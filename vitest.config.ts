@@ -11,14 +11,14 @@ export default defineConfig({
       {
         test: {
           name: "merge",
-          root: "./node/packages/merge",
+          root: "./packages/merge",
           include: ["**/*.test.ts"],
         },
       },
       {
         test: {
           name: "secrets-sync",
-          root: "./node/packages/secrets-sync",
+          root: "./packages/secrets-sync",
           include: ["test/**/*.test.ts"],
         },
       },

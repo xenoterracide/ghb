@@ -1034,9 +1034,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xenoterracide/merge@workspace:node/packages/merge":
+"@xenoterracide/merge@workspace:packages/merge":
   version: 0.0.0-use.local
-  resolution: "@xenoterracide/merge@workspace:node/packages/merge"
+  resolution: "@xenoterracide/merge@workspace:packages/merge"
   dependencies:
     "@types/node": "npm:^24.12.0"
     clipanion: "npm:^4.0.0-rc.4"
@@ -1046,9 +1046,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@xenoterracide/secrets-sync@workspace:node/packages/secrets-sync":
+"@xenoterracide/secrets-sync@workspace:packages/secrets-sync":
   version: 0.0.0-use.local
-  resolution: "@xenoterracide/secrets-sync@workspace:node/packages/secrets-sync"
+  resolution: "@xenoterracide/secrets-sync@workspace:packages/secrets-sync"
   dependencies:
     "@types/node": "npm:^24.12.0"
     clipanion: "npm:^4.0.0-rc.4"
@@ -1058,9 +1058,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@xenoterracide/share@workspace:.":
+"@xenoterracide/ts-cli-devtools@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@xenoterracide/share@workspace:."
+  resolution: "@xenoterracide/ts-cli-devtools@workspace:."
   dependencies:
     "@eslint/js": "npm:^10.0.0"
     "@eslint/json": "npm:^1.0.0"

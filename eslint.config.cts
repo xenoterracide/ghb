@@ -76,7 +76,7 @@ export default defineConfig([
 
   {
     // Node packages: relax strict type checking due to PnP resolution issues
-    files: ["node/packages/**/*.ts"],
+    files: ["packages/**/*.ts"],
     rules: {
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-call": "off",

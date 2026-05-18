@@ -1,5 +1,5 @@
 {
-  "name": "@xenoterracide/share",
+  "name": "@xenoterracide/ts-cli-devtools",
   "packageManager": "yarn@4.14.1",
   "private": true,
   "license": "MIT",
@@ -31,7 +31,7 @@
     "merge:copilot": "yarn workspace @xenoterracide/merge run merge:copilot",
     "merge:junie": "yarn workspace @xenoterracide/merge run merge:junie",
     "merge:kimi": "yarn workspace @xenoterracide/merge run merge:kimi",
-    "secrets": "tsx node/packages/secrets-sync/src/cli.ts",
+    "secrets": "tsx packages/secrets-sync/src/cli.ts",
     "lint:prettier": "prettier --ignore-unknown --cache --check '**'",
     "lint:reuse": "uv run --frozen --group dev reuse lint",
     "lint:eslint": "eslint .",
@@ -41,6 +41,6 @@
     "check": "concurrently --names eslint,tsc,test --prefix-colors cyan,magenta,green 'yarn lint:eslint' 'yarn typecheck' 'yarn test'"
   },
   "workspaces": [
-    "node/packages/*"
+    "packages/*"
   ]
 }

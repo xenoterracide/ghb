@@ -7,13 +7,13 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 # Project Overview
 
-This is **share** (also referenced as `template-main`), a shared configuration and tooling repository that provides:
+This is **ts-cli-devtools**, a TypeScript CLI devtools repository that provides:
 
 1. **AI-assisted PR merge workflows** - Automated PR creation, message generation, and merging using AI tools (Kimi, Junie, GitHub Copilot)
-2. **Git hooks** - Automated dependency syncing and commit validation
+2. **Secrets sync** - CLI tool for syncing GitHub secrets to repositories
 3. **License compliance** - REUSE specification compliance for copyright and licensing
 
-The project uses a hybrid Python + Node.js architecture with Yarn workspaces for package management.
+The project uses Node.js with Yarn workspaces for package management. Python is kept minimal for REUSE license tooling only.
 
 ## Technology Stack
 
@@ -31,9 +31,12 @@ The project uses a hybrid Python + Node.js architecture with Yarn workspaces for
 │   ├── post-checkout           # Auto-install deps on branch switch
 │   ├── post-merge              # Auto-install deps after merge
 │   └── pre-commit              # Lint-staged runner
-├── node/packages/              # Yarn workspaces
-│   └── merge/                  # AI-assisted merge workflow tool
-│       ├── merge.ts            # Main TypeScript implementation
+├── packages/                   # Yarn workspaces
+│   ├── merge/                  # AI-assisted merge workflow tool
+│   │   ├── merge.ts            # Main TypeScript implementation
+│   │   └── package.json
+│   └── secrets-sync/           # GitHub secrets sync CLI
+│       ├── src/
 │       └── package.json
 ├── .github/workflows/          # GitHub Actions
 ├── .share/                     # Symlink to project root (for git hooks path)
@@ -143,7 +146,7 @@ Allowed types (from `git-conventional-commits.yaml`):
 
 ### Merge Workflow
 
-The `node/packages/merge` tool provides AI-assisted PR workflows:
+The `packages/merge` tool provides AI-assisted PR workflows:
 
 ```bash
 # Generate PR message and merge using different AI engines
