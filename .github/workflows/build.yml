@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Copyright © 2024-2026 Caleb Cushing
+#
+# SPDX-License-Identifier: MIT
+
+name: build
+on: [push]
+jobs:
+  build:
+    uses: xenoterracide/github/.github/workflows/maven.yml@5da5c929b6ede492de3ddf60fb2376ca1b1c1493 # develop
+    permissions:
+      actions: write
+      contents: read
+      packages: read
+  jbang:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+      - run: ./mvnw install -DskipTests -q --batch-mode
+      - uses: jbangdev/setup-jbang@2b1b465a7b75f4222b81426f23a01e013aa7b95c # v0.1.1
+      - run: jbang main.java --help
+      - run: jbang main.java

@@ -24,22 +24,7 @@
   ],
   packageRules: [
     {
-      matchManagers: ["maven"],
-      matchUpdateTypes: ["major", "minor", "patch"],
-      automerge: true,
-    },
-    {
-      // Python deps via uv: Run daily at 03:00 UTC (after update-java)
-      schedule: ["* 3 * * *"],
-      matchManagers: ["pep621"],
-      automerge: true,
-    },
-    {
-      matchManagers: ["pyenv"],
-      automerge: true,
-    },
-    {
-      matchManagers: ["github-actions"],
+      matchManagers: ["asdf", "maven", "npm", "pyenv", "pep621", "github-actions"],
       automerge: true,
     },
     {
@@ -48,15 +33,7 @@
       matchManagers: ["github-actions"],
       matchDepNames: ["xenoterracide/**"],
       extends: ["helpers:pinGitHubActionDigests"],
-      automerge: true,
-    },
-    {
-      // Run every Wednesday
-      // Window: 04:00 UTC hour on Wednesday (Renovate cron uses '*' for minutes)
-      schedule: ["* 4 * * 3"],
-      matchManagers: ["npm", "asdf"],
-      groupName: "devDependencies",
-      matchUpdateTypes: ["minor", "patch", "pin"],
+      branchTopic: "{{{depNameSanitized}}}-{{{newDigestShort}}}",
       automerge: true,
     },
   ],
