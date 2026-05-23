@@ -22,7 +22,7 @@
     "prettier-plugin-toml": "^2.0.6",
     "rimraf": "^6.1.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.0.0",
+    "typescript": "^6.0.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^4.1.3"
   },
