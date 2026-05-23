@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Copyright © 2024-2026 Caleb Cushing
+#
+# SPDX-License-Identifier: MIT
+
+name: devtools-regression
+on: push
+permissions:
+  contents: read
+jobs:
+  node-cli:
+    uses: xenoterracide/github/.github/workflows/node-cli.yml@5da5c929b6ede492de3ddf60fb2376ca1b1c1493 # develop
