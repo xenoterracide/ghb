@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 
 // SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
 //
@@ -9,7 +9,7 @@ import { execFileSync, execSync } from "child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { logger } from "./logger";
+import { logger } from "./logger.js";
 
 export type Engine = "kimi" | "junie" | "copilot";
 

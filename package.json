@@ -38,6 +38,7 @@
     "lint": "yarn lint:eslint && yarn lint:prettier && yarn lint:reuse",
     "test": "vitest run --coverage",
     "typecheck": "yarn workspaces foreach --all --exclude @xenoterracide/share run typecheck",
+    "build": "yarn workspaces foreach --all --exclude @xenoterracide/ts-cli-devtools run build",
     "check": "concurrently --names eslint,tsc,test --prefix-colors cyan,magenta,green 'yarn lint:eslint' 'yarn typecheck' 'yarn test'"
   },
   "workspaces": [

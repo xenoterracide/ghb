@@ -1,7 +1,25 @@
 {
   "name": "@xenoterracide/secrets-sync",
+  "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "packageManager": "yarn@4.15.0",
+  "bin": {
+    "secrets": "dist/cli.js"
+  },
+  "main": "dist/cli.js",
+  "types": "dist/cli.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "clipanion": "^4.0.0-rc.4"
   },
@@ -12,6 +30,7 @@
     "vitest": "^4.1.2"
   },
   "scripts": {
+    "build": "tsc",
     "secrets-sync": "tsx src/cli.ts",
     "test": "vitest run && yarn typecheck",
     "test:watch": "vitest",

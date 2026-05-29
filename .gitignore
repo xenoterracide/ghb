@@ -34,3 +34,5 @@ node_modules
 
 # Coverage reports
 coverage/
+# Build output
+dist/
