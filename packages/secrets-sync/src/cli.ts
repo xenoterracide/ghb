@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 
 // SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
 //

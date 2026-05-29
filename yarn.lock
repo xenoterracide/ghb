@@ -1001,6 +1001,8 @@ __metadata:
     tsx: "npm:^4.21.0"
     typescript: "npm:^6.0.0"
     vitest: "npm:^4.1.2"
+  bin:
+    merge: dist/merge.js
   languageName: unknown
   linkType: soft
 
@@ -1013,6 +1015,8 @@ __metadata:
     tsx: "npm:^4.21.0"
     typescript: "npm:^6.0.0"
     vitest: "npm:^4.1.2"
+  bin:
+    secrets: dist/cli.js
   languageName: unknown
   linkType: soft
 

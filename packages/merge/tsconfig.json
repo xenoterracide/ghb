@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
+//
+// SPDX-License-Identifier: CC0-1.0
+
 {
   "compilerOptions": {
     "target": "ES2022",
@@ -8,9 +12,8 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": "src",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["test/**/*.ts", "vitest.config.ts"]
+  "include": ["*.ts"],
+  "exclude": ["*.test.ts", "vitest.config.ts"]
 }

@@ -1,7 +1,25 @@
 {
   "name": "@xenoterracide/merge",
+  "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "packageManager": "yarn@4.15.0",
+  "bin": {
+    "merge": "dist/merge.js"
+  },
+  "main": "dist/merge.js",
+  "types": "dist/merge.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/merge.d.ts",
+      "default": "./dist/merge.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "clipanion": "^4.0.0-rc.4"
   },
@@ -12,11 +30,12 @@
     "vitest": "^4.1.2"
   },
   "scripts": {
+    "build": "tsc",
     "merge:copilot": "tsx merge.ts --engine copilot",
     "merge:junie": "tsx merge.ts --engine junie",
     "merge:kimi": "tsx merge.ts --engine kimi",
     "test": "vitest run && yarn typecheck",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit merge.ts"
+    "typecheck": "tsc --noEmit"
   }
 }
