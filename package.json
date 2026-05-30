@@ -5,7 +5,7 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^10.0.0",
-    "@eslint/json": "^1.0.0",
+    "@eslint/json": "^2.0.0",
     "@eslint/markdown": "^8.0.0",
     "@prettier/plugin-xml": "^3.4.2",
     "@vitest/coverage-v8": "^4.1.3",
