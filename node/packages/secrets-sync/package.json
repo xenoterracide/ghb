@@ -1,7 +1,7 @@
 {
   "name": "@xenoterracide/secrets-sync",
   "license": "GPL-3.0-or-later",
-  "packageManager": "yarn@4.14.1",
+  "packageManager": "yarn@4.16.0",
   "dependencies": {
     "clipanion": "^4.0.0-rc.4"
   },
