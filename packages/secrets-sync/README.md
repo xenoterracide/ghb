@@ -4,6 +4,8 @@ SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
 SPDX-License-Identifier: CC-BY-NC-SA-4.0
 -->
 
+> **Note:** This tool was written for my own workflows. If you find it useful, great — but it comes with no guarantees of support or stability. It is also almost entirely AI-generated.
+
 # secrets-sync
 
 A CLI tool for syncing GitHub secrets to repositories.
@@ -11,30 +13,30 @@ A CLI tool for syncing GitHub secrets to repositories.
 ## Installation
 
 ```bash
-yarn install
+npm install -g @xenoterracide/secrets-sync
 ```
 
 ## Usage
 
 ```bash
 # Sync all secrets from env file to current repo
-yarn secrets sync --env-file secrets.env
+secrets sync --env-file secrets.env
 
 # Sync to specific repo
-yarn secrets sync --env-file secrets.env --repo owner/target-repo
+secrets sync --env-file secrets.env --repo owner/target-repo
 
 # Sync to multiple repos
-yarn secrets sync --env-file secrets.env --repo owner/target-1,owner/target-2
+secrets sync --env-file secrets.env --repo owner/target-1,owner/target-2
 
 # Sync to all repos with a label/topic
-yarn secrets sync --env-file secrets.env --label auto-updated
+secrets sync --env-file secrets.env --label auto-updated
 
 # Sync specific secrets only (from env or env vars)
-yarn secrets sync --secrets API_KEY,SECRET --repo owner/target
+secrets sync --secrets API_KEY,SECRET --repo owner/target
 
 # Use environment variables directly
 export API_KEY="secret-value"
-yarn secrets sync --secrets API_KEY
+secrets sync --secrets API_KEY
 ```
 
 ## Env File Format
@@ -57,7 +59,7 @@ PASSWORD=val:my-secret-123
 
 ### Why require prefixes?
 
-Without prefixes, a password like `pass:word` is ambiguous - is it a `pass` protocol or a literal value? Explicit protocols remove all ambiguity:
+Without prefixes, a password like `pass:word` is ambiguous — is it a `pass` protocol or a literal value? Explicit protocols remove all ambiguity:
 
 ```bash
 # ERROR: no protocol prefix
@@ -96,7 +98,7 @@ Using `file:` references keeps the env file clean and makes it easier to manage 
 
 ### Important: GitHub Doesn't Allow Reading Secret Values
 
-GitHub's API (and `gh` CLI) only allows listing secret **names** - you cannot read the values back. This means you must provide secret values via:
+GitHub's API (and `gh` CLI) only allows listing secret **names** — you cannot read the values back. This means you must provide secret values via:
 
 - Environment variables (matching the secret name)
 - `--env-file` with `env:`, `file:`, or `val:` protocols
@@ -106,16 +108,15 @@ GitHub's API (and `gh` CLI) only allows listing secret **names** - you cannot re
 For each secret, values are resolved in this order:
 
 1. **From env file entry:**
-   - `env:VAR_NAME` - Read from environment variable
-   - `file:./path` or `file:///absolute/path` - Read from file
-   - `val:literal` - Use as-is
+   - `env:VAR_NAME` — Read from environment variable
+   - `file:./path` or `file:///absolute/path` — Read from file
+   - `val:literal` — Use as-is
 2. **Environment variable matching secret name**
 
 ## Requirements
 
 - GitHub CLI (`gh`) authenticated
 - Node.js 24+
-- Yarn 4+
 
 ## License
 
