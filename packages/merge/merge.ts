@@ -13,14 +13,22 @@ import { logger } from "./logger.js";
 
 export type Engine = "kimi" | "junie" | "copilot";
 
-const ENGINES: Engine[] = ["kimi", "junie", "copilot"];
-
-function validateEngine(engine: string): Engine {
-  if (ENGINES.includes(engine as Engine)) {
-    return engine as Engine;
+export class EngineResolutionError extends Error {
+  public constructor(message: string) {
+    super(message);
+    this.name = "EngineResolutionError";
   }
-  console.error(`Error: Invalid engine "${engine}". Valid engines: ${ENGINES.join(", ")}`);
-  process.exit(1);
+}
+
+export function resolveEngine(flags: Record<Engine, boolean>): Engine {
+  const active = (Object.entries(flags) as [Engine, boolean][]).filter(([, v]) => v).map(([k]) => k);
+  if (active.length > 1) {
+    throw new EngineResolutionError(`Error: Multiple engines specified: ${active.join(", ")}. Use only one.`);
+  }
+  if (active.length === 1) {
+    return active[0];
+  }
+  return "kimi";
 }
 
 export interface CommandRunner {
@@ -513,8 +521,16 @@ export class PrMessageCommand extends Command {
     description: "Path to write PR body",
   });
 
-  public engine = Option.String("--engine,-e", "kimi", {
-    description: "AI engine to use (kimi, junie, copilot)",
+  public kimi = Option.Boolean("--kimi", false, {
+    description: "Use Kimi engine",
+  });
+
+  public junie = Option.Boolean("--junie", false, {
+    description: "Use Junie engine",
+  });
+
+  public copilot = Option.Boolean("--copilot", false, {
+    description: "Use Copilot engine",
   });
 
   private readonly runner: CommandRunner;
@@ -527,7 +543,12 @@ export class PrMessageCommand extends Command {
   public async execute(): Promise<number> {
     const tmpDir = mkdtempSync(join(tmpdir(), "prmsg-"));
     try {
-      await generateMessage(this.titleFile, this.bodyFile, tmpDir, this.runner, validateEngine(this.engine));
+      const engine = resolveEngine({
+        kimi: this.kimi,
+        junie: this.junie,
+        copilot: this.copilot,
+      });
+      await generateMessage(this.titleFile, this.bodyFile, tmpDir, this.runner, engine);
       return 0;
     } catch (e) {
       console.error(e instanceof Error ? e.message : String(e));
@@ -549,8 +570,16 @@ export class MergeCommand extends Command {
     description: "Show what would be done without making changes",
   });
 
-  public engine = Option.String("--engine,-e", "kimi", {
-    description: "AI engine to use (kimi, junie, copilot)",
+  public kimi = Option.Boolean("--kimi", false, {
+    description: "Use Kimi engine",
+  });
+
+  public junie = Option.Boolean("--junie", false, {
+    description: "Use Junie engine",
+  });
+
+  public copilot = Option.Boolean("--copilot", false, {
+    description: "Use Copilot engine",
   });
 
   private readonly runner: CommandRunner;
@@ -562,6 +591,13 @@ export class MergeCommand extends Command {
 
   public async execute(): Promise<number> {
     try {
+      // Resolve engine up front before any side effects
+      const engine = resolveEngine({
+        kimi: this.kimi,
+        junie: this.junie,
+        copilot: this.copilot,
+      });
+
       // Full merge workflow
       // Capture branch name BEFORE any git operations that might change it
       const currentBranch = getBranch(this.runner);
@@ -575,8 +611,6 @@ export class MergeCommand extends Command {
       this.runner.run("git push");
 
       const hasExistingPR = hasPR(currentBranch, this.runner);
-
-      const engine = validateEngine(this.engine);
       if (hasExistingPR) {
         await waitForChecks();
         await createOrUpdatePR(currentBranch, this.runner, undefined, engine);

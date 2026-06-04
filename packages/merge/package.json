@@ -38,9 +38,9 @@
   "scripts": {
     "build": "tsc",
     "prepack": "yarn build",
-    "merge:copilot": "tsx merge.ts --engine copilot",
-    "merge:junie": "tsx merge.ts --engine junie",
-    "merge:kimi": "tsx merge.ts --engine kimi",
+    "merge:copilot": "tsx merge.ts --copilot",
+    "merge:junie": "tsx merge.ts --junie",
+    "merge:kimi": "tsx merge.ts --kimi",
     "test": "vitest run && yarn typecheck",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

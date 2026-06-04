@@ -25,10 +25,10 @@ merge
 # Dry run — show what would happen without making changes
 merge --dry-run
 
-# Use a specific AI engine for PR message generation
-merge --engine kimi
-merge --engine junie
-merge --engine copilot
+# Use a specific AI engine for PR message generation (default is Kimi)
+merge --kimi
+merge --junie
+merge --copilot
 
 # Generate only the PR title/body files
 merge pr-message --title-file title.txt --body-file body.txt
