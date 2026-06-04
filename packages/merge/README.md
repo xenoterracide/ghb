@@ -1,8 +1,54 @@
 <!--
 SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
 
-SPDX-License-Identifier: CC-BY-NC-4.0
 SPDX-License-Identifier: CC-BY-NC-SA-4.0
 -->
 
+> **Note:** This tool was written for my own workflows. If you find it useful, great — but it comes with no guarantees of support or stability. It is also almost entirely AI-generated.
+
 # merge
+
+An AI-assisted PR merge workflow tool. It automates the busywork of keeping a branch up to date, generating PR descriptions with an AI engine, waiting for CI, and merging.
+
+## Installation
+
+```bash
+npm install -g @xenoterracide/merge
+```
+
+## Usage
+
+```bash
+# Full merge workflow (default)
+merge
+
+# Dry run — show what would happen without making changes
+merge --dry-run
+
+# Use a specific AI engine for PR message generation
+merge --engine kimi
+merge --engine junie
+merge --engine copilot
+
+# Generate only the PR title/body files
+merge pr-message --title-file title.txt --body-file body.txt
+```
+
+### What the full workflow does
+
+1. Fetches and merges `origin/HEAD` into the current branch
+2. Pushes the branch
+3. Creates or updates the PR with an AI-generated conventional commit message
+4. Waits for GitHub Actions checks to pass
+5. Prompts for confirmation and squash-merges the PR
+
+## Requirements
+
+- Git
+- GitHub CLI (`gh`) authenticated
+- Node.js 24+
+- One of: [Kimi CLI](https://www.kimi.com/), [Junie](https://www.jetbrains.com/junie/), or [GitHub Copilot CLI](https://github.com/github/copilot.vim) installed
+
+## License
+
+GPL-3.0-or-later

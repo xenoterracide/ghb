@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "packageManager": "yarn@4.15.0",
-  "bin": {
-    "merge": "dist/merge.js"
-  },
+  "bin": "dist/merge.js",
   "main": "dist/merge.js",
   "types": "dist/merge.d.ts",
   "exports": {
@@ -29,8 +27,17 @@
     "typescript": "^6.0.0",
     "vitest": "^4.1.2"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xenoterracide/ts-cli-devtools.git",
+    "directory": "packages/merge"
+  },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "build": "tsc",
+    "prepack": "yarn build",
     "merge:copilot": "tsx merge.ts --engine copilot",
     "merge:junie": "tsx merge.ts --engine junie",
     "merge:kimi": "tsx merge.ts --engine kimi",
