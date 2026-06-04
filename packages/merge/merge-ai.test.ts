@@ -14,7 +14,7 @@ vi.mock("child_process", () => ({
   execFileSync: vi.fn(),
 }));
 
-import { execSync, execFileSync } from "child_process";
+import { execFileSync } from "child_process";
 
 describe("generateWithKimi", () => {
   let tmpDir: string;
@@ -40,14 +40,21 @@ describe("generateWithKimi", () => {
   it("should generate message using kimi CLI", async () => {
     const diff = "some diff content";
 
-    // Write a valid title file to simulate kimi success
-    writeFileSync(titleFile, "feat: test message", "utf8");
+    (execFileSync as ReturnType<typeof vi.fn>).mockImplementation(() => "feat: test message\n\n- Detail 1\n- Detail 2");
 
-    (execSync as ReturnType<typeof vi.fn>).mockImplementation(() => "");
+    await generateWithKimi(titleFile, bodyFile, diff);
 
-    await generateWithKimi(titleFile, bodyFile, diff, tmpDir);
+    expect(execFileSync).toHaveBeenCalledWith("kimi", expect.arrayContaining(["-p"]), expect.any(Object));
+  });
 
-    expect(execSync).toHaveBeenCalled();
+  it("should throw error when kimi fails", async () => {
+    const diff = "some diff content";
+
+    (execFileSync as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      throw new Error("kimi failed");
+    });
+
+    await expect(generateWithKimi(titleFile, bodyFile, diff)).rejects.toThrow("kimi failed to generate message");
   });
 });
 
@@ -137,7 +144,11 @@ describe("generateWithCopilot", () => {
 
     await generateWithCopilot(titleFile, bodyFile, diff, files, tmpDir);
 
-    expect(execFileSync).toHaveBeenCalledWith("copilot", expect.any(Array), expect.any(Object));
+    expect(execFileSync).toHaveBeenCalledWith(
+      "copilot",
+      expect.arrayContaining(["--model", "--silent", "--prompt"]),
+      expect.any(Object),
+    );
   });
 
   it("should use environment model variable", async () => {

@@ -47,6 +47,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@earendil-works/pi-tui@npm:^0.74.0":
+  version: 0.74.2
+  resolution: "@earendil-works/pi-tui@npm:0.74.2"
+  dependencies:
+    get-east-asian-width: "npm:^1.3.0"
+    koffi: "npm:^2.9.0"
+    marked: "npm:^15.0.12"
+  dependenciesMeta:
+    koffi:
+      optional: true
+  checksum: 10c0/1c1e7f4bac4e72196087f460074c44d30fe9bda51f672f54732ea1636ff6eb96774b67e1f0d7690e333f90a44f26ceb6bf82b908984db24aed03af1e4bb0ee6d
+  languageName: node
+  linkType: hard
+
 "@emnapi/core@npm:^1.7.1":
   version: 1.9.1
   resolution: "@emnapi/core@npm:1.9.1"
@@ -381,6 +395,114 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@github/copilot-darwin-arm64@npm:1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot-darwin-arm64@npm:1.0.59"
+  bin:
+    copilot-darwin-arm64: copilot
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@github/copilot-darwin-x64@npm:1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot-darwin-x64@npm:1.0.59"
+  bin:
+    copilot-darwin-x64: copilot
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@github/copilot-linux-arm64@npm:1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot-linux-arm64@npm:1.0.59"
+  bin:
+    copilot-linux-arm64: copilot
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@github/copilot-linux-x64@npm:1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot-linux-x64@npm:1.0.59"
+  bin:
+    copilot-linux-x64: copilot
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@github/copilot-linuxmusl-arm64@npm:1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot-linuxmusl-arm64@npm:1.0.59"
+  bin:
+    copilot-linuxmusl-arm64: copilot
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@github/copilot-linuxmusl-x64@npm:1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot-linuxmusl-x64@npm:1.0.59"
+  bin:
+    copilot-linuxmusl-x64: copilot
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@github/copilot-win32-arm64@npm:1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot-win32-arm64@npm:1.0.59"
+  bin:
+    copilot-win32-arm64: copilot.exe
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@github/copilot-win32-x64@npm:1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot-win32-x64@npm:1.0.59"
+  bin:
+    copilot-win32-x64: copilot.exe
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@github/copilot@npm:^1.0.59":
+  version: 1.0.59
+  resolution: "@github/copilot@npm:1.0.59"
+  dependencies:
+    "@github/copilot-darwin-arm64": "npm:1.0.59"
+    "@github/copilot-darwin-x64": "npm:1.0.59"
+    "@github/copilot-linux-arm64": "npm:1.0.59"
+    "@github/copilot-linux-x64": "npm:1.0.59"
+    "@github/copilot-linuxmusl-arm64": "npm:1.0.59"
+    "@github/copilot-linuxmusl-x64": "npm:1.0.59"
+    "@github/copilot-win32-arm64": "npm:1.0.59"
+    "@github/copilot-win32-x64": "npm:1.0.59"
+    detect-libc: "npm:^2.1.2"
+  dependenciesMeta:
+    "@github/copilot-darwin-arm64":
+      optional: true
+    "@github/copilot-darwin-x64":
+      optional: true
+    "@github/copilot-linux-arm64":
+      optional: true
+    "@github/copilot-linux-x64":
+      optional: true
+    "@github/copilot-linuxmusl-arm64":
+      optional: true
+    "@github/copilot-linuxmusl-x64":
+      optional: true
+    "@github/copilot-win32-arm64":
+      optional: true
+    "@github/copilot-win32-x64":
+      optional: true
+  bin:
+    copilot: npm-loader.js
+  checksum: 10c0/b6cd5c4f5f515ac750ac22983c0eb5243cbdd6d7831258109a49b7994c44b4b321282a9af5e8c0dffb0873bde53b74d1e65134106b85d7aa5d5bff6662c8aa6d
+  languageName: node
+  linkType: hard
+
 "@humanfs/core@npm:^0.19.1":
   version: 0.19.1
   resolution: "@humanfs/core@npm:0.19.1"
@@ -428,6 +550,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jetbrains/junie@npm:^1831.35.0":
+  version: 1831.35.0
+  resolution: "@jetbrains/junie@npm:1831.35.0"
+  dependencies:
+    yauzl: "npm:^3.2.0"
+  bin:
+    junie: bin/index.js
+  checksum: 10c0/81b3742b3161fd5bc3c6b8b8f9c9c2074b104104382336de02b8f700977c81fe57fc47ff33218568644e11c6f9094f9c453dec4c3fb14e97b9c31fe404bc6d5a
+  languageName: node
+  linkType: hard
+
 "@jridgewell/resolve-uri@npm:^3.1.0":
   version: 3.1.2
   resolution: "@jridgewell/resolve-uri@npm:3.1.2"
@@ -449,6 +582,133 @@ __metadata:
     "@jridgewell/resolve-uri": "npm:^3.1.0"
     "@jridgewell/sourcemap-codec": "npm:^1.4.14"
   checksum: 10c0/4b30ec8cd56c5fd9a661f088230af01e0c1a3888d11ffb6b47639700f71225be21d1f7e168048d6d4f9449207b978a235c07c8f15c07705685d16dc06280e9d9
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-darwin-arm64@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-darwin-arm64@npm:0.3.9"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-darwin-universal@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-darwin-universal@npm:0.3.9"
+  conditions: os=darwin
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-darwin-x64@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-darwin-x64@npm:0.3.9"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-linux-arm64-gnu@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-linux-arm64-gnu@npm:0.3.9"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-linux-arm64-musl@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-linux-arm64-musl@npm:0.3.9"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-linux-riscv64-gnu@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-linux-riscv64-gnu@npm:0.3.9"
+  conditions: os=linux & cpu=riscv64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-linux-x64-gnu@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-linux-x64-gnu@npm:0.3.9"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-linux-x64-musl@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-linux-x64-musl@npm:0.3.9"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-win32-arm64-msvc@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-win32-arm64-msvc@npm:0.3.9"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard-win32-x64-msvc@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard-win32-x64-msvc@npm:0.3.9"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@mariozechner/clipboard@npm:^0.3.2":
+  version: 0.3.9
+  resolution: "@mariozechner/clipboard@npm:0.3.9"
+  dependencies:
+    "@mariozechner/clipboard-darwin-arm64": "npm:0.3.9"
+    "@mariozechner/clipboard-darwin-universal": "npm:0.3.9"
+    "@mariozechner/clipboard-darwin-x64": "npm:0.3.9"
+    "@mariozechner/clipboard-linux-arm64-gnu": "npm:0.3.9"
+    "@mariozechner/clipboard-linux-arm64-musl": "npm:0.3.9"
+    "@mariozechner/clipboard-linux-riscv64-gnu": "npm:0.3.9"
+    "@mariozechner/clipboard-linux-x64-gnu": "npm:0.3.9"
+    "@mariozechner/clipboard-linux-x64-musl": "npm:0.3.9"
+    "@mariozechner/clipboard-win32-arm64-msvc": "npm:0.3.9"
+    "@mariozechner/clipboard-win32-x64-msvc": "npm:0.3.9"
+  dependenciesMeta:
+    "@mariozechner/clipboard-darwin-arm64":
+      optional: true
+    "@mariozechner/clipboard-darwin-universal":
+      optional: true
+    "@mariozechner/clipboard-darwin-x64":
+      optional: true
+    "@mariozechner/clipboard-linux-arm64-gnu":
+      optional: true
+    "@mariozechner/clipboard-linux-arm64-musl":
+      optional: true
+    "@mariozechner/clipboard-linux-riscv64-gnu":
+      optional: true
+    "@mariozechner/clipboard-linux-x64-gnu":
+      optional: true
+    "@mariozechner/clipboard-linux-x64-musl":
+      optional: true
+    "@mariozechner/clipboard-win32-arm64-msvc":
+      optional: true
+    "@mariozechner/clipboard-win32-x64-msvc":
+      optional: true
+  checksum: 10c0/088f48d4aae6cd7c5f3169fe3fc0c9b26e494d5640b970a623b31faf5da7cc62332b7415eee7a8d434807de3e73b92671cc3b28fb6e80b420dfa80f4c2211f62
+  languageName: node
+  linkType: hard
+
+"@moonshot-ai/kimi-code@npm:^0.10.0":
+  version: 0.10.0
+  resolution: "@moonshot-ai/kimi-code@npm:0.10.0"
+  dependencies:
+    "@earendil-works/pi-tui": "npm:^0.74.0"
+    "@mariozechner/clipboard": "npm:^0.3.2"
+    chalk: "npm:^5.4.1"
+    cli-highlight: "npm:^2.1.11"
+    commander: "npm:^13.1.0"
+    semver: "npm:^7.7.4"
+    smol-toml: "npm:^1.6.1"
+    zod: "npm:^4.3.6"
+  bin:
+    kimi: dist/main.mjs
+  checksum: 10c0/77d7c84d23530b2aba18f417d8c4f43a47d4d4de36e8ca5a54d379631f148576564c08c4c90bfa88b27a1a62b1a0f4625b3595cefaa10318382c3f93d20b8f36
   languageName: node
   linkType: hard
 
@@ -996,11 +1256,21 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@xenoterracide/merge@workspace:packages/merge"
   dependencies:
+    "@github/copilot": "npm:^1.0.59"
+    "@jetbrains/junie": "npm:^1831.35.0"
+    "@moonshot-ai/kimi-code": "npm:^0.10.0"
     "@types/node": "npm:^24.12.0"
     clipanion: "npm:^4.0.0-rc.4"
     tsx: "npm:^4.21.0"
     typescript: "npm:^6.0.0"
     vitest: "npm:^4.1.2"
+  dependenciesMeta:
+    "@github/copilot":
+      optional: true
+    "@jetbrains/junie":
+      optional: true
+    "@moonshot-ai/kimi-code":
+      optional: true
   bin:
     merge: dist/merge.js
   languageName: unknown
@@ -1124,7 +1394,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ansi-styles@npm:^4.0.0":
+"ansi-styles@npm:^4.0.0, ansi-styles@npm:^4.1.0":
   version: 4.3.0
   resolution: "ansi-styles@npm:4.3.0"
   dependencies:
@@ -1137,6 +1407,13 @@ __metadata:
   version: 6.2.3
   resolution: "ansi-styles@npm:6.2.3"
   checksum: 10c0/23b8a4ce14e18fb854693b95351e286b771d23d8844057ed2e7d083cd3e708376c3323707ec6a24365f7d7eda3ca00327fe04092e29e551499ec4c8b7bfac868
+  languageName: node
+  linkType: hard
+
+"any-promise@npm:^1.0.0":
+  version: 1.3.0
+  resolution: "any-promise@npm:1.3.0"
+  checksum: 10c0/60f0298ed34c74fef50daab88e8dab786036ed5a7fad02e012ab57e376e0a0b4b29e83b95ea9b5e7d89df762f5f25119b83e00706ecaccb22cfbacee98d74889
   languageName: node
   linkType: hard
 
@@ -1215,10 +1492,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:5.6.2, chalk@npm:^5.6.2":
+"chalk@npm:5.6.2, chalk@npm:^5.4.1, chalk@npm:^5.6.2":
   version: 5.6.2
   resolution: "chalk@npm:5.6.2"
   checksum: 10c0/99a4b0f0e7991796b1e7e3f52dceb9137cae2a9dfc8fc0784a550dc4c558e15ab32ed70b14b21b52beb2679b4892b41a0aa44249bcb996f01e125d58477c6976
+  languageName: node
+  linkType: hard
+
+"chalk@npm:^4.0.0":
+  version: 4.1.2
+  resolution: "chalk@npm:4.1.2"
+  dependencies:
+    ansi-styles: "npm:^4.1.0"
+    supports-color: "npm:^7.1.0"
+  checksum: 10c0/4a3fef5cc34975c898ffe77141450f679721df9dde00f6c304353fa9c8b571929123b26a0e4617bde5018977eb655b31970c297b91b63ee83bb82aeb04666880
   languageName: node
   linkType: hard
 
@@ -1254,6 +1541,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cli-highlight@npm:^2.1.11":
+  version: 2.1.11
+  resolution: "cli-highlight@npm:2.1.11"
+  dependencies:
+    chalk: "npm:^4.0.0"
+    highlight.js: "npm:^10.7.1"
+    mz: "npm:^2.4.0"
+    parse5: "npm:^5.1.1"
+    parse5-htmlparser2-tree-adapter: "npm:^6.0.0"
+    yargs: "npm:^16.0.0"
+  bin:
+    highlight: bin/highlight
+  checksum: 10c0/b5b4af3b968aa9df77eee449a400fbb659cf47c4b03a395370bd98d5554a00afaa5819b41a9a8a1ca0d37b0b896a94e57c65289b37359a25b700b1f56eb04852
+  languageName: node
+  linkType: hard
+
 "cli-truncate@npm:^5.2.0":
   version: 5.2.0
   resolution: "cli-truncate@npm:5.2.0"
@@ -1272,6 +1575,17 @@ __metadata:
   peerDependencies:
     typanion: "*"
   checksum: 10c0/047b415b59a5e9777d00690fba563ccc850eca6bf27790a88d1deea3ecc8a89840ae9aed554ff284cc698a9f3f20256e43c25ff4a7c4c90a71e5e7d9dca61dd1
+  languageName: node
+  linkType: hard
+
+"cliui@npm:^7.0.2":
+  version: 7.0.4
+  resolution: "cliui@npm:7.0.4"
+  dependencies:
+    string-width: "npm:^4.2.0"
+    strip-ansi: "npm:^6.0.0"
+    wrap-ansi: "npm:^7.0.0"
+  checksum: 10c0/6035f5daf7383470cef82b3d3db00bec70afb3423538c50394386ffbbab135e26c3689c41791f911fa71b62d13d3863c712fdd70f0fbdffd938a1e6fd09aac00
   languageName: node
   linkType: hard
 
@@ -1310,6 +1624,13 @@ __metadata:
   version: 1.1.4
   resolution: "color-name@npm:1.1.4"
   checksum: 10c0/a1a3f914156960902f46f7f56bc62effc6c94e84b2cae157a526b1c1f74b677a47ec602bf68a61abfa2b42d15b7c5651c6dbe72a43af720bc588dff885b10f95
+  languageName: node
+  linkType: hard
+
+"commander@npm:^13.1.0":
+  version: 13.1.0
+  resolution: "commander@npm:13.1.0"
+  checksum: 10c0/7b8c5544bba704fbe84b7cab2e043df8586d5c114a4c5b607f83ae5060708940ed0b5bd5838cf8ce27539cde265c1cbd59ce3c8c6b017ed3eec8943e3a415164
   languageName: node
   linkType: hard
 
@@ -1390,7 +1711,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"detect-libc@npm:^2.0.3":
+"detect-libc@npm:^2.0.3, detect-libc@npm:^2.1.2":
   version: 2.1.2
   resolution: "detect-libc@npm:2.1.2"
   checksum: 10c0/acc675c29a5649fa1fb6e255f993b8ee829e510b6b56b0910666949c80c364738833417d0edb5f90e4e46be17228b0f2b66a010513984e18b15deeeac49369c4
@@ -1829,6 +2150,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"get-east-asian-width@npm:^1.3.0":
+  version: 1.6.0
+  resolution: "get-east-asian-width@npm:1.6.0"
+  checksum: 10c0/7e72e9550fd49ca5b246f9af6bb2afc129c96412845ff6556b3274fd44817a381702ca17028efe9866b261a3d44254cbf21e6c90cf05b4b61675630af776d431
+  languageName: node
+  linkType: hard
+
 "git-conventional-commits@npm:^2.8.0":
   version: 2.9.0
   resolution: "git-conventional-commits@npm:2.9.0"
@@ -1886,6 +2214,13 @@ __metadata:
   version: 4.0.0
   resolution: "has-flag@npm:4.0.0"
   checksum: 10c0/2e789c61b7888d66993e14e8331449e525ef42aac53c627cc53d1c3334e768bcb6abdc4f5f0de1478a25beec6f0bd62c7549058b7ac53e924040d4f301f02fd1
+  languageName: node
+  linkType: hard
+
+"highlight.js@npm:^10.7.1":
+  version: 10.7.3
+  resolution: "highlight.js@npm:10.7.3"
+  checksum: 10c0/073837eaf816922427a9005c56c42ad8786473dc042332dfe7901aa065e92bc3d94ebf704975257526482066abb2c8677cc0326559bb8621e046c21c5991c434
   languageName: node
   linkType: hard
 
@@ -2088,6 +2423,13 @@ __metadata:
   dependencies:
     json-buffer: "npm:3.0.1"
   checksum: 10c0/aa52f3c5e18e16bb6324876bb8b59dd02acf782a4b789c7b2ae21107fab95fab3890ed448d4f8dba80ce05391eeac4bfabb4f02a20221342982f806fa2cf271e
+  languageName: node
+  linkType: hard
+
+"koffi@npm:^2.9.0":
+  version: 2.16.2
+  resolution: "koffi@npm:2.16.2"
+  checksum: 10c0/5a6bb40730c0b61a486c4af0c67bc4ee4ef8980d49d200f224632debdf308b78862291fdca0f1452374d5367c17b164b095c5a32daa38f2cad58c499c056e201
   languageName: node
   linkType: hard
 
@@ -2341,6 +2683,15 @@ __metadata:
   version: 3.0.4
   resolution: "markdown-table@npm:3.0.4"
   checksum: 10c0/1257b31827629a54c24a5030a3dac952256c559174c95ce3ef89bebd6bff0cb1444b1fd667b1a1bb53307f83278111505b3e26f0c4e7b731e0060d435d2d930b
+  languageName: node
+  linkType: hard
+
+"marked@npm:^15.0.12":
+  version: 15.0.12
+  resolution: "marked@npm:15.0.12"
+  bin:
+    marked: bin/marked.js
+  checksum: 10c0/e09da211544b787ecfb25fed07af206060bf7cd6d9de6cb123f15c496a57f83b7aabea93340aaa94dae9c94e097ae129377cad6310abc16009590972e85f4212
   languageName: node
   linkType: hard
 
@@ -2982,6 +3333,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mz@npm:^2.4.0":
+  version: 2.7.0
+  resolution: "mz@npm:2.7.0"
+  dependencies:
+    any-promise: "npm:^1.0.0"
+    object-assign: "npm:^4.0.1"
+    thenify-all: "npm:^1.0.0"
+  checksum: 10c0/103114e93f87362f0b56ab5b2e7245051ad0276b646e3902c98397d18bb8f4a77f2ea4a2c9d3ad516034ea3a56553b60d3f5f78220001ca4c404bd711bd0af39
+  languageName: node
+  linkType: hard
+
 "nanoid@npm:^3.3.11":
   version: 3.3.11
   resolution: "nanoid@npm:3.3.11"
@@ -3033,6 +3395,13 @@ __metadata:
   bin:
     nopt: bin/nopt.js
   checksum: 10c0/1822eb6f9b020ef6f7a7516d7b64a8036e09666ea55ac40416c36e4b2b343122c3cff0e2f085675f53de1d2db99a2a89a60ccea1d120bcd6a5347bf6ceb4a7fd
+  languageName: node
+  linkType: hard
+
+"object-assign@npm:^4.0.1":
+  version: 4.1.1
+  resolution: "object-assign@npm:4.1.1"
+  checksum: 10c0/1f4df9945120325d041ccf7b86f31e8bcc14e73d29171e37a7903050e96b81323784ec59f93f102ec635bcf6fa8034ba3ea0a8c7e69fa202b87ae3b6cec5a414
   languageName: node
   linkType: hard
 
@@ -3098,6 +3467,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"parse5-htmlparser2-tree-adapter@npm:^6.0.0":
+  version: 6.0.1
+  resolution: "parse5-htmlparser2-tree-adapter@npm:6.0.1"
+  dependencies:
+    parse5: "npm:^6.0.1"
+  checksum: 10c0/dfa5960e2aaf125707e19a4b1bc333de49232eba5a6ffffb95d313a7d6087c3b7a274b58bee8d3bd41bdf150638815d1d601a42bbf2a0345208c3c35b1279556
+  languageName: node
+  linkType: hard
+
+"parse5@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "parse5@npm:5.1.1"
+  checksum: 10c0/b0f87a77a7fea5f242e3d76917c983bbea47703b9371801d51536b78942db6441cbda174bf84eb30e47315ddc6f8a0b57d68e562c790154430270acd76c1fa03
+  languageName: node
+  linkType: hard
+
+"parse5@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "parse5@npm:6.0.1"
+  checksum: 10c0/595821edc094ecbcfb9ddcb46a3e1fe3a718540f8320eff08b8cf6742a5114cce2d46d45f95c26191c11b184dcaf4e2960abcd9c5ed9eb9393ac9a37efcfdecb
+  languageName: node
+  linkType: hard
+
 "path-exists@npm:^4.0.0":
   version: 4.0.0
   resolution: "path-exists@npm:4.0.0"
@@ -3126,6 +3518,13 @@ __metadata:
   version: 2.0.3
   resolution: "pathe@npm:2.0.3"
   checksum: 10c0/c118dc5a8b5c4166011b2b70608762e260085180bb9e33e80a50dcdb1e78c010b1624f4280c492c92b05fc276715a4c357d1f9edc570f8f1b3d90b6839ebaca1
+  languageName: node
+  linkType: hard
+
+"pend@npm:~1.2.0":
+  version: 1.2.0
+  resolution: "pend@npm:1.2.0"
+  checksum: 10c0/8a87e63f7a4afcfb0f9f77b39bb92374afc723418b9cb716ee4257689224171002e07768eeade4ecd0e86f1fa3d8f022994219fb45634f2dbd78c6803e452458
   languageName: node
   linkType: hard
 
@@ -3343,6 +3742,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"semver@npm:^7.7.4":
+  version: 7.8.2
+  resolution: "semver@npm:7.8.2"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/8e8c193fa75b938e5b3ccf6707c6447e4b34f73e493e72b03f3185393489f45e049144052f624217c346d6c6e0a301dda8eeab2f14413e337218ecb1cbd2de16
+  languageName: node
+  linkType: hard
+
 "shebang-command@npm:^2.0.0":
   version: 2.0.0
   resolution: "shebang-command@npm:2.0.0"
@@ -3404,6 +3812,13 @@ __metadata:
   version: 4.2.0
   resolution: "smart-buffer@npm:4.2.0"
   checksum: 10c0/a16775323e1404dd43fabafe7460be13a471e021637bc7889468eb45ce6a6b207261f454e4e530a19500cc962c4cc5348583520843b363f4193cee5c00e1e539
+  languageName: node
+  linkType: hard
+
+"smol-toml@npm:^1.6.1":
+  version: 1.6.1
+  resolution: "smol-toml@npm:1.6.1"
+  checksum: 10c0/511a78722f99c7616fdb46af708de3d7e81434b5a3d58061166da73f28bfc6cae4f0cd04683f60515b9c490cd10152fce72287c960b337419c0299cc1f0f2a22
   languageName: node
   linkType: hard
 
@@ -3541,6 +3956,24 @@ __metadata:
     minizlib: "npm:^3.1.0"
     yallist: "npm:^5.0.0"
   checksum: 10c0/5c65b8084799bde7a791593a1c1a45d3d6ee98182e3700b24c247b7b8f8654df4191642abbdb07ff25043d45dcff35620827c3997b88ae6c12040f64bed5076b
+  languageName: node
+  linkType: hard
+
+"thenify-all@npm:^1.0.0":
+  version: 1.6.0
+  resolution: "thenify-all@npm:1.6.0"
+  dependencies:
+    thenify: "npm:>= 3.1.0 < 4"
+  checksum: 10c0/9b896a22735e8122754fe70f1d65f7ee691c1d70b1f116fda04fea103d0f9b356e3676cb789506e3909ae0486a79a476e4914b0f92472c2e093d206aed4b7d6b
+  languageName: node
+  linkType: hard
+
+"thenify@npm:>= 3.1.0 < 4":
+  version: 3.3.1
+  resolution: "thenify@npm:3.3.1"
+  dependencies:
+    any-promise: "npm:^1.0.0"
+  checksum: 10c0/f375aeb2b05c100a456a30bc3ed07ef03a39cbdefe02e0403fb714b8c7e57eeaad1a2f5c4ecfb9ce554ce3db9c2b024eba144843cd9e344566d9fcee73b04767
   languageName: node
   linkType: hard
 
@@ -3983,6 +4416,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"yargs-parser@npm:^20.2.2":
+  version: 20.2.9
+  resolution: "yargs-parser@npm:20.2.9"
+  checksum: 10c0/0685a8e58bbfb57fab6aefe03c6da904a59769bd803a722bb098bd5b0f29d274a1357762c7258fb487512811b8063fb5d2824a3415a0a4540598335b3b086c72
+  languageName: node
+  linkType: hard
+
 "yargs-parser@npm:^21.1.1":
   version: 21.1.1
   resolution: "yargs-parser@npm:21.1.1"
@@ -4011,6 +4451,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"yargs@npm:^16.0.0":
+  version: 16.2.0
+  resolution: "yargs@npm:16.2.0"
+  dependencies:
+    cliui: "npm:^7.0.2"
+    escalade: "npm:^3.1.1"
+    get-caller-file: "npm:^2.0.5"
+    require-directory: "npm:^2.1.1"
+    string-width: "npm:^4.2.0"
+    y18n: "npm:^5.0.5"
+    yargs-parser: "npm:^20.2.2"
+  checksum: 10c0/b1dbfefa679848442454b60053a6c95d62f2d2e21dd28def92b647587f415969173c6e99a0f3bab4f1b67ee8283bf735ebe3544013f09491186ba9e8a9a2b651
+  languageName: node
+  linkType: hard
+
 "yargs@npm:^17.6.2":
   version: 17.7.2
   resolution: "yargs@npm:17.7.2"
@@ -4026,10 +4481,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"yauzl@npm:^3.2.0":
+  version: 3.3.2
+  resolution: "yauzl@npm:3.3.2"
+  dependencies:
+    pend: "npm:~1.2.0"
+  checksum: 10c0/92e93b5162ad27a1b3088742fd613c90158553f9ce957ef40bad117c13b25476ea2992a825a7b45eed23924a355991253e60cdeb9b7dea63771de83710dd856f
+  languageName: node
+  linkType: hard
+
 "yocto-queue@npm:^0.1.0":
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 10c0/dceb44c28578b31641e13695d200d34ec4ab3966a5729814d5445b194933c096b7ced71494ce53a0e8820685d1d010df8b2422e5bf2cdea7e469d97ffbea306f
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.3.6":
+  version: 4.4.3
+  resolution: "zod@npm:4.4.3"
+  checksum: 10c0/7ea31b558e88f9faf44f31dd185e2e1cbf51fed3081787fb96cc2534749b50c0acfc6da7f0922a7353ed092dd358c7d50c28ea96c94d04af64191bd33152eca3
   languageName: node
   linkType: hard
 

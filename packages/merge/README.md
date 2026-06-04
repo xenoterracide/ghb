@@ -47,7 +47,20 @@ merge pr-message --title-file title.txt --body-file body.txt
 - Git
 - GitHub CLI (`gh`) authenticated
 - Node.js 24+
-- One of: [Kimi CLI](https://www.kimi.com/), [Junie](https://www.jetbrains.com/junie/), or [GitHub Copilot CLI](https://github.com/github/copilot.vim) installed
+- One of: [Kimi CLI](https://www.kimi.com/), [Junie](https://www.jetbrains.com/junie/), or [GitHub Copilot CLI](https://github.com/github/copilot.vim)
+
+### AI Engine Dependencies
+
+The package declares all three AI CLIs as `optionalDependencies`. They are installed by default, but you can skip the ones you don't need:
+
+```bash
+# Install only Kimi (skip Junie and Copilot)
+npm install -g @xenoterracide/merge --omit optional
+npm install -g @moonshot-ai/kimi-code
+
+# Or install them all (default)
+npm install -g @xenoterracide/merge
+```
 
 ## License
 

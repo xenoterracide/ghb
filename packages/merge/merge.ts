@@ -158,7 +158,7 @@ export async function generateMessage(
   const changedDiff = runner.run(`git diff ${diffRange}`).split("\n").slice(0, 2000).join("\n");
 
   if (engine === "kimi") {
-    await generateWithKimi(titleFile, bodyFile, changedDiff, tmpDir);
+    await generateWithKimi(titleFile, bodyFile, changedDiff);
   } else if (engine === "junie") {
     await generateWithJunie(titleFile, bodyFile, changedDiff, tmpDir);
   } else {
@@ -166,12 +166,7 @@ export async function generateMessage(
   }
 }
 
-export async function generateWithKimi(
-  titleFile: string,
-  bodyFile: string,
-  diff: string,
-  tmpDir: string,
-): Promise<void> {
+export async function generateWithKimi(titleFile: string, bodyFile: string, diff: string): Promise<void> {
   const skillsDir = ".agents/skills";
   const hasSkillsDir = existsSync(skillsDir);
 
@@ -180,45 +175,20 @@ export async function generateWithKimi(
 Diff:
 ${diff}`;
 
-  const promptFile = join(tmpDir, "kimi-prompt.txt");
-  writeFileSync(promptFile, prompt, "utf8");
-
-  const kimiArgs = ["--no-thinking", "--quiet"];
+  const kimiArgs = ["-p", prompt];
   if (hasSkillsDir) {
     kimiArgs.unshift("--skills-dir", skillsDir);
   }
 
-  const kimiOut = join(tmpDir, "kimi-out.txt");
-
+  let output: string;
   try {
-    try {
-      execSync(`kimi ${kimiArgs.join(" ")} < "${promptFile}" > "${kimiOut}" 2>&1 || true`, {
-        encoding: "utf8",
-        shell: "/bin/bash",
-      });
-    } catch (e) {
-      logger.debug("kimi output check failed:", e instanceof Error ? e.message : String(e));
-    }
-
-    try {
-      readFileSync(titleFile, "utf8");
-      console.log("kimi wrote title/body directly");
-      return;
-    } catch {
-      if (!existsSync(kimiOut)) {
-        throw new Error("kimi failed to generate message");
-      }
-      const output = readFileSync(kimiOut, "utf8");
-      await parseAndWriteMessage(output, titleFile, bodyFile);
-    }
-  } finally {
-    try {
-      unlinkSync(promptFile);
-      unlinkSync(kimiOut);
-    } catch (e) {
-      logger.debug("Failed to cleanup temp file:", e instanceof Error ? e.message : String(e));
-    }
+    output = execFileSync("kimi", kimiArgs, { encoding: "utf8" });
+  } catch (e) {
+    logger.debug("kimi failed:", e instanceof Error ? e.message : String(e));
+    throw new Error("kimi failed to generate message");
   }
+
+  await parseAndWriteMessage(output, titleFile, bodyFile);
 }
 
 export async function generateWithJunie(
@@ -310,7 +280,7 @@ ${diff}`;
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const model = process.env.COPILOT_PRMSG_MODEL || "gpt-5.1-codex-mini";
     try {
-      const result = execFileSync("copilot", ["--model", model, "-s", "-p", promptFile], {
+      const result = execFileSync("copilot", ["--model", model, "--silent", "--prompt", promptFile], {
         encoding: "utf8",
       });
       writeFileSync(copilotOut, result, "utf8");
@@ -326,7 +296,7 @@ ${diff}`;
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       const fallback = process.env.COPILOT_PRMSG_FALLBACK_MODEL || "gpt-5.1-codex";
       try {
-        const result = execFileSync("copilot", ["--model", fallback, "-s", "-p", promptFile], {
+        const result = execFileSync("copilot", ["--model", fallback, "--silent", "--prompt", promptFile], {
           encoding: "utf8",
         });
         writeFileSync(copilotOut, result, "utf8");

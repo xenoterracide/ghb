@@ -155,6 +155,34 @@ yarn merge:junie     # Uses Junie CLI
 yarn merge:copilot   # Uses GitHub Copilot CLI
 ```
 
+#### AI Engine Dependencies
+
+The merge tool declares all three AI CLIs as `optionalDependencies` in
+`packages/merge/package.json`:
+
+| Engine  | npm Package              | Binary    |
+| ------- | ------------------------ | --------- |
+| Kimi    | `@moonshot-ai/kimi-code` | `kimi`    |
+| Junie   | `@jetbrains/junie`       | `junie`   |
+| Copilot | `@github/copilot`        | `copilot` |
+
+Optional dependencies are installed by default, but you can skip the ones you
+don't need to save disk space and install time:
+
+```bash
+# Install only Kimi (skip Junie and Copilot)
+npm install -g @xenoterracide/merge --omit optional
+npm install -g @moonshot-ai/kimi-code
+
+# Or with yarn
+yarn global add @xenoterracide/merge --json | jq '.[].name'
+# Then add only the engine you want
+yarn global add @moonshot-ai/kimi-code
+```
+
+If an engine binary is not found, the merge script will fail with a clear error
+when you try to use it.
+
 The merge script:
 
 1. Fetches and merges `origin/HEAD`
