@@ -5,4 +5,4 @@ name: test
 on: [push]
 jobs:
   yarn:
-    uses: xenoterracide/github/.github/workflows/yarn.yml@1814dc1a9d6c3a0cf287e02bab1b9a9467550a8f # develop
+    uses: xenoterracide/github/.github/workflows/yarn.yml@ab6f61a03583148f376d08cd7d867f69777c03e8 # develop
