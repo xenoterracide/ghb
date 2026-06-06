@@ -24,7 +24,7 @@
   "optionalDependencies": {
     "@github/copilot": "^1.0.59",
     "@jetbrains/junie": "^1831.35.0",
-    "@moonshot-ai/kimi-code": "^0.10.0"
+    "@moonshot-ai/kimi-code": "^0.11.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
