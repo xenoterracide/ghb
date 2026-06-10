@@ -38,8 +38,8 @@
     "lint:eslint": "eslint .",
     "lint": "yarn lint:eslint && yarn lint:prettier && yarn lint:reuse",
     "test": "vitest run --coverage",
-    "typecheck": "yarn workspaces foreach --all --exclude ghb run typecheck",
-    "build": "yarn workspaces foreach --all --exclude ghb run build",
+    "typecheck": "yarn build && yarn workspaces foreach --all --exclude ghb run typecheck",
+    "build": "yarn workspaces foreach --all --exclude ghb --topological run build",
     "check": "concurrently --names eslint,tsc,test --prefix-colors cyan,magenta,green 'yarn lint:eslint' 'yarn typecheck' 'yarn test'"
   },
   "workspaces": [
