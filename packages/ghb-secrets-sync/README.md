@@ -10,33 +10,29 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 A CLI tool for syncing GitHub secrets to repositories.
 
-## Installation
-
-```bash
-npm install -g @xenoterracide/ghb-secrets-sync
-```
+This package is a subcommand of `ghb` and is not intended to be used standalone.
 
 ## Usage
 
 ```bash
 # Sync all secrets from env file to current repo
-secrets sync --env-file secrets.env
+ghb sync --env-file secrets.env
 
 # Sync to specific repo
-secrets sync --env-file secrets.env --repo owner/target-repo
+ghb sync --env-file secrets.env --repo owner/target-repo
 
 # Sync to multiple repos
-secrets sync --env-file secrets.env --repo owner/target-1,owner/target-2
+ghb sync --env-file secrets.env --repo owner/target-1,owner/target-2
 
 # Sync to all repos with a label/topic
-secrets sync --env-file secrets.env --label auto-updated
+ghb sync --env-file secrets.env --label auto-updated
 
 # Sync specific secrets only (from env or env vars)
-secrets sync --secrets API_KEY,SECRET --repo owner/target
+ghb sync --secrets API_KEY,SECRET --repo owner/target
 
 # Use environment variables directly
 export API_KEY="secret-value"
-secrets sync --secrets API_KEY
+ghb sync --secrets API_KEY
 ```
 
 ## Env File Format

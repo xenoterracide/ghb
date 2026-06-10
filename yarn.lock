@@ -1252,7 +1252,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xenoterracide/ghb-merge@workspace:packages/ghb-merge":
+"@xenoterracide/ghb-merge@workspace:^, @xenoterracide/ghb-merge@workspace:packages/ghb-merge":
   version: 0.0.0-use.local
   resolution: "@xenoterracide/ghb-merge@workspace:packages/ghb-merge"
   dependencies:
@@ -1271,12 +1271,10 @@ __metadata:
       optional: true
     "@moonshot-ai/kimi-code":
       optional: true
-  bin:
-    merge: dist/merge.js
   languageName: unknown
   linkType: soft
 
-"@xenoterracide/ghb-secrets-sync@workspace:packages/ghb-secrets-sync":
+"@xenoterracide/ghb-secrets-sync@workspace:^, @xenoterracide/ghb-secrets-sync@workspace:packages/ghb-secrets-sync":
   version: 0.0.0-use.local
   resolution: "@xenoterracide/ghb-secrets-sync@workspace:packages/ghb-secrets-sync"
   dependencies:
@@ -1285,8 +1283,6 @@ __metadata:
     tsx: "npm:^4.21.0"
     typescript: "npm:^6.0.0"
     vitest: "npm:^4.1.2"
-  bin:
-    secrets: dist/cli.js
   languageName: unknown
   linkType: soft
 
@@ -1295,6 +1291,8 @@ __metadata:
   resolution: "@xenoterracide/ghb@workspace:packages/ghb"
   dependencies:
     "@types/node": "npm:^24.12.0"
+    "@xenoterracide/ghb-merge": "workspace:^"
+    "@xenoterracide/ghb-secrets-sync": "workspace:^"
     clipanion: "npm:^4.0.0-rc.4"
     tsx: "npm:^4.21.0"
     typescript: "npm:^6.0.0"

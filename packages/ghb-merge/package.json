@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "packageManager": "yarn@4.16.0",
-  "bin": {
-    "merge": "dist/merge.js"
-  },
   "main": "dist/merge.js",
   "types": "dist/merge.d.ts",
   "exports": {

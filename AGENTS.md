@@ -149,7 +149,7 @@ Allowed types (from `git-conventional-commits.yaml`):
 
 ### Merge Workflow
 
-The `packages/ghb-merge` tool provides AI-assisted PR workflows:
+The `ghb merge` command provides AI-assisted PR workflows:
 
 ```bash
 # Generate PR message and merge using different AI engines
@@ -160,8 +160,8 @@ yarn merge:copilot   # Uses GitHub Copilot CLI
 
 #### AI Engine Dependencies
 
-The merge tool declares all three AI CLIs as `optionalDependencies` in
-`packages/ghb-merge/package.json`:
+The `ghb` package declares all three AI CLIs as `optionalDependencies` via
+`ghb-merge`:
 
 | Engine  | npm Package              | Binary    |
 | ------- | ------------------------ | --------- |
@@ -174,11 +174,11 @@ don't need to save disk space and install time:
 
 ```bash
 # Install only Kimi (skip Junie and Copilot)
-npm install -g @xenoterracide/ghb-merge --omit optional
+npm install -g @xenoterracide/ghb --omit optional
 npm install -g @moonshot-ai/kimi-code
 
 # Or with yarn
-yarn global add @xenoterracide/ghb-merge --json | jq '.[].name'
+yarn global add @xenoterracide/ghb --json | jq '.[].name'
 # Then add only the engine you want
 yarn global add @moonshot-ai/kimi-code
 ```

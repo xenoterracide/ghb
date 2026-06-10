@@ -5,6 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { Cli, Command } from "clipanion";
+import { MergeCommand, PrMessageCommand } from "@xenoterracide/ghb-merge";
+import { GetCommand, SyncCommand, UpdateCommand } from "@xenoterracide/ghb-secrets-sync";
 
 class HelpCommand extends Command {
   public static override paths = [["--help"], ["-h"]];
@@ -15,27 +17,14 @@ class HelpCommand extends Command {
 Usage: ghb <command> [options]
 
 Commands:
-  merge    AI-assisted PR merge workflow
+  merge       AI-assisted PR merge workflow
+  pr-message  Generate PR title/body files
+  sync        Sync GitHub secrets to repositories
+  update      Update secrets in an env file
+  get         Get a secret value
 
 Run 'ghb <command> --help' for more information on a command.
 `);
-  }
-}
-
-class MergeCommand extends Command {
-  public static override paths = [["merge"]];
-
-  public static override usage = Command.Usage({
-    description: "AI-assisted PR merge workflow",
-    details: `
-      Automates the busywork of keeping a branch up to date, generating
-      PR descriptions with an AI engine, waiting for CI, and merging.
-    `,
-  });
-
-  public async execute(): Promise<void> {
-    this.context.stdout.write("ghb merge is not yet implemented. Use ghb-merge directly for now.\n");
-    this.context.stdout.write("  yarn workspace @xenoterracide/ghb-merge run merge:kimi\n");
   }
 }
 
@@ -46,6 +35,10 @@ const cli = new Cli({
 
 cli.register(HelpCommand);
 cli.register(MergeCommand);
+cli.register(PrMessageCommand);
+cli.register(SyncCommand);
+cli.register(UpdateCommand);
+cli.register(GetCommand);
 
 void cli
   .run(process.argv.slice(2), Cli.defaultContext)
