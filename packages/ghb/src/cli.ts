@@ -7,9 +7,9 @@
 import { Cli, Command } from "clipanion";
 
 class HelpCommand extends Command {
-  static override paths = [["--help"], ["-h"]];
+  public static override paths = [["--help"], ["-h"]];
 
-  async execute() {
+  public async execute(): Promise<void> {
     this.context.stdout.write(`ghb - GitHub Bridge CLI
 
 Usage: ghb <command> [options]
@@ -23,9 +23,9 @@ Run 'ghb <command> --help' for more information on a command.
 }
 
 class MergeCommand extends Command {
-  static override paths = [["merge"]];
+  public static override paths = [["merge"]];
 
-  static override usage = Command.Usage({
+  public static override usage = Command.Usage({
     description: "AI-assisted PR merge workflow",
     details: `
       Automates the busywork of keeping a branch up to date, generating
@@ -33,7 +33,7 @@ class MergeCommand extends Command {
     `,
   });
 
-  async execute() {
+  public async execute(): Promise<void> {
     this.context.stdout.write("ghb merge is not yet implemented. Use ghb-merge directly for now.\n");
     this.context.stdout.write("  yarn workspace @xenoterracide/ghb-merge run merge:kimi\n");
   }
