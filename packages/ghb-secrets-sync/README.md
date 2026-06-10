@@ -6,14 +6,14 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 > **Note:** This tool was written for my own workflows. If you find it useful, great — but it comes with no guarantees of support or stability. It is also almost entirely AI-generated.
 
-# secrets-sync
+# ghb-secrets-sync
 
 A CLI tool for syncing GitHub secrets to repositories.
 
 ## Installation
 
 ```bash
-npm install -g @xenoterracide/secrets-sync
+npm install -g @xenoterracide/ghb-secrets-sync
 ```
 
 ## Usage

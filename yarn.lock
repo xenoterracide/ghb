@@ -1252,9 +1252,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xenoterracide/merge@workspace:packages/merge":
+"@xenoterracide/ghb-merge@workspace:packages/ghb-merge":
   version: 0.0.0-use.local
-  resolution: "@xenoterracide/merge@workspace:packages/merge"
+  resolution: "@xenoterracide/ghb-merge@workspace:packages/ghb-merge"
   dependencies:
     "@github/copilot": "npm:^1.0.59"
     "@jetbrains/junie": "npm:^1831.35.0"
@@ -1276,9 +1276,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@xenoterracide/secrets-sync@workspace:packages/secrets-sync":
+"@xenoterracide/ghb-secrets-sync@workspace:packages/ghb-secrets-sync":
   version: 0.0.0-use.local
-  resolution: "@xenoterracide/secrets-sync@workspace:packages/secrets-sync"
+  resolution: "@xenoterracide/ghb-secrets-sync@workspace:packages/ghb-secrets-sync"
   dependencies:
     "@types/node": "npm:^24.12.0"
     clipanion: "npm:^4.0.0-rc.4"
@@ -1290,31 +1290,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@xenoterracide/ts-cli-devtools@workspace:.":
+"@xenoterracide/ghb@workspace:packages/ghb":
   version: 0.0.0-use.local
-  resolution: "@xenoterracide/ts-cli-devtools@workspace:."
+  resolution: "@xenoterracide/ghb@workspace:packages/ghb"
   dependencies:
-    "@eslint/js": "npm:^10.0.0"
-    "@eslint/json": "npm:^2.0.0"
-    "@eslint/markdown": "npm:^8.0.0"
-    "@prettier/plugin-xml": "npm:^3.4.2"
-    "@vitest/coverage-v8": "npm:^4.1.3"
-    chalk: "npm:^5.6.2"
-    concurrently: "npm:^10.0.0"
-    eslint: "npm:^10.0.0"
-    git-conventional-commits: "npm:^2.8.0"
-    globals: "npm:^17.0.0"
-    jiti: "npm:^2.0.0"
-    lint-staged: "npm:^17.0.0"
-    prettier: "npm:^3.6.2"
-    prettier-plugin-java: "npm:^2.7.5"
-    prettier-plugin-properties: "npm:^0.3.0"
-    prettier-plugin-toml: "npm:^2.0.6"
-    rimraf: "npm:^6.1.2"
+    "@types/node": "npm:^24.12.0"
+    clipanion: "npm:^4.0.0-rc.4"
     tsx: "npm:^4.21.0"
     typescript: "npm:^6.0.0"
-    typescript-eslint: "npm:^8.0.0"
-    vitest: "npm:^4.1.3"
+    vitest: "npm:^4.1.2"
+  bin:
+    ghb: dist/cli.js
   languageName: unknown
   linkType: soft
 
@@ -2156,6 +2142,34 @@ __metadata:
   checksum: 10c0/7e72e9550fd49ca5b246f9af6bb2afc129c96412845ff6556b3274fd44817a381702ca17028efe9866b261a3d44254cbf21e6c90cf05b4b61675630af776d431
   languageName: node
   linkType: hard
+
+"ghb@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "ghb@workspace:."
+  dependencies:
+    "@eslint/js": "npm:^10.0.0"
+    "@eslint/json": "npm:^2.0.0"
+    "@eslint/markdown": "npm:^8.0.0"
+    "@prettier/plugin-xml": "npm:^3.4.2"
+    "@vitest/coverage-v8": "npm:^4.1.3"
+    chalk: "npm:^5.6.2"
+    concurrently: "npm:^10.0.0"
+    eslint: "npm:^10.0.0"
+    git-conventional-commits: "npm:^2.8.0"
+    globals: "npm:^17.0.0"
+    jiti: "npm:^2.0.0"
+    lint-staged: "npm:^17.0.0"
+    prettier: "npm:^3.6.2"
+    prettier-plugin-java: "npm:^2.7.5"
+    prettier-plugin-properties: "npm:^0.3.0"
+    prettier-plugin-toml: "npm:^2.0.6"
+    rimraf: "npm:^6.1.2"
+    tsx: "npm:^4.21.0"
+    typescript: "npm:^6.0.0"
+    typescript-eslint: "npm:^8.0.0"
+    vitest: "npm:^4.1.3"
+  languageName: unknown
+  linkType: soft
 
 "git-conventional-commits@npm:^2.8.0":
   version: 2.9.0

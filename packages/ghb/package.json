@@ -1,11 +1,9 @@
 {
-  "name": "@xenoterracide/secrets-sync",
+  "name": "@xenoterracide/ghb",
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "packageManager": "yarn@4.16.0",
-  "bin": {
-    "secrets": "dist/cli.js"
-  },
+  "bin": "dist/cli.js",
   "main": "dist/cli.js",
   "types": "dist/cli.d.ts",
   "exports": {
@@ -31,8 +29,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xenoterracide/ts-cli-devtools.git",
-    "directory": "packages/secrets-sync"
+    "url": "git+https://github.com/xenoterracide/ghb.git",
+    "directory": "packages/ghb"
   },
   "engines": {
     "node": ">=24"
@@ -40,7 +38,7 @@
   "scripts": {
     "build": "tsc",
     "prepack": "yarn build",
-    "secrets-sync": "tsx src/cli.ts",
+    "ghb": "tsx src/cli.ts",
     "test": "vitest run && yarn typecheck",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

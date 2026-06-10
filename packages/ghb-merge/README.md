@@ -6,14 +6,14 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 > **Note:** This tool was written for my own workflows. If you find it useful, great — but it comes with no guarantees of support or stability. It is also almost entirely AI-generated.
 
-# merge
+# ghb-merge
 
 An AI-assisted PR merge workflow tool. It automates the busywork of keeping a branch up to date, generating PR descriptions with an AI engine, waiting for CI, and merging.
 
 ## Installation
 
 ```bash
-npm install -g @xenoterracide/merge
+npm install -g @xenoterracide/ghb-merge
 ```
 
 ## Usage
@@ -55,11 +55,11 @@ The package declares all three AI CLIs as `optionalDependencies`. They are insta
 
 ```bash
 # Install only Kimi (skip Junie and Copilot)
-npm install -g @xenoterracide/merge --omit optional
+npm install -g @xenoterracide/ghb-merge --omit optional
 npm install -g @moonshot-ai/kimi-code
 
 # Or install them all (default)
-npm install -g @xenoterracide/merge
+npm install -g @xenoterracide/ghb-merge
 ```
 
 ## License
