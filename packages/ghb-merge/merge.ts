@@ -481,6 +481,12 @@ export async function createOrUpdatePR(
 export class PrMessageCommand extends Command {
   public static paths = [["pr-message"]];
 
+  public static usage = Command.Usage({
+    description: "Generate PR title and body files using an AI engine",
+    details:
+      "Fetches the diff and uses the selected AI engine to generate a conventional commit style PR title and body. Writes them to the specified files.",
+  });
+
   public titleFile = Option.String("--title-file", {
     required: true,
     description: "Path to write PR title",
@@ -535,6 +541,12 @@ export class PrMessageCommand extends Command {
 
 export class MergeCommand extends Command {
   public static paths = [["merge"], Command.Default];
+
+  public static usage = Command.Usage({
+    description: "AI-assisted PR merge workflow",
+    details:
+      "Full merge workflow: fetch and merge origin/HEAD, push branch, create/update PR with AI-generated message, wait for CI checks, and interactively squash merge.",
+  });
 
   public dryRun = Option.Boolean("--dry-run", false, {
     description: "Show what would be done without making changes",

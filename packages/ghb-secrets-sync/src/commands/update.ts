@@ -11,6 +11,11 @@ import { checkFilePermissions } from "../fs-utils.js";
 export class UpdateCommand extends Command {
   public static paths = [["update"]];
 
+  public static usage = Command.Usage({
+    description: "Update a secret in an env file",
+    details: "Add or update a secret value in a local env file. Creates the file if it does not exist.",
+  });
+
   public file = Option.String("--file,-f", "secrets.env", {
     description: "Secrets env file path",
   });

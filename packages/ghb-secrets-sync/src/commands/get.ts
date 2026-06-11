@@ -8,6 +8,11 @@ import { parseEnvFile, resolveSecretValue } from "../env.js";
 export class GetCommand extends Command {
   public static paths = [["get"]];
 
+  public static usage = Command.Usage({
+    description: "Get a secret value",
+    details: "Resolve and print the value of a named secret from environment variables or an env file.",
+  });
+
   public name = Option.String({ required: true });
 
   public envFile = Option.String("--env-file,-e", {

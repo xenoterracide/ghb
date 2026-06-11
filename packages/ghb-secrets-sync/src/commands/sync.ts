@@ -12,6 +12,11 @@ import type { CommandRunner } from "../types.js";
 export class SyncCommand extends Command {
   public static paths = [["sync"]];
 
+  public static usage = Command.Usage({
+    description: "Sync secrets to GitHub repositories",
+    details: "Sync secrets from environment variables or an env file to one or more GitHub repositories.",
+  });
+
   public secrets = Option.String("--secrets,-s", {
     description: "Secret names to sync (comma-separated). If omitted with --env-file, all secrets from file are synced",
   });
