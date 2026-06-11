@@ -17,6 +17,8 @@ vi.mock("child_process", () => ({
 import { execFileSync } from "child_process";
 
 describe("generateWithKimi", () => {
+  const nodeOptions =
+    "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
   let tmpDir: string;
   let titleFile: string;
   let bodyFile: string;
@@ -27,12 +29,14 @@ describe("generateWithKimi", () => {
     titleFile = join(tmpDir, "title.txt");
     bodyFile = join(tmpDir, "body.txt");
     originalExit = process.exit;
+    vi.stubEnv("NODE_OPTIONS", nodeOptions);
     process.exit = vi.fn();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     process.exit = originalExit;
+    vi.unstubAllEnvs();
     rmSync(tmpDir, { recursive: true, force: true });
     vi.clearAllMocks();
   });
@@ -45,6 +49,9 @@ describe("generateWithKimi", () => {
     await generateWithKimi(titleFile, bodyFile, diff);
 
     expect(execFileSync).toHaveBeenCalledWith("kimi", expect.arrayContaining(["-p"]), expect.any(Object));
+
+    const kimiCall = (execFileSync as ReturnType<typeof vi.fn>).mock.calls.find(([cmd]) => cmd === "kimi");
+    expect(kimiCall?.[2]?.env?.NODE_OPTIONS).toBe("--max-old-space-size=4096");
   });
 
   it("should throw error when kimi fails", async () => {
@@ -59,6 +66,8 @@ describe("generateWithKimi", () => {
 });
 
 describe("generateWithJunie", () => {
+  const nodeOptions =
+    "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
   let tmpDir: string;
   let titleFile: string;
   let bodyFile: string;
@@ -69,12 +78,14 @@ describe("generateWithJunie", () => {
     titleFile = join(tmpDir, "title.txt");
     bodyFile = join(tmpDir, "body.txt");
     originalExit = process.exit;
+    vi.stubEnv("NODE_OPTIONS", nodeOptions);
     process.exit = vi.fn();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     process.exit = originalExit;
+    vi.unstubAllEnvs();
     rmSync(tmpDir, { recursive: true, force: true });
     vi.clearAllMocks();
   });
@@ -94,6 +105,9 @@ describe("generateWithJunie", () => {
       expect.arrayContaining(["--skip-update-check"]),
       expect.any(Object),
     );
+
+    const junieCall = (execFileSync as ReturnType<typeof vi.fn>).mock.calls.find(([cmd]) => cmd === "junie");
+    expect(junieCall?.[2]?.env?.NODE_OPTIONS).toBe("--max-old-space-size=4096");
   });
 
   it("should throw error when junie fails completely", async () => {
@@ -110,6 +124,8 @@ describe("generateWithJunie", () => {
 });
 
 describe("generateWithCopilot", () => {
+  const nodeOptions =
+    "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
   let tmpDir: string;
   let titleFile: string;
   let bodyFile: string;
@@ -120,12 +136,14 @@ describe("generateWithCopilot", () => {
     titleFile = join(tmpDir, "title.txt");
     bodyFile = join(tmpDir, "body.txt");
     originalExit = process.exit;
+    vi.stubEnv("NODE_OPTIONS", nodeOptions);
     process.exit = vi.fn();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     process.exit = originalExit;
+    vi.unstubAllEnvs();
     rmSync(tmpDir, { recursive: true, force: true });
     vi.clearAllMocks();
   });
@@ -149,6 +167,9 @@ describe("generateWithCopilot", () => {
       expect.arrayContaining(["--model", "--silent", "--prompt"]),
       expect.any(Object),
     );
+
+    const copilotCall = (execFileSync as ReturnType<typeof vi.fn>).mock.calls.find(([cmd]) => cmd === "copilot");
+    expect(copilotCall?.[2]?.env?.NODE_OPTIONS).toBe("--max-old-space-size=4096");
   });
 
   it("should use environment model variable", async () => {
