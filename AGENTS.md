@@ -97,7 +97,7 @@ The project is a Yarn workspace monorepo with three packages. It uses Yarn Plug'
   - `MergeCommand` - Full workflow: fetch/merge origin/HEAD, push, create/update PR, wait for checks, interactive squash merge.
   - `PrMessageCommand` - Generate PR title/body files using an AI engine.
   - `resolveEngine()`, `generateMessage()`, `createOrUpdatePR()`, `waitForChecks()`, `findMainRepoRoot()`.
-- **AI Engines**: Supports `kimi`, `junie`, `copilot` via optional dependencies. Defaults to `kimi` if none specified.
+- **AI Engines**: Supports `kimi`, `junie`, `copilot`. Only `kimi` is installed by default as an optional dependency; `junie` and `copilot` must be installed separately. Defaults to `kimi` if none specified.
 - **Security**: Uses `execFileSync` with argv arrays to avoid shell injection. Secret values passed via stdin.
 - **Published as**: `@xenoterracide/ghb-merge`.
 
@@ -265,20 +265,26 @@ yarn merge:copilot   # Uses GitHub Copilot CLI
 
 #### AI Engine Dependencies
 
-The `ghb-merge` package declares all three AI CLIs as `optionalDependencies`:
+The `ghb-merge` package declares only Kimi as an `optionalDependency`. Junie and Copilot are supported engines but must be installed separately because their npm packages are too large for the default install graph:
 
-| Engine  | npm Package              | Binary    |
-| ------- | ------------------------ | --------- |
-| Kimi    | `@moonshot-ai/kimi-code` | `kimi`    |
-| Junie   | `@jetbrains/junie`       | `junie`   |
-| Copilot | `@github/copilot`        | `copilot` |
+| Engine  | npm Package              | Binary    | Installed by default? |
+| ------- | ------------------------ | --------- | --------------------- |
+| Kimi    | `@moonshot-ai/kimi-code` | `kimi`    | Yes (optional)        |
+| Junie   | `@jetbrains/junie`       | `junie`   | No                    |
+| Copilot | `@github/copilot`        | `copilot` | No                    |
 
-Optional dependencies are installed by default, but you can skip the ones you don't need:
+To install Kimi only:
 
 ```bash
-# Install only Kimi (skip Junie and Copilot)
 npm install -g @xenoterracide/ghb --omit optional
 npm install -g @moonshot-ai/kimi-code
+```
+
+To use Junie or Copilot, install them globally:
+
+```bash
+npm install -g @jetbrains/junie
+npm install -g @github/copilot
 ```
 
 If an engine binary is not found, the merge script will fail with a clear error when you try to use it.
