@@ -17,27 +17,26 @@ vi.mock("child_process", () => ({
 import { execFileSync } from "child_process";
 
 describe("generateWithKimi", () => {
+  const nodeOptions =
+    "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
   let tmpDir: string;
   let titleFile: string;
   let bodyFile: string;
   let originalExit: typeof process.exit;
-  let originalNodeOptions: string | undefined;
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), "kimi-test-"));
     titleFile = join(tmpDir, "title.txt");
     bodyFile = join(tmpDir, "body.txt");
     originalExit = process.exit;
-    originalNodeOptions = process.env.NODE_OPTIONS;
-    process.env.NODE_OPTIONS =
-      "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
+    vi.stubEnv("NODE_OPTIONS", nodeOptions);
     process.exit = vi.fn();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     process.exit = originalExit;
-    process.env.NODE_OPTIONS = originalNodeOptions;
+    vi.unstubAllEnvs();
     rmSync(tmpDir, { recursive: true, force: true });
     vi.clearAllMocks();
   });
@@ -67,27 +66,26 @@ describe("generateWithKimi", () => {
 });
 
 describe("generateWithJunie", () => {
+  const nodeOptions =
+    "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
   let tmpDir: string;
   let titleFile: string;
   let bodyFile: string;
   let originalExit: typeof process.exit;
-  let originalNodeOptions: string | undefined;
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), "junie-test-"));
     titleFile = join(tmpDir, "title.txt");
     bodyFile = join(tmpDir, "body.txt");
     originalExit = process.exit;
-    originalNodeOptions = process.env.NODE_OPTIONS;
-    process.env.NODE_OPTIONS =
-      "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
+    vi.stubEnv("NODE_OPTIONS", nodeOptions);
     process.exit = vi.fn();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     process.exit = originalExit;
-    process.env.NODE_OPTIONS = originalNodeOptions;
+    vi.unstubAllEnvs();
     rmSync(tmpDir, { recursive: true, force: true });
     vi.clearAllMocks();
   });
@@ -126,27 +124,26 @@ describe("generateWithJunie", () => {
 });
 
 describe("generateWithCopilot", () => {
+  const nodeOptions =
+    "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
   let tmpDir: string;
   let titleFile: string;
   let bodyFile: string;
   let originalExit: typeof process.exit;
-  let originalNodeOptions: string | undefined;
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), "copilot-test-"));
     titleFile = join(tmpDir, "title.txt");
     bodyFile = join(tmpDir, "body.txt");
     originalExit = process.exit;
-    originalNodeOptions = process.env.NODE_OPTIONS;
-    process.env.NODE_OPTIONS =
-      "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
+    vi.stubEnv("NODE_OPTIONS", nodeOptions);
     process.exit = vi.fn();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     process.exit = originalExit;
-    process.env.NODE_OPTIONS = originalNodeOptions;
+    vi.unstubAllEnvs();
     rmSync(tmpDir, { recursive: true, force: true });
     vi.clearAllMocks();
   });
