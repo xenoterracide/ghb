@@ -166,6 +166,18 @@ export async function generateMessage(
   }
 }
 
+/**
+ * Remove Yarn PnP loader flags from NODE_OPTIONS before spawning a child
+ * process. The AI engines (kimi, junie, copilot) are Node.js scripts; when
+ * ghb is run via `yarn`, NODE_OPTIONS contains the project PnP runtime
+ * (--require .pnp.cjs and --experimental-loader .pnp.loader.mjs). If that
+ * leaks into the engine's own Node process, its module resolution breaks
+ * with errors like "Method not implemented" or "[logger] write failed".
+ *
+ * We strip only the PnP-specific entries rather than clearing the whole
+ * variable so that other Node options (e.g. memory limits) are preserved
+ * when ghb is invoked outside of Yarn PnP.
+ */
 function cleanNodeOptions(nodeOptions: string | undefined): string | undefined {
   if (!nodeOptions) {
     return undefined;
