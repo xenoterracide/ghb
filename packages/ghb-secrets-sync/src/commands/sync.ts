@@ -10,7 +10,7 @@ import { UserError } from "../errors.js";
 import type { CommandRunner } from "../types.js";
 
 export class SyncCommand extends Command {
-  public static paths = [["sync"]];
+  public static paths = [["secrets", "sync"]];
 
   public static usage = Command.Usage({
     description: "Sync secrets to GitHub repositories",

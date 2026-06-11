@@ -6,7 +6,7 @@ import { Command, Option } from "clipanion";
 import { parseEnvFile, resolveSecretValue } from "../env.js";
 
 export class GetCommand extends Command {
-  public static paths = [["get"]];
+  public static paths = [["secrets", "get"]];
 
   public static usage = Command.Usage({
     description: "Get a secret value",

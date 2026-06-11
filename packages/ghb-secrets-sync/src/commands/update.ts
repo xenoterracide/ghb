@@ -9,7 +9,7 @@ import { logger } from "../logger.js";
 import { checkFilePermissions } from "../fs-utils.js";
 
 export class UpdateCommand extends Command {
-  public static paths = [["update"]];
+  public static paths = [["secrets", "update"]];
 
   public static usage = Command.Usage({
     description: "Update a secret in an env file",
