@@ -32,8 +32,6 @@ The repository is REUSE-compliant: every file must carry an SPDX license header.
 └── root config files           # eslint, vitest, prettier, reuse, etc.
 ```
 
-For the current file-level layout, run `tree` or `eza --tree`.
-
 ## Technology Stack
 
 - **Node.js** `>=24`, **Yarn** 4 PnP workspaces, **TypeScript** 6 — see
