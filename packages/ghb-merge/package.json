@@ -3,20 +3,21 @@
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "packageManager": "yarn@4.16.0",
-  "main": "dist/merge.js",
-  "types": "dist/merge.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/merge.d.ts",
-      "default": "./dist/merge.js"
+  "main": "merge.ts",
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/merge.js",
+    "types": "dist/merge.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/merge.d.ts",
+        "default": "./dist/merge.js"
+      }
     }
   },
   "files": [
     "dist"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "clipanion": "^4.0.0-rc.4"
   },
