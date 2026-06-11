@@ -20,7 +20,7 @@ packages:
 The repository is also a REUSE-compliant project: every file must carry an SPDX
 license header, and license compliance is checked in CI and via local linting.
 
-# Technology Stack
+## Technology Stack
 
 | Tool        | Version / Requirement | Notes                                                             |
 | ----------- | --------------------- | ----------------------------------------------------------------- |
@@ -38,7 +38,7 @@ license header, and license compliance is checked in CI and via local linting.
 
 Python is kept minimal: it exists only to run `reuse` for license compliance.
 
-# Project Structure
+## Project Structure
 
 ```text
 .
@@ -102,9 +102,9 @@ Python is kept minimal: it exists only to run `reuse` for license compliance.
 └── .envrc                      # direnv: asdf install + PATH + hooks warning
 ```
 
-# Package Architecture
+## Package Architecture
 
-## `ghb` (root CLI)
+### `ghb` (root CLI)
 
 - **Package:** `@xenoterracide/ghb`
 - **Entry:** `packages/ghb/src/cli.ts`
@@ -119,7 +119,7 @@ Python is kept minimal: it exists only to run `reuse` for license compliance.
   - `ghb secrets get`
 - The CLI can be exercised locally via `yarn ghb` (runs `tsx src/cli.ts`).
 
-## `ghb-merge`
+### `ghb-merge`
 
 - **Package:** `@xenoterracide/ghb-merge`
 - **Entry:** `packages/ghb-merge/merge.ts`
@@ -146,7 +146,7 @@ Python is kept minimal: it exists only to run `reuse` for license compliance.
 - Special care is taken to strip Yarn PnP loader flags from `NODE_OPTIONS` before
   spawning AI engine binaries (see `cleanNodeOptions` in `merge.ts`).
 
-## `ghb-secrets-sync`
+### `ghb-secrets-sync`
 
 - **Package:** `@xenoterracide/ghb-secrets-sync`
 - **Entry:** `packages/ghb-secrets-sync/src/cli.ts`
@@ -165,9 +165,9 @@ Python is kept minimal: it exists only to run `reuse` for license compliance.
   2. Matching entry from `--env-file`
   3. Environment variable matching the secret name
 
-# Build, Test, and Release Commands
+## Build, Test, and Release Commands
 
-## Root-level scripts
+### Root-level scripts
 
 ```bash
 # One-time setup (creates .venv, syncs Python deps, installs Node deps, sets hooks path)
@@ -200,7 +200,7 @@ yarn merge:copilot   # yarn ghb pr merge --copilot
 yarn secrets         # yarn ghb secrets
 ```
 
-## Workspace-level scripts
+### Workspace-level scripts
 
 Every package supports:
 
@@ -210,36 +210,36 @@ yarn workspace @xenoterracide/<pkg> run typecheck   # tsc --noEmit
 yarn workspace @xenoterracide/<pkg> run test        # vitest run && tsc --noEmit
 ```
 
-## Python commands
+### Python commands
 
 ```bash
 uv sync --frozen              # sync base (none)
 uv sync --frozen --group dev  # sync reuse
 ```
 
-## Publishing
+### Publishing
 
 Each package has a `prepack` script that runs `yarn build`, so publishing
 produces fresh `dist/` artifacts. Packages are published as public npm packages
 under the `@xenoterracide` scope.
 
-# Code Style Guidelines
+## Code Style Guidelines
 
-## EditorConfig
+### EditorConfig
 
 - Charset: UTF-8
 - Line endings: LF
 - Indent: 2 spaces
 - Final newline: required
 
-## Prettier
+### Prettier
 
 - Print width: 120 characters
 - XML whitespace sensitivity: `ignore`
 - Plugins: XML, Properties, Java, TOML
 - Run check with `yarn lint:prettier`; write with `prettier --cache --write`.
 
-## ESLint
+### ESLint
 
 - TypeScript files use `typescript-eslint` `strictTypeChecked` and
   `stylisticTypeChecked` configs.
@@ -254,7 +254,7 @@ under the `@xenoterracide` scope.
 - CLI entrypoints (`cli.ts`, `merge.ts`, `commands/*.ts`) are exempt from
   `no-console` because they interact with the user via the terminal.
 
-## File licensing and formatting
+### File licensing and formatting
 
 `lint-staged` (`.lintstagedrc.cjs`) formats files and adds SPDX headers with
 `reuse annotate`. The effective mapping is:
@@ -273,9 +273,9 @@ under the `@xenoterracide` scope.
 headers (`.gitmodules`, `*.lockfile`, `yarn.lock`, `uv.lock`, `.tool-versions`,
 `.python-version`).
 
-# Testing Strategy
+## Testing Strategy
 
-## Framework and configuration
+### Framework and configuration
 
 - **Runner:** `vitest` configured in `vitest.config.ts`.
 - **Workspace projects:**
@@ -287,7 +287,7 @@ headers (`.gitmodules`, `*.lockfile`, `yarn.lock`, `uv.lock`, `.tool-versions`,
   `vitest.config.ts`.
 - Tests explicitly import `describe`, `it`, `expect`, `vi`, etc. from `vitest`.
 
-## Testing patterns
+### Testing patterns
 
 - **Dependency injection via `CommandRunner`:** production code accepts a
   `runArgv` implementation so tests can pass fake `gh`/`git` runners instead of
@@ -298,9 +298,9 @@ headers (`.gitmodules`, `*.lockfile`, `yarn.lock`, `uv.lock`, `.tool-versions`,
   variables in `afterEach`.
 - **Spies/mocks:** use `vi.fn()` from `vitest`.
 
-# Git Workflow
+## Git Workflow
 
-## Git hooks
+### Git hooks
 
 Hooks live in `.share/git/hooks` and are configured by `yarn contribute` via
 `git config core.hooksPath .share/git/hooks`.
@@ -314,7 +314,7 @@ Hooks live in `.share/git/hooks` and are configured by `yarn contribute` via
 
 All hooks exit early in CI (`[ -n "$CI" ]`).
 
-## Conventional Commits
+### Conventional Commits
 
 Allowed types from `git-conventional-commits.yaml`:
 
@@ -325,7 +325,7 @@ ci, feat, fix, perf, refactor, style, test, build, ops, docs, chore, merge, reve
 Changelog types are `feat`, `fix`, `perf`, and `merge`. Commits matching `^WIP `
 are ignored.
 
-# CI/CD and Automation
+## CI/CD and Automation
 
 All workflows trigger on `push`.
 
@@ -338,14 +338,14 @@ All workflows trigger on `push`.
 
 Reusable workflows are pinned to commit SHAs (see `.github/workflows/*.yml`).
 
-## Renovate
+### Renovate
 
 `.github/renovate.json5` enables automatic rebasing and auto-merge for npm,
 GitHub Actions, asdf, pyenv, pep621, and maven dependencies. Xenoterracide org
 GitHub Actions are pinned to commit SHAs. `.share/**` and `.agents/**` are
 ignored because they are managed as subtrees.
 
-# Security Considerations
+## Security Considerations
 
 1. **Shell command safety:** wherever possible the code uses `execFileSync` with
    argv arrays instead of shell strings to avoid injection. `CommandRunner.runArgv`
@@ -367,7 +367,7 @@ ignored because they are managed as subtrees.
    scrubbed of Yarn PnP loader flags to prevent module-resolution failures in
    globally installed engines.
 
-# Development Setup
+## Development Setup
 
 1. Ensure `asdf` and `direnv` are installed and allowed.
 2. Run `asdf install` (or let `.envrc` run it).
