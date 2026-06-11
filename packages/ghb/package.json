@@ -1,15 +1,15 @@
 {
-  "name": "@xenoterracide/merge",
+  "name": "@xenoterracide/ghb",
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "packageManager": "yarn@4.16.0",
-  "bin": "dist/merge.js",
-  "main": "dist/merge.js",
-  "types": "dist/merge.d.ts",
+  "bin": "dist/cli.js",
+  "main": "dist/cli.js",
+  "types": "dist/cli.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/merge.d.ts",
-      "default": "./dist/merge.js"
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
     }
   },
   "files": [
@@ -19,12 +19,9 @@
     "access": "public"
   },
   "dependencies": {
+    "@xenoterracide/ghb-merge": "workspace:^",
+    "@xenoterracide/ghb-secrets-sync": "workspace:^",
     "clipanion": "^4.0.0-rc.4"
-  },
-  "optionalDependencies": {
-    "@github/copilot": "^1.0.59",
-    "@jetbrains/junie": "^1831.35.0",
-    "@moonshot-ai/kimi-code": "^0.10.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
@@ -34,8 +31,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xenoterracide/ts-cli-devtools.git",
-    "directory": "packages/merge"
+    "url": "git+https://github.com/xenoterracide/ghb.git",
+    "directory": "packages/ghb"
   },
   "engines": {
     "node": ">=24"
@@ -43,9 +40,7 @@
   "scripts": {
     "build": "tsc",
     "prepack": "yarn build",
-    "merge:copilot": "tsx merge.ts --copilot",
-    "merge:junie": "tsx merge.ts --junie",
-    "merge:kimi": "tsx merge.ts --kimi",
+    "ghb": "tsx src/cli.ts",
     "test": "vitest run && yarn typecheck",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

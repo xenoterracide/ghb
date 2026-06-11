@@ -7,7 +7,7 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 # Project Overview
 
-This is **ts-cli-devtools**, a TypeScript CLI devtools repository that provides:
+This is **ghb** (GitHub Bridge), a TypeScript CLI devtools repository that provides:
 
 1. **AI-assisted PR merge workflows** - Automated PR creation, message generation, and merging using AI tools (Kimi, Junie, GitHub Copilot)
 2. **Secrets sync** - CLI tool for syncing GitHub secrets to repositories
@@ -32,10 +32,13 @@ The project uses Node.js with Yarn workspaces for package management. Python is 
 │   ├── post-merge              # Auto-install deps after merge
 │   └── pre-commit              # Lint-staged runner
 ├── packages/                   # Yarn workspaces
-│   ├── merge/                  # AI-assisted merge workflow tool
+│   ├── ghb/                    # GitHub Bridge root CLI
+│   │   ├── src/
+│   │   └── package.json
+│   ├── ghb-merge/              # AI-assisted merge workflow tool
 │   │   ├── merge.ts            # Main TypeScript implementation
 │   │   └── package.json
-│   └── secrets-sync/           # GitHub secrets sync CLI
+│   └── ghb-secrets-sync/       # GitHub secrets sync CLI
 │       ├── src/
 │       └── package.json
 ├── .github/workflows/          # GitHub Actions
@@ -121,7 +124,7 @@ All files MUST have SPDX license headers. The project uses:
 
 ## Testing Instructions
 
-1. **TypeScript type checking**: `yarn workspace @xenoterracide/merge run test` (runs `tsc --noEmit`)
+1. **TypeScript type checking**: `yarn workspace @xenoterracide/ghb-merge run test` (runs `tsc --noEmit`)
 2. **All workspace tests**: `yarn test`
 3. **License compliance**: `yarn lint:reuse`
 4. **Formatting**: `yarn lint:prettier`
@@ -146,7 +149,7 @@ Allowed types (from `git-conventional-commits.yaml`):
 
 ### Merge Workflow
 
-The `packages/merge` tool provides AI-assisted PR workflows:
+The `ghb merge` command provides AI-assisted PR workflows:
 
 ```bash
 # Generate PR message and merge using different AI engines
@@ -157,8 +160,8 @@ yarn merge:copilot   # Uses GitHub Copilot CLI
 
 #### AI Engine Dependencies
 
-The merge tool declares all three AI CLIs as `optionalDependencies` in
-`packages/merge/package.json`:
+The `ghb` package declares all three AI CLIs as `optionalDependencies` via
+`ghb-merge`:
 
 | Engine  | npm Package              | Binary    |
 | ------- | ------------------------ | --------- |
@@ -171,11 +174,11 @@ don't need to save disk space and install time:
 
 ```bash
 # Install only Kimi (skip Junie and Copilot)
-npm install -g @xenoterracide/merge --omit optional
+npm install -g @xenoterracide/ghb --omit optional
 npm install -g @moonshot-ai/kimi-code
 
 # Or with yarn
-yarn global add @xenoterracide/merge --json | jq '.[].name'
+yarn global add @xenoterracide/ghb --json | jq '.[].name'
 # Then add only the engine you want
 yarn global add @moonshot-ai/kimi-code
 ```

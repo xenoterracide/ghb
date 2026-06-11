@@ -10,15 +10,22 @@ export default defineConfig({
     projects: [
       {
         test: {
-          name: "merge",
-          root: "./packages/merge",
+          name: "ghb",
+          root: "./packages/ghb",
           include: ["**/*.test.ts"],
         },
       },
       {
         test: {
-          name: "secrets-sync",
-          root: "./packages/secrets-sync",
+          name: "ghb-merge",
+          root: "./packages/ghb-merge",
+          include: ["**/*.test.ts"],
+        },
+      },
+      {
+        test: {
+          name: "ghb-secrets-sync",
+          root: "./packages/ghb-secrets-sync",
           include: ["test/**/*.test.ts"],
         },
       },
