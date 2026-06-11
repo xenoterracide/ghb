@@ -166,13 +166,27 @@ export async function generateMessage(
   }
 }
 
+function cleanNodeOptions(nodeOptions: string | undefined): string | undefined {
+  if (!nodeOptions) {
+    return undefined;
+  }
+  if (!nodeOptions.includes(".pnp.cjs") && !nodeOptions.includes(".pnp.loader.mjs")) {
+    return nodeOptions;
+  }
+  const stripped = nodeOptions
+    .replace(/--require\s+\S*\.pnp\.cjs(\s+|$)/g, "")
+    .replace(/--experimental-loader\s+\S*\.pnp\.loader\.mjs(\s+|$)/g, "")
+    .trim();
+  return stripped || undefined;
+}
+
 function execFileSyncClean(
   file: string,
   args: string[],
   options?: { cwd?: string; input?: string; env?: Record<string, string> },
 ): string {
   const env = { ...process.env, ...options?.env };
-  delete env.NODE_OPTIONS;
+  env.NODE_OPTIONS = cleanNodeOptions(env.NODE_OPTIONS);
   return execFileSync(file, args, { ...options, encoding: "utf8", env });
 }
 
