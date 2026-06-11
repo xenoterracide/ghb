@@ -5,62 +5,45 @@
 import { describe, it, expect } from "vitest";
 import { execFileSync } from "child_process";
 
-function getHelpOutput(cmd: string): string | undefined {
+function getHelp(cmd: string): string | undefined {
   try {
-    return execFileSync(cmd, ["--help"], { encoding: "utf8" });
+    return execFileSync(cmd, ["--help"], { encoding: "utf8", timeout: 10000 });
   } catch {
     return undefined;
   }
 }
 
-describe("CLI flag compatibility", () => {
-  describe("kimi", () => {
-    it("should support -p / --prompt flag", () => {
-      const help = getHelpOutput("kimi");
-      if (help === undefined) {
-        return;
-      }
-      expect(help).toMatch(/-p, --prompt/);
-    });
+const describeIf = (condition: boolean): typeof describe => (condition ? describe : describe.skip);
 
-    it("should support --skills-dir flag", () => {
-      const help = getHelpOutput("kimi");
-      if (help === undefined) {
-        return;
-      }
-      expect(help).toMatch(/--skills-dir/);
-    });
+const kimiHelp = getHelp("kimi");
+describeIf(kimiHelp !== undefined)("kimi", () => {
+  it("should support -p / --prompt flag", () => {
+    expect(kimiHelp).toMatch(/-p, --prompt/);
   });
 
-  describe("copilot", () => {
-    it("should support --model flag", () => {
-      const help = getHelpOutput("copilot");
-      if (help === undefined) {
-        return;
-      }
-      expect(help).toMatch(/--model/);
-    });
+  it("should support --skills-dir flag", () => {
+    expect(kimiHelp).toMatch(/--skills-dir/);
+  });
+});
 
-    it("should support -p / --prompt flag", () => {
-      const help = getHelpOutput("copilot");
-      if (help === undefined) {
-        return;
-      }
-      expect(help).toMatch(/-p, --prompt/);
-    });
-
-    it("should support --silent flag", () => {
-      const help = getHelpOutput("copilot");
-      if (help === undefined) {
-        return;
-      }
-      expect(help).toMatch(/--silent/);
-    });
+const copilotHelp = getHelp("copilot");
+describeIf(copilotHelp !== undefined)("copilot", () => {
+  it("should support --model flag", () => {
+    expect(copilotHelp).toMatch(/--model/);
   });
 
-  describe("junie", () => {
-    it.todo(
-      "should support required flags — skipped because @jetbrains/junie npm package delegates to a shim installed by their bash script, not the npm binary itself",
-    );
+  it("should support -p / --prompt flag", () => {
+    expect(copilotHelp).toMatch(/-p, --prompt/);
   });
+
+  it("should support --silent flag", () => {
+    expect(copilotHelp).toMatch(/--silent/);
+  });
+});
+
+const junieHelp = getHelp("junie");
+describeIf(junieHelp !== undefined)("junie", () => {
+  it.todo(
+    "should support required flags — skipped because @jetbrains/junie npm package delegates to a shim installed by their bash script, not the npm binary itself",
+  );
 });

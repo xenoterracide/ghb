@@ -395,114 +395,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@github/copilot-darwin-arm64@npm:1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot-darwin-arm64@npm:1.0.59"
-  bin:
-    copilot-darwin-arm64: copilot
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@github/copilot-darwin-x64@npm:1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot-darwin-x64@npm:1.0.59"
-  bin:
-    copilot-darwin-x64: copilot
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@github/copilot-linux-arm64@npm:1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot-linux-arm64@npm:1.0.59"
-  bin:
-    copilot-linux-arm64: copilot
-  conditions: os=linux & cpu=arm64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@github/copilot-linux-x64@npm:1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot-linux-x64@npm:1.0.59"
-  bin:
-    copilot-linux-x64: copilot
-  conditions: os=linux & cpu=x64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@github/copilot-linuxmusl-arm64@npm:1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot-linuxmusl-arm64@npm:1.0.59"
-  bin:
-    copilot-linuxmusl-arm64: copilot
-  conditions: os=linux & cpu=arm64 & libc=musl
-  languageName: node
-  linkType: hard
-
-"@github/copilot-linuxmusl-x64@npm:1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot-linuxmusl-x64@npm:1.0.59"
-  bin:
-    copilot-linuxmusl-x64: copilot
-  conditions: os=linux & cpu=x64 & libc=musl
-  languageName: node
-  linkType: hard
-
-"@github/copilot-win32-arm64@npm:1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot-win32-arm64@npm:1.0.59"
-  bin:
-    copilot-win32-arm64: copilot.exe
-  conditions: os=win32 & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@github/copilot-win32-x64@npm:1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot-win32-x64@npm:1.0.59"
-  bin:
-    copilot-win32-x64: copilot.exe
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@github/copilot@npm:^1.0.59":
-  version: 1.0.59
-  resolution: "@github/copilot@npm:1.0.59"
-  dependencies:
-    "@github/copilot-darwin-arm64": "npm:1.0.59"
-    "@github/copilot-darwin-x64": "npm:1.0.59"
-    "@github/copilot-linux-arm64": "npm:1.0.59"
-    "@github/copilot-linux-x64": "npm:1.0.59"
-    "@github/copilot-linuxmusl-arm64": "npm:1.0.59"
-    "@github/copilot-linuxmusl-x64": "npm:1.0.59"
-    "@github/copilot-win32-arm64": "npm:1.0.59"
-    "@github/copilot-win32-x64": "npm:1.0.59"
-    detect-libc: "npm:^2.1.2"
-  dependenciesMeta:
-    "@github/copilot-darwin-arm64":
-      optional: true
-    "@github/copilot-darwin-x64":
-      optional: true
-    "@github/copilot-linux-arm64":
-      optional: true
-    "@github/copilot-linux-x64":
-      optional: true
-    "@github/copilot-linuxmusl-arm64":
-      optional: true
-    "@github/copilot-linuxmusl-x64":
-      optional: true
-    "@github/copilot-win32-arm64":
-      optional: true
-    "@github/copilot-win32-x64":
-      optional: true
-  bin:
-    copilot: npm-loader.js
-  checksum: 10c0/b6cd5c4f5f515ac750ac22983c0eb5243cbdd6d7831258109a49b7994c44b4b321282a9af5e8c0dffb0873bde53b74d1e65134106b85d7aa5d5bff6662c8aa6d
-  languageName: node
-  linkType: hard
-
 "@humanfs/core@npm:^0.19.1":
   version: 0.19.1
   resolution: "@humanfs/core@npm:0.19.1"
@@ -547,17 +439,6 @@ __metadata:
   dependencies:
     minipass: "npm:^7.0.4"
   checksum: 10c0/c25b6dc1598790d5b55c0947a9b7d111cfa92594db5296c3b907e2f533c033666f692a3939eadac17b1c7c40d362d0b0635dc874cbfe3e70db7c2b07cc97a5d2
-  languageName: node
-  linkType: hard
-
-"@jetbrains/junie@npm:^1831.35.0":
-  version: 1831.35.0
-  resolution: "@jetbrains/junie@npm:1831.35.0"
-  dependencies:
-    yauzl: "npm:^3.2.0"
-  bin:
-    junie: bin/index.js
-  checksum: 10c0/81b3742b3161fd5bc3c6b8b8f9c9c2074b104104382336de02b8f700977c81fe57fc47ff33218568644e11c6f9094f9c453dec4c3fb14e97b9c31fe404bc6d5a
   languageName: node
   linkType: hard
 
@@ -1256,8 +1137,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@xenoterracide/ghb-merge@workspace:packages/ghb-merge"
   dependencies:
-    "@github/copilot": "npm:^1.0.59"
-    "@jetbrains/junie": "npm:^1831.35.0"
     "@moonshot-ai/kimi-code": "npm:^0.10.0"
     "@types/node": "npm:^24.12.0"
     clipanion: "npm:^4.0.0-rc.4"
@@ -1265,10 +1144,6 @@ __metadata:
     typescript: "npm:^6.0.0"
     vitest: "npm:^4.1.2"
   dependenciesMeta:
-    "@github/copilot":
-      optional: true
-    "@jetbrains/junie":
-      optional: true
     "@moonshot-ai/kimi-code":
       optional: true
   languageName: unknown
@@ -1695,7 +1570,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"detect-libc@npm:^2.0.3, detect-libc@npm:^2.1.2":
+"detect-libc@npm:^2.0.3":
   version: 2.1.2
   resolution: "detect-libc@npm:2.1.2"
   checksum: 10c0/acc675c29a5649fa1fb6e255f993b8ee829e510b6b56b0910666949c80c364738833417d0edb5f90e4e46be17228b0f2b66a010513984e18b15deeeac49369c4
@@ -3533,13 +3408,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pend@npm:~1.2.0":
-  version: 1.2.0
-  resolution: "pend@npm:1.2.0"
-  checksum: 10c0/8a87e63f7a4afcfb0f9f77b39bb92374afc723418b9cb716ee4257689224171002e07768eeade4ecd0e86f1fa3d8f022994219fb45634f2dbd78c6803e452458
-  languageName: node
-  linkType: hard
-
 "picocolors@npm:^1.1.1":
   version: 1.1.1
   resolution: "picocolors@npm:1.1.1"
@@ -4490,15 +4358,6 @@ __metadata:
     y18n: "npm:^5.0.5"
     yargs-parser: "npm:^21.1.1"
   checksum: 10c0/ccd7e723e61ad5965fffbb791366db689572b80cca80e0f96aad968dfff4156cd7cd1ad18607afe1046d8241e6fb2d6c08bf7fa7bfb5eaec818735d8feac8f05
-  languageName: node
-  linkType: hard
-
-"yauzl@npm:^3.2.0":
-  version: 3.3.2
-  resolution: "yauzl@npm:3.3.2"
-  dependencies:
-    pend: "npm:~1.2.0"
-  checksum: 10c0/92e93b5162ad27a1b3088742fd613c90158553f9ce957ef40bad117c13b25476ea2992a825a7b45eed23924a355991253e60cdeb9b7dea63771de83710dd856f
   languageName: node
   linkType: hard
 

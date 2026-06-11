@@ -22,8 +22,6 @@
     "clipanion": "^4.0.0-rc.4"
   },
   "optionalDependencies": {
-    "@github/copilot": "^1.0.59",
-    "@jetbrains/junie": "^1831.35.0",
     "@moonshot-ai/kimi-code": "^0.10.0"
   },
   "devDependencies": {
