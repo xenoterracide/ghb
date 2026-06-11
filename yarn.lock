@@ -575,21 +575,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@moonshot-ai/kimi-code@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@moonshot-ai/kimi-code@npm:0.10.0"
+"@moonshot-ai/kimi-code@npm:^0.14.0":
+  version: 0.14.0
+  resolution: "@moonshot-ai/kimi-code@npm:0.14.0"
   dependencies:
     "@earendil-works/pi-tui": "npm:^0.74.0"
     "@mariozechner/clipboard": "npm:^0.3.2"
     chalk: "npm:^5.4.1"
     cli-highlight: "npm:^2.1.11"
     commander: "npm:^13.1.0"
+    pathe: "npm:^2.0.3"
     semver: "npm:^7.7.4"
     smol-toml: "npm:^1.6.1"
     zod: "npm:^4.3.6"
   bin:
     kimi: dist/main.mjs
-  checksum: 10c0/77d7c84d23530b2aba18f417d8c4f43a47d4d4de36e8ca5a54d379631f148576564c08c4c90bfa88b27a1a62b1a0f4625b3595cefaa10318382c3f93d20b8f36
+  checksum: 10c0/edd4405a9473f38d3ab7a9a08d293006585fc649f6f8522614416cd72db5625b3376b3f86050bdb9f9176575f2b145f93add820463eee2a7bb6cbfd176d9fea1
   languageName: node
   linkType: hard
 
@@ -1137,7 +1138,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@xenoterracide/ghb-merge@workspace:packages/ghb-merge"
   dependencies:
-    "@moonshot-ai/kimi-code": "npm:^0.10.0"
+    "@moonshot-ai/kimi-code": "npm:^0.14.0"
     "@types/node": "npm:^24.12.0"
     clipanion: "npm:^4.0.0-rc.4"
     tsx: "npm:^4.21.0"
