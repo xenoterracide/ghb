@@ -166,6 +166,16 @@ export async function generateMessage(
   }
 }
 
+function execFileSyncClean(
+  file: string,
+  args: string[],
+  options?: { cwd?: string; input?: string; env?: Record<string, string> },
+): string {
+  const env = { ...process.env, ...options?.env };
+  delete env.NODE_OPTIONS;
+  return execFileSync(file, args, { ...options, encoding: "utf8", env });
+}
+
 export async function generateWithKimi(titleFile: string, bodyFile: string, diff: string): Promise<void> {
   const skillsDir = ".agents/skills";
   const hasSkillsDir = existsSync(skillsDir);
@@ -182,7 +192,7 @@ ${diff}`;
 
   let output: string;
   try {
-    output = execFileSync("kimi", kimiArgs, { encoding: "utf8" });
+    output = execFileSyncClean("kimi", kimiArgs);
   } catch (e) {
     logger.debug("kimi failed:", e instanceof Error ? e.message : String(e));
     throw new Error("kimi failed to generate message");
@@ -205,19 +215,19 @@ ${diff}`;
   writeFileSync(promptFile, prompt, "utf8");
 
   try {
-    execFileSync("junie", ["--skip-update-check", "--cache-dir=.junie/cache", "--prompt-file", promptFile], {
-      encoding: "utf8",
-    });
+    execFileSyncClean("junie", ["--skip-update-check", "--cache-dir=.junie/cache", "--prompt-file", promptFile]);
     readFileSync(titleFile, "utf8");
     return;
   } catch {
     try {
-      const output = execFileSync(
-        "junie",
-        ["--skip-update-check", "--cache-dir=.junie/cache", "--output-format=json", "--prompt-file", promptFile],
-        { encoding: "utf8" },
-      );
-      const result = execFileSync("jq", ["-r", ".result"], { input: output, encoding: "utf8" });
+      const output = execFileSyncClean("junie", [
+        "--skip-update-check",
+        "--cache-dir=.junie/cache",
+        "--output-format=json",
+        "--prompt-file",
+        promptFile,
+      ]);
+      const result = execFileSyncClean("jq", ["-r", ".result"], { input: output });
       await parseAndWriteMessage(result.trim(), titleFile, bodyFile);
     } catch {
       throw new Error("junie failed to generate message");
@@ -280,9 +290,7 @@ ${diff}`;
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const model = process.env.COPILOT_PRMSG_MODEL || "gpt-5.1-codex-mini";
     try {
-      const result = execFileSync("copilot", ["--model", model, "--silent", "--prompt", promptFile], {
-        encoding: "utf8",
-      });
+      const result = execFileSyncClean("copilot", ["--model", model, "--silent", "--prompt", promptFile]);
       writeFileSync(copilotOut, result, "utf8");
     } catch (e: unknown) {
       const stderr = e && typeof e === "object" && "stderr" in e ? String(e.stderr) : "";
@@ -296,9 +304,7 @@ ${diff}`;
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       const fallback = process.env.COPILOT_PRMSG_FALLBACK_MODEL || "gpt-5.1-codex";
       try {
-        const result = execFileSync("copilot", ["--model", fallback, "--silent", "--prompt", promptFile], {
-          encoding: "utf8",
-        });
+        const result = execFileSyncClean("copilot", ["--model", fallback, "--silent", "--prompt", promptFile]);
         writeFileSync(copilotOut, result, "utf8");
       } catch (e) {
         console.warn("Warning: Fallback model also failed:", e instanceof Error ? e.message : String(e));

@@ -45,6 +45,9 @@ describe("generateWithKimi", () => {
     await generateWithKimi(titleFile, bodyFile, diff);
 
     expect(execFileSync).toHaveBeenCalledWith("kimi", expect.arrayContaining(["-p"]), expect.any(Object));
+
+    const kimiCall = (execFileSync as ReturnType<typeof vi.fn>).mock.calls.find(([cmd]) => cmd === "kimi");
+    expect(kimiCall?.[2]?.env).not.toHaveProperty("NODE_OPTIONS");
   });
 
   it("should throw error when kimi fails", async () => {
@@ -94,6 +97,9 @@ describe("generateWithJunie", () => {
       expect.arrayContaining(["--skip-update-check"]),
       expect.any(Object),
     );
+
+    const junieCall = (execFileSync as ReturnType<typeof vi.fn>).mock.calls.find(([cmd]) => cmd === "junie");
+    expect(junieCall?.[2]?.env).not.toHaveProperty("NODE_OPTIONS");
   });
 
   it("should throw error when junie fails completely", async () => {
@@ -149,6 +155,9 @@ describe("generateWithCopilot", () => {
       expect.arrayContaining(["--model", "--silent", "--prompt"]),
       expect.any(Object),
     );
+
+    const copilotCall = (execFileSync as ReturnType<typeof vi.fn>).mock.calls.find(([cmd]) => cmd === "copilot");
+    expect(copilotCall?.[2]?.env).not.toHaveProperty("NODE_OPTIONS");
   });
 
   it("should use environment model variable", async () => {
