@@ -43,64 +43,15 @@ Python is kept minimal: it exists only to run `reuse` for license compliance.
 ```text
 .
 ├── packages/
-│   ├── ghb/                    # Aggregated CLI (published as @xenoterracide/ghb)
-│   │   ├── src/
-│   │   │   └── cli.ts          # createCli() registers all commands
-│   │   ├── test/
-│   │   │   └── cli.test.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
+│   ├── ghb/                    # Aggregated CLI
 │   ├── ghb-merge/              # AI-assisted merge workflow
-│   │   ├── merge.ts            # Main implementation + standalone CLI
-│   │   ├── logger.ts           # Debug/info/warn/error logger
-│   │   ├── *.test.ts           # Unit tests
-│   │   ├── package.json
-│   │   └── tsconfig.json
 │   └── ghb-secrets-sync/       # GitHub secrets sync CLI
-│       ├── src/
-│       │   ├── cli.ts          # Standalone CLI entry point
-│       │   ├── index.ts        # Public API exports
-│       │   ├── types.ts        # CommandRunner, EnvEntry, SetSecretOptions
-│       │   ├── env.ts          # Env file parsing and secret resolution
-│       │   ├── github.ts       # gh CLI wrappers
-│       │   ├── errors.ts       # UserError
-│       │   ├── fs-utils.ts     # 0o600 permission helpers
-│       │   ├── logger.ts       # ANSI-colored logger
-│       │   └── commands/
-│       │       ├── sync.ts
-│       │       ├── update.ts
-│       │       └── get.ts
-│       ├── test/
-│       │   ├── env.test.ts
-│       │   ├── github.test.ts
-│       │   └── commands/
-│       │       ├── sync.test.ts
-│       │       └── update.test.ts
-│       ├── package.json
-│       └── tsconfig.json
 ├── .share/git/hooks/           # Custom git hooks
-│   ├── commit-msg              # Conventional commits validation
-│   ├── post-checkout           # Auto-install on lockfile changes
-│   ├── post-merge              # Auto-install on lockfile changes
-│   └── pre-commit              # lint-staged runner
 ├── .github/workflows/          # GitHub Actions
-│   ├── test.yml                # Reusable yarn test workflow
-│   ├── pre-commit.yml          # License + prettier reusable workflows
-│   ├── devtools-regression.yml # Node CLI regression reusable workflow
-│   └── ai-engines.yml          # Installs Copilot/Junie and tests ghb-merge
-├── .github/renovate.json5      # Renovate configuration
-├── eslint.config.cts           # Root ESLint configuration
-├── vitest.config.ts            # Root Vitest workspace configuration
-├── tsconfig.eslint.json        # TypeScript project for ESLint type-aware rules
-├── .lintstagedrc.cjs           # lint-staged: reuse annotate + format per file type
-├── git-conventional-commits.yaml # Conventional commit types
-├── pyproject.toml              # Python project (only for reuse)
-├── package.json                # Root Yarn workspace configuration
-├── REUSE.toml                  # REUSE annotations for generated/lock files
-├── .tool-versions              # asdf tool versions
-├── .python-version             # uv/Python version hint
-└── .envrc                      # direnv: asdf install + PATH + hooks warning
+└── root config files           # eslint, vitest, prettier, reuse, etc.
 ```
+
+For the current file-level layout, run `tree` or `eza --tree`.
 
 ## Package Architecture
 
