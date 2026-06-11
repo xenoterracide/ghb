@@ -6,330 +6,371 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 # Project Overview
 
-This is **ghb** (GitHub Bridge), a TypeScript CLI devtools repository that provides:
+**ghb** (GitHub Bridge) is a TypeScript CLI devtools monorepo. It ships three
+packages:
 
-1. **AI-assisted PR merge workflows** - Automated PR creation, message generation, and merging using AI tools (Kimi, Junie, GitHub Copilot).
-2. **Secrets sync** - CLI tool for syncing GitHub secrets to repositories.
-3. **License compliance** - REUSE specification compliance for copyright and licensing.
+1. **`@xenoterracide/ghb`** — a single aggregated `ghb` CLI that exposes every
+   subcommand from the other two packages.
+2. **`@xenoterracide/ghb-merge`** — AI-assisted PR creation/merge workflows
+   using Kimi, Junie, or GitHub Copilot to generate conventional-commit PR
+   messages.
+3. **`@xenoterracide/ghb-secrets-sync`** — sync GitHub repository secrets from
+   environment variables or local env files.
 
-The project is a Yarn workspace monorepo with three packages. It uses Yarn Plug'n'Play (PnP) instead of `node_modules`, and Python is kept minimal for REUSE license tooling only.
+The repository is also a REUSE-compliant project: every file must carry an SPDX
+license header, and license compliance is checked in CI and via local linting.
 
-## Technology Stack
+# Technology Stack
 
-- **Node.js**: 24.16.0+ (managed via `asdf`, see `.tool-versions`)
-- **Yarn**: 4.16.0 with Plug'n'Play (PnP) workspaces
-- **TypeScript**: 6.0+
-- **Python**: 3.12+ (managed via `uv`, see `.python-version`)
-- **CLI framework**: `clipanion`
-- **Test runner**: `vitest` with `@vitest/coverage-v8`
-- **Linter**: `eslint` with `typescript-eslint` (strict type-checked configs)
-- **Formatter**: `prettier` with plugins for XML, Properties, Java, and TOML
-- **License compliance**: `reuse` (Python tool)
-- **Git hooks**: Custom shell scripts in `.share/git/hooks/`
+| Tool        | Version / Requirement | Notes                                                             |
+| ----------- | --------------------- | ----------------------------------------------------------------- |
+| Node.js     | `>=24`                | See `package.json` `engines`; pinned in `.tool-versions`          |
+| Yarn        | See `package.json`    | Plug'n'Play (PnP) workspaces; declared in `packageManager` fields |
+| TypeScript  | See `package.json`    | `NodeNext` module resolution, ES2022 target                       |
+| Python      | `>=3.12`              | See `pyproject.toml`; pinned in `.tool-versions`                  |
+| `uv`        | See `.tool-versions`  | Used for the Python virtualenv and `reuse`                        |
+| `asdf`      | See `.tool-versions`  | `asdf install` is run by `.envrc`                                 |
+| `clipanion` | See `package.json`    | CLI framework used by all packages                                |
+| `vitest`    | See `package.json`    | Test runner with `@vitest/coverage-v8`                            |
+| `eslint`    | See `package.json`    | TypeScript-aware strict config                                    |
+| `prettier`  | See `package.json`    | With XML, Properties, Java, and TOML plugins                      |
+| `reuse`     | See `pyproject.toml`  | Python REUSE compliance tool (dev dependency only)                |
 
-## Project Structure
+Python is kept minimal: it exists only to run `reuse` for license compliance.
+
+# Project Structure
 
 ```text
 .
-├── packages/                   # Yarn workspaces
-│   ├── ghb/                    # Root CLI package (published as @xenoterracide/ghb)
-│   │   ├── src/cli.ts          # Entry point: composes commands from other packages
+├── packages/
+│   ├── ghb/                    # Aggregated CLI (published as @xenoterracide/ghb)
+│   │   ├── src/
+│   │   │   └── cli.ts          # createCli() registers all commands
 │   │   ├── test/
-│   │   ├── tsconfig.json
-│   │   └── package.json
-│   ├── ghb-merge/              # AI-assisted merge workflow (published as @xenoterracide/ghb-merge)
-│   │   ├── merge.ts            # Main implementation: commands, AI message generation, git/gh workflows
-│   │   ├── logger.ts           # Simple debug/info/warn/error logger
+│   │   │   └── cli.test.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   ├── ghb-merge/              # AI-assisted merge workflow
+│   │   ├── merge.ts            # Main implementation + standalone CLI
+│   │   ├── logger.ts           # Debug/info/warn/error logger
 │   │   ├── *.test.ts           # Unit tests
-│   │   ├── tsconfig.json
-│   │   └── package.json
-│   └── ghb-secrets-sync/       # GitHub secrets sync CLI (published as @xenoterracide/ghb-secrets-sync)
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── ghb-secrets-sync/       # GitHub secrets sync CLI
 │       ├── src/
-│       │   ├── cli.ts          # CLI entry point
+│       │   ├── cli.ts          # Standalone CLI entry point
 │       │   ├── index.ts        # Public API exports
-│       │   ├── types.ts        # Shared interfaces (CommandRunner, EnvEntry, SetSecretOptions)
-│       │   ├── env.ts          # Env file parsing and secret value resolution
-│       │   ├── github.ts       # gh CLI wrappers for repo/secret operations
-│       │   ├── errors.ts       # UserError class for user-facing errors
-│       │   ├── fs-utils.ts     # File permission helpers (secure 0o600)
-│       │   ├── logger.ts       # ANSI-colored structured logger
+│       │   ├── types.ts        # CommandRunner, EnvEntry, SetSecretOptions
+│       │   ├── env.ts          # Env file parsing and secret resolution
+│       │   ├── github.ts       # gh CLI wrappers
+│       │   ├── errors.ts       # UserError
+│       │   ├── fs-utils.ts     # 0o600 permission helpers
+│       │   ├── logger.ts       # ANSI-colored logger
 │       │   └── commands/
-│       │       ├── sync.ts     # Sync secrets to repos
-│       │       ├── update.ts   # Update secrets in local env files
-│       │       └── get.ts      # Resolve and print a secret value
+│       │       ├── sync.ts
+│       │       ├── update.ts
+│       │       └── get.ts
 │       ├── test/
-│       ├── tsconfig.json
-│       └── package.json
+│       │   ├── env.test.ts
+│       │   ├── github.test.ts
+│       │   └── commands/
+│       │       ├── sync.test.ts
+│       │       └── update.test.ts
+│       ├── package.json
+│       └── tsconfig.json
 ├── .share/git/hooks/           # Custom git hooks
 │   ├── commit-msg              # Conventional commits validation
-│   ├── post-checkout           # Auto-install deps on branch switch if lockfiles changed
-│   ├── post-merge              # Auto-install deps after merge if lockfiles changed
+│   ├── post-checkout           # Auto-install on lockfile changes
+│   ├── post-merge              # Auto-install on lockfile changes
 │   └── pre-commit              # lint-staged runner
 ├── .github/workflows/          # GitHub Actions
-│   ├── test.yml                # Runs yarn test via reusable workflow
-│   ├── pre-commit.yml          # License and prettier checks
-│   └── devtools-regression.yml # Node CLI regression tests
+│   ├── test.yml                # Reusable yarn test workflow
+│   ├── pre-commit.yml          # License + prettier reusable workflows
+│   ├── devtools-regression.yml # Node CLI regression reusable workflow
+│   └── ai-engines.yml          # Installs Copilot/Junie and tests ghb-merge
 ├── .github/renovate.json5      # Renovate configuration
-├── eslint.config.cts           # Root ESLint configuration (strict TS rules)
+├── eslint.config.cts           # Root ESLint configuration
 ├── vitest.config.ts            # Root Vitest workspace configuration
 ├── tsconfig.eslint.json        # TypeScript project for ESLint type-aware rules
-├── .lintstagedrc.cjs           # lint-staged: reuse annotate + prettier per file type
-├── git-conventional-commits.yaml # Conventional commits config
-├── pyproject.toml              # Python project configuration (PEP 621)
-├── package.json                # Root Node.js workspace configuration
-└── REUSE.toml                  # REUSE license annotations for generated/lock files
+├── .lintstagedrc.cjs           # lint-staged: reuse annotate + format per file type
+├── git-conventional-commits.yaml # Conventional commit types
+├── pyproject.toml              # Python project (only for reuse)
+├── package.json                # Root Yarn workspace configuration
+├── REUSE.toml                  # REUSE annotations for generated/lock files
+├── .tool-versions              # asdf tool versions
+├── .python-version             # uv/Python version hint
+└── .envrc                      # direnv: asdf install + PATH + hooks warning
 ```
 
-## Package Architecture
+# Package Architecture
 
-### `ghb` (root CLI)
+## `ghb` (root CLI)
 
-- **Purpose**: Aggregates all subcommands into a single `ghb` binary.
-- **Entry**: `src/cli.ts` exports `createCli()` which registers `MergeCommand`, `PrMessageCommand`, `SyncCommand`, `UpdateCommand`, `GetCommand`.
-- **Dependencies**: Both workspace packages (`ghb-merge`, `ghb-secrets-sync`) and `clipanion`.
-- **Published as**: `@xenoterracide/ghb` with binary `dist/cli.js`.
+- **Package:** `@xenoterracide/ghb`
+- **Entry:** `packages/ghb/src/cli.ts`
+- **Published binary:** `dist/cli.js`
+- **Role:** Composes commands from both workspace packages into a single `ghb`
+  binary.
+- **Commands registered:**
+  - `ghb pr merge`
+  - `ghb pr message`
+  - `ghb secrets sync`
+  - `ghb secrets update`
+  - `ghb secrets get`
+- The CLI can be exercised locally via `yarn ghb` (runs `tsx src/cli.ts`).
 
-### `ghb-merge`
+## `ghb-merge`
 
-- **Purpose**: AI-assisted PR merge workflow.
-- **Entry**: `merge.ts` (single-file module).
-- **Key exports**:
-  - `MergeCommand` - Full workflow: fetch/merge origin/HEAD, push, create/update PR, wait for checks, interactive squash merge.
-  - `PrMessageCommand` - Generate PR title/body files using an AI engine.
-  - `resolveEngine()`, `generateMessage()`, `createOrUpdatePR()`, `waitForChecks()`, `findMainRepoRoot()`.
-- **AI Engines**: Supports `kimi`, `junie`, `copilot`. Only `kimi` is installed by default as an optional dependency; `junie` and `copilot` must be installed separately. Defaults to `kimi` if none specified.
-- **Security**: Uses `execFileSync` with argv arrays to avoid shell injection. Secret values passed via stdin.
-- **Published as**: `@xenoterracide/ghb-merge`.
+- **Package:** `@xenoterracide/ghb-merge`
+- **Entry:** `packages/ghb-merge/merge.ts`
+- **Published entry:** `dist/merge.js` / `dist/merge.d.ts`
+- **Role:** AI-assisted PR merge workflow.
+- **Key exports:**
+  - `MergeCommand` — full workflow
+  - `PrMessageCommand` — generate PR title/body files only
+  - `resolveEngine()`, `generateMessage()`, `createOrUpdatePR()`,
+    `waitForChecks()`, `findMainRepoRoot()`
+  - `CommandRunner` interface and `EngineResolutionError`
+- **AI engines:**
+  - `kimi` — declared as an `optionalDependency` (`@moonshot-ai/kimi-code`)
+  - `junie` — supported, must be installed separately (`@jetbrains/junie`)
+  - `copilot` — supported, must be installed separately (`@github/copilot`)
+  - Defaults to `kimi` when no engine flag is passed.
+- The merge workflow:
+  1. Resolves the chosen engine.
+  2. Fetches and merges `origin/HEAD`.
+  3. Pushes the current branch.
+  4. Creates or updates the PR with an AI-generated conventional-commit message.
+  5. Waits for `gh pr checks --watch`.
+  6. Prompts interactively for squash merge (`[Y/n]`).
+- Special care is taken to strip Yarn PnP loader flags from `NODE_OPTIONS` before
+  spawning AI engine binaries (see `cleanNodeOptions` in `merge.ts`).
 
-### `ghb-secrets-sync`
+## `ghb-secrets-sync`
 
-- **Purpose**: Sync GitHub repository secrets from environment variables or env files.
-- **Entry**: `src/cli.ts` for standalone use; `src/index.ts` for programmatic API.
-- **Commands**:
-  - `secrets sync` - Sync secrets to one or more repos (by name, label/topic, or current repo).
-  - `secrets update` - Add/update a key in a local env file with `0o600` permissions.
-  - `secrets get` - Resolve and print a secret value.
-- **Env File Protocols**: Values in env files use prefixes:
-  - `val:` - literal value
-  - `env:` - reference to another environment variable
-  - `file:` - read value from a file path
-- **Security**: `setSecret` passes values via stdin to `gh secret set` (never via argv). Env files enforce `0o600` permissions.
-- **Published as**: `@xenoterracide/ghb-secrets-sync`.
+- **Package:** `@xenoterracide/ghb-secrets-sync`
+- **Entry:** `packages/ghb-secrets-sync/src/cli.ts`
+- **Public API:** `packages/ghb-secrets-sync/src/index.ts`
+- **Published entry:** `dist/index.js` / `dist/index.d.ts`
+- **Commands:**
+  - `secrets sync` — sync secrets to repos by name, topic/label, or current repo.
+  - `secrets update` — add/update a key in a local env file with `0o600` permissions.
+  - `secrets get` — resolve and print a secret value.
+- **Env file value protocols:**
+  - `val:<value>` — literal value
+  - `env:<VAR>` — reference to another environment variable
+  - `file:<path>` or `file://<path>` — read value from a file
+- Values are resolved in priority order:
+  1. Explicit `--value` / `--secrets` value
+  2. Matching entry from `--env-file`
+  3. Environment variable matching the secret name
 
-## Build and Test Commands
+# Build, Test, and Release Commands
 
-### Root-level commands
+## Root-level scripts
 
 ```bash
-# Setup development environment (run once after clone)
+# One-time setup (creates .venv, syncs Python deps, installs Node deps, sets hooks path)
 yarn contribute
 
-# Run all tests across workspaces with coverage
-yarn test
-
-# Run all checks in parallel (eslint, typecheck, test)
+# Run all checks in parallel: eslint, typecheck, tests
 yarn check
 
-# Linting
-yarn lint              # All: eslint + prettier + reuse
-yarn lint:eslint       # ESLint only
-yarn lint:prettier     # Prettier check only
-yarn lint:reuse        # REUSE license compliance
-
-# Build all packages topologically
-yarn build
-
-# Type-check all workspaces
-yarn typecheck
-```
-
-### Workspace-level commands
-
-Each package supports:
-
-```bash
-yarn workspace @xenoterracide/ghb run test        # vitest run + tsc --noEmit
-yarn workspace @xenoterracide/ghb run build       # tsc
-yarn workspace @xenoterracide/ghb run typecheck   # tsc --noEmit
-```
-
-Same pattern for `@xenoterracide/ghb-merge` and `@xenoterracide/ghb-secrets-sync`.
-
-### Python (uv)
-
-```bash
-# Sync dependencies (only dev group has reuse)
-uv sync --frozen
-
-# Sync with dev dependencies
-uv sync --frozen --group dev
-```
-
-## Code Style Guidelines
-
-### EditorConfig (`.editorconfig`)
-
-- **Charset**: UTF-8
-- **Line endings**: LF
-- **Indent**: 2 spaces
-- **Final newline**: Required
-
-### Prettier (`.prettierrc.cjs`)
-
-- **Print width**: 120 characters
-- **XML whitespace sensitivity**: ignore
-- **Plugins**: XML, Properties, Java, TOML
-
-### ESLint (`eslint.config.cts`)
-
-- TypeScript files use `strictTypeChecked` and `stylisticTypeChecked` configs.
-- Enforces explicit return types, member accessibility, consistent type imports/exports, strict boolean expressions, and switch exhaustiveness.
-- Packages receive relaxed rules for `no-unsafe-*`, `strict-boolean-expressions`, and `no-unnecessary-condition` due to PnP resolution behavior.
-- CLI entrypoints (`cli.ts`, `merge.ts`, `commands/*.ts`) are exempt from `no-console`.
-
-### File Type Conventions
-
-| File Type                              | License          | Formatter            |
-| -------------------------------------- | ---------------- | -------------------- |
-| `*.ts`, `*.java`                       | GPL-3.0-or-later | Prettier             |
-| `*.js`, `*.cjs`, `*.yml`               | MIT              | Prettier             |
-| `package.json`                         | MIT              | Prettier             |
-| `*.json` (non-package)                 | CC0-1.0          | Prettier             |
-| `*.md`, `*.adoc`                       | CC-BY-NC-SA-4.0  | Prettier             |
-| `*.xml`, `*.yaml`, `*.toml`, `*.json5` | CC0-1.0          | Prettier             |
-| Shell scripts                          | MIT              | shfmt (python style) |
-
-### Licensing
-
-All files MUST have SPDX license headers. The project uses:
-
-- **REUSE specification** for license compliance.
-- **lint-staged** automatically adds headers via `reuse annotate`.
-- The `REUSE.toml` file annotates generated files and lockfiles that cannot carry inline headers.
-
-## Testing Instructions
-
-### Test Framework
-
-- **Vitest** with `globals: true` and `environment: "node"`.
-- Root `vitest.config.ts` defines three workspace projects (`ghb`, `ghb-merge`, `ghb-secrets-sync`).
-- Coverage thresholds: **28%** minimum for statements, branches, functions, and lines.
-
-### Running Tests
-
-```bash
-# All workspaces with coverage
+# Tests across all workspaces with coverage
 yarn test
 
-# Individual workspace
-yarn workspace @xenoterracide/ghb-secrets-sync run test
+# Build all packages topologically (ghb is excluded because it depends on built workspaces)
+yarn build
+
+# Type-check all workspaces (after building them)
+yarn typecheck
+
+# Linting
+yarn lint            # eslint + prettier + reuse
+yarn lint:eslint     # ESLint only
+yarn lint:prettier   # Prettier check only
+yarn lint:reuse      # REUSE license compliance
+
+# Convenience wrappers for the merge workflow
+yarn merge:kimi      # yarn ghb pr merge --kimi
+yarn merge:junie     # yarn ghb pr merge --junie
+yarn merge:copilot   # yarn ghb pr merge --copilot
+
+# Convenience wrapper for secrets commands
+yarn secrets         # yarn ghb secrets
 ```
 
-### Testing Patterns
+## Workspace-level scripts
 
-- **Dependency injection via `CommandRunner`**: Tests pass fake `runArgv` implementations instead of calling real `gh` or `git` binaries.
-- **Filesystem isolation**: Tests that write files use `mkdtempSync` under `os.tmpdir()` and clean up in `afterEach`.
-- **Process env isolation**: Tests mutate `process.env` but restore the original in `afterEach`.
-- **Mocking**: Uses `vi.fn()` from vitest for spies and mocks.
-
-## Git Workflow
-
-### Git Hooks
-
-The project uses custom git hooks (configured via `git config core.hooksPath .share/git/hooks`):
-
-1. **pre-commit**: Runs `lint-staged` to format and add license headers.
-2. **commit-msg**: Validates conventional commit format via `git-conventional-commits`.
-3. **post-checkout**: Auto-runs `yarn install --immutable` or `uv sync --frozen` if lockfiles changed.
-4. **post-merge**: Same as post-checkout.
-
-All hooks exit early in CI environments (`[ -n "$CI" ]`).
-
-### Conventional Commits
-
-Allowed types (from `git-conventional-commits.yaml`):
-
-- `ci`, `feat`, `fix`, `perf`, `refactor`, `style`, `test`
-- `build`, `ops`, `docs`, `chore`, `merge`, `revert`
-
-### Merge Workflow
-
-The `ghb pr merge` command provides AI-assisted PR workflows:
+Every package supports:
 
 ```bash
-# Generate PR message and merge using different AI engines
-yarn merge:kimi      # Uses Kimi CLI
-yarn merge:junie     # Uses Junie CLI
-yarn merge:copilot   # Uses GitHub Copilot CLI
+yarn workspace @xenoterracide/<pkg> run build       # tsc
+yarn workspace @xenoterracide/<pkg> run typecheck   # tsc --noEmit
+yarn workspace @xenoterracide/<pkg> run test        # vitest run && tsc --noEmit
 ```
 
-#### AI Engine Dependencies
-
-The `ghb-merge` package declares only Kimi as an `optionalDependency`. Junie and Copilot are supported engines but must be installed separately because their npm packages are too large for the default install graph:
-
-| Engine  | npm Package              | Binary    | Installed by default? |
-| ------- | ------------------------ | --------- | --------------------- |
-| Kimi    | `@moonshot-ai/kimi-code` | `kimi`    | Yes (optional)        |
-| Junie   | `@jetbrains/junie`       | `junie`   | No                    |
-| Copilot | `@github/copilot`        | `copilot` | No                    |
-
-To install Kimi only:
+## Python commands
 
 ```bash
-npm install -g @xenoterracide/ghb --omit optional
-npm install -g @moonshot-ai/kimi-code
+uv sync --frozen              # sync base (none)
+uv sync --frozen --group dev  # sync reuse
 ```
 
-To use Junie or Copilot, install them globally:
+## Publishing
 
-```bash
-npm install -g @jetbrains/junie
-npm install -g @github/copilot
+Each package has a `prepack` script that runs `yarn build`, so publishing
+produces fresh `dist/` artifacts. Packages are published as public npm packages
+under the `@xenoterracide` scope.
+
+# Code Style Guidelines
+
+## EditorConfig
+
+- Charset: UTF-8
+- Line endings: LF
+- Indent: 2 spaces
+- Final newline: required
+
+## Prettier
+
+- Print width: 120 characters
+- XML whitespace sensitivity: `ignore`
+- Plugins: XML, Properties, Java, TOML
+- Run check with `yarn lint:prettier`; write with `prettier --cache --write`.
+
+## ESLint
+
+- TypeScript files use `typescript-eslint` `strictTypeChecked` and
+  `stylisticTypeChecked` configs.
+- Required for TS source:
+  - explicit function return types
+  - explicit member accessibility
+  - consistent type imports/exports
+  - strict boolean expressions (root config)
+  - switch exhaustiveness
+- `packages/**/*.ts` receives relaxed `no-unsafe-*`, `strict-boolean-expressions`,
+  and `no-unnecessary-condition` rules due to Yarn PnP resolution behavior.
+- CLI entrypoints (`cli.ts`, `merge.ts`, `commands/*.ts`) are exempt from
+  `no-console` because they interact with the user via the terminal.
+
+## File licensing and formatting
+
+`lint-staged` (`.lintstagedrc.cjs`) formats files and adds SPDX headers with
+`reuse annotate`. The effective mapping is:
+
+| File type                                              | License          | Formatter                      |
+| ------------------------------------------------------ | ---------------- | ------------------------------ |
+| `*.ts`, `*.mts`, `*.cts`, `*.java`                     | GPL-3.0-or-later | Prettier                       |
+| `*.js`, `*.cjs`, `*.yml`                               | MIT              | Prettier                       |
+| `package.json`                                         | MIT              | Prettier                       |
+| `*.json` (non-package)                                 | CC0-1.0          | Prettier                       |
+| `*.md`, `*.adoc`                                       | CC-BY-NC-SA-4.0  | Prettier                       |
+| `*.xml`, `*.yaml`, `*.properties`, `*.toml`, `*.json5` | CC0-1.0          | Prettier                       |
+| shell scripts                                          | MIT              | `shfmt --write --style python` |
+
+`REUSE.toml` annotates generated files and lockfiles that cannot carry inline
+headers (`.gitmodules`, `*.lockfile`, `yarn.lock`, `uv.lock`, `.tool-versions`,
+`.python-version`).
+
+# Testing Strategy
+
+## Framework and configuration
+
+- **Runner:** `vitest` configured in `vitest.config.ts`.
+- **Workspace projects:**
+  - `ghb` — root `./packages/ghb`, includes `**/*.test.ts`
+  - `ghb-merge` — root `./packages/ghb-merge`, includes `**/*.test.ts`
+  - `ghb-secrets-sync` — root `./packages/ghb-secrets-sync`, includes
+    `test/**/*.test.ts`
+- **Coverage:** `@vitest/coverage-v8` with thresholds configured in
+  `vitest.config.ts`.
+- Tests explicitly import `describe`, `it`, `expect`, `vi`, etc. from `vitest`.
+
+## Testing patterns
+
+- **Dependency injection via `CommandRunner`:** production code accepts a
+  `runArgv` implementation so tests can pass fake `gh`/`git` runners instead of
+  invoking real binaries.
+- **Filesystem isolation:** tests that write files use `mkdtempSync` under
+  `os.tmpdir()` and clean up in `afterEach`.
+- **Process env isolation:** tests that mutate `process.env` restore/delete the
+  variables in `afterEach`.
+- **Spies/mocks:** use `vi.fn()` from `vitest`.
+
+# Git Workflow
+
+## Git hooks
+
+Hooks live in `.share/git/hooks` and are configured by `yarn contribute` via
+`git config core.hooksPath .share/git/hooks`.
+
+- **pre-commit:** runs `lint-staged` (format + SPDX headers).
+- **commit-msg:** validates conventional commit format with
+  `git-conventional-commits commit-msg-hook`.
+- **post-checkout:** on branch checkouts, runs `yarn install --immutable` and/or
+  `uv sync --frozen` if `yarn.lock` or `uv.lock` changed.
+- **post-merge:** same as post-checkout using `HEAD@{1}` as the previous state.
+
+All hooks exit early in CI (`[ -n "$CI" ]`).
+
+## Conventional Commits
+
+Allowed types from `git-conventional-commits.yaml`:
+
+```text
+ci, feat, fix, perf, refactor, style, test, build, ops, docs, chore, merge, revert
 ```
 
-If an engine binary is not found, the merge script will fail with a clear error when you try to use it.
+Changelog types are `feat`, `fix`, `perf`, and `merge`. Commits matching `^WIP `
+are ignored.
 
-The merge script:
+# CI/CD and Automation
 
-1. Fetches and merges `origin/HEAD`.
-2. Pushes the current branch.
-3. Creates/updates PR with AI-generated conventional commit message.
-4. Waits for CI checks via `gh pr checks --watch`.
-5. Interactive squash merge prompt (`[Y/n]`).
+All workflows trigger on `push`.
 
-## Security Considerations
+| Workflow                  | Purpose                                                                                 |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| `test.yml`                | Runs the reusable `xenoterracide/github/.github/workflows/yarn.yml` workflow            |
+| `pre-commit.yml`          | Runs reusable `license.yml` and `prettier.yml` workflows                                |
+| `devtools-regression.yml` | Runs reusable `node-cli.yml` regression workflow                                        |
+| `ai-engines.yml`          | Installs `@github/copilot` and `@jetbrains/junie` globally, then runs `ghb-merge` tests |
 
-1. **CI Detection**: All git hooks check `[ -n "$CI" ]` and exit early in CI environments.
-2. **GitHub CLI**: Requires `gh` CLI authenticated for PR and secret operations.
-3. **Lockfile Integrity**:
-   - `yarn install --immutable` ensures `yarn.lock` is not modified unexpectedly.
-   - `uv sync --frozen` ensures `uv.lock` is not modified unexpectedly.
-4. **Path Security**: Scripts use `execFileSync` with arrays to prevent command injection. Never concatenate user input into shell commands.
-5. **Secret Handling**: `gh secret set` receives values via `stdin` (using `input` option) so secrets never appear in process arguments.
-6. **File Permissions**: Env files and secret files are checked/enforced to `0o600`. Warnings are emitted if files are overly permissive.
-7. **Submodule Awareness**: `findMainRepoRoot()` walks up past submodules to find the true repository root, preventing operations in the wrong git context.
+Reusable workflows are pinned to commit SHAs (see `.github/workflows/*.yml`).
 
-## Development Setup
+## Renovate
 
-1. Install prerequisites: `asdf install` (reads `.tool-versions`).
-2. Setup environment: `yarn contribute`
-   - Creates `.venv` if missing.
-   - Syncs Python virtual environment.
-   - Installs Node.js dependencies.
-   - Configures git hooks path.
+`.github/renovate.json5` enables automatic rebasing and auto-merge for npm,
+GitHub Actions, asdf, pyenv, pep621, and maven dependencies. Xenoterracide org
+GitHub Actions are pinned to commit SHAs. `.share/**` and `.agents/**` are
+ignored because they are managed as subtrees.
 
-## Dependency Management
+# Security Considerations
 
-### Renovate Configuration
+1. **Shell command safety:** wherever possible the code uses `execFileSync` with
+   argv arrays instead of shell strings to avoid injection. `CommandRunner.runArgv`
+   is the preferred interface.
+2. **Secret handling:** `gh secret set` always receives the secret value via the
+   `input` option (stdin), never via command-line arguments.
+3. **File permissions:** env files and referenced secret files are checked and
+   forced to `0o600` when created or updated. Warnings are emitted for overly
+   permissive files.
+4. **Submodule awareness:** `findMainRepoRoot()` walks up past submodules
+   (detected by a parent `.gitmodules`) so git operations run in the true repo
+   root.
+5. **Lockfile integrity:**
+   - `yarn install --immutable` prevents unexpected `yarn.lock` changes.
+   - `uv sync --frozen` prevents unexpected `uv.lock` changes.
+6. **CI detection:** all git hooks and the setup script skip behavior when `$CI`
+   is set.
+7. **PnP isolation:** before spawning AI engine Node processes, `NODE_OPTIONS` is
+   scrubbed of Yarn PnP loader flags to prevent module-resolution failures in
+   globally installed engines.
 
-Automatic dependency updates via Renovate (`.github/renovate.json5`):
+# Development Setup
 
-- **npm/asdf/pyenv/pep621/github-actions**: Auto-merge enabled with rebase strategy.
-- **xenoterracide org GitHub Actions**: Pinned to commit SHAs for reproducibility.
-- **Ignored paths**: `.share/**`, `.agents/**` (subtree-managed).
-
-### Key Files
-
-- `uv.lock` - Python dependency lock.
-- `yarn.lock` - Node.js dependency lock (managed by Yarn PnP).
-- Changes to these trigger automatic sync via git hooks.
+1. Ensure `asdf` and `direnv` are installed and allowed.
+2. Run `asdf install` (or let `.envrc` run it).
+3. Run `yarn contribute` to create `.venv`, sync Python deps, install Node
+   dependencies, and configure git hooks.
+4. Run `yarn check` to confirm the repo builds, lints, and tests cleanly.
