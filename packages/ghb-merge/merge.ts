@@ -479,7 +479,7 @@ export async function createOrUpdatePR(
 }
 
 export class PrMessageCommand extends Command {
-  public static paths = [["pr-message"]];
+  public static paths = [["pr", "message"]];
 
   public static usage = Command.Usage({
     description: "Generate PR title and body files using an AI engine",
@@ -540,7 +540,7 @@ export class PrMessageCommand extends Command {
 }
 
 export class MergeCommand extends Command {
-  public static paths = [["merge"], Command.Default];
+  public static paths = [["pr", "merge"]];
 
   public static usage = Command.Usage({
     description: "AI-assisted PR merge workflow",
