@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
 SPDX-License-Identifier: CC-BY-NC-SA-4.0
 -->
 
-# share (template-main)
+# share
 
 Shared configuration and tooling repository. Uses Node.js-based developer tools
 (Prettier, lint-staged, git-conventional-commits) managed via Yarn PnP, with
