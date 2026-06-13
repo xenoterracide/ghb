@@ -52,7 +52,7 @@ yarn check
 # Individual commands
 yarn test              # tests with coverage
 yarn build             # build packages topologically
-yarn typecheck         # tsc --noEmit
+yarn typecheck         # build, then typecheck all workspaces
 yarn lint              # eslint + prettier + reuse
 yarn lint:eslint
 yarn lint:prettier
@@ -80,3 +80,18 @@ yarn lint:reuse
 3. Run `yarn contribute` to create `.venv`, sync Python deps, install Node
    dependencies, and configure git hooks.
 4. Run `yarn check` to confirm the repo builds, lints, and tests cleanly.
+
+## Source of Truth
+
+- Tool versions → `.tool-versions`
+- Scripts and Node dependencies → `package.json`
+- Python dependencies → `pyproject.toml`, `uv.lock`
+- Conventional commit types → `git-conventional-commits.yaml`
+- Vitest/coverage configuration → `vitest.config.ts`
+- Renovate configuration → `.github/renovate.json5`
+
+## Maintenance
+
+Update this file when you change workflows, tools, or conventions it describes.
+Update `README.md` for user-facing behavior changes and `CONTRIBUTING.md` for
+contributor-facing workflow changes.
