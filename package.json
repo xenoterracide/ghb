@@ -4,43 +4,19 @@
   "private": true,
   "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^10.0.0",
-    "@eslint/json": "^2.0.0",
-    "@eslint/markdown": "^8.0.0",
     "@prettier/plugin-xml": "^3.4.2",
-    "@vitest/coverage-v8": "^4.1.3",
-    "chalk": "^5.6.2",
-    "concurrently": "^10.0.0",
-    "eslint": "^10.0.0",
     "git-conventional-commits": "^2.8.0",
-    "globals": "^17.0.0",
-    "jiti": "^2.0.0",
     "lint-staged": "^17.0.0",
     "prettier": "^3.6.2",
     "prettier-plugin-java": "^2.7.5",
     "prettier-plugin-properties": "^0.3.0",
-    "prettier-plugin-toml": "^2.0.6",
-    "rimraf": "^6.1.2",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.0",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^4.1.3"
+    "prettier-plugin-toml": "^2.0.6"
   },
   "scripts": {
+    "check": "yarn lint:prettier",
     "contribute": "uv sync --frozen && git config core.hooksPath git/hooks",
-    "merge:copilot": "yarn workspace @xenoterracide/merge run merge:copilot",
-    "merge:junie": "yarn workspace @xenoterracide/merge run merge:junie",
-    "merge:kimi": "yarn workspace @xenoterracide/merge run merge:kimi",
-    "secrets": "tsx node/packages/secrets-sync/src/cli.ts",
     "lint:prettier": "prettier --ignore-unknown --cache --check '**'",
     "lint:reuse": "uv run --frozen --group dev reuse lint",
-    "lint:eslint": "eslint .",
-    "lint": "yarn lint:eslint && yarn lint:prettier && yarn lint:reuse",
-    "test": "vitest run --coverage",
-    "typecheck": "yarn workspaces foreach --all --exclude @xenoterracide/share run typecheck",
-    "check": "concurrently --names eslint,tsc,test --prefix-colors cyan,magenta,green 'yarn lint:eslint' 'yarn typecheck' 'yarn test'"
-  },
-  "workspaces": [
-    "node/packages/*"
-  ]
+    "lint": "yarn lint:prettier && yarn lint:reuse"
+  }
 }
