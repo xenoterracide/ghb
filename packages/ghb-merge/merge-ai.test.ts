@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { generateWithKimi, generateWithJunie, generateWithCopilot } from "./merge";
-import { mkdtempSync, writeFileSync, rmSync } from "fs";
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -41,10 +41,16 @@ describe("generateWithKimi", () => {
     vi.clearAllMocks();
   });
 
-  it("should generate message using kimi CLI", async () => {
+  it("should use files written by kimi-code", async () => {
     const diff = "some diff content";
 
-    (execFileSync as ReturnType<typeof vi.fn>).mockImplementation(() => "feat: test message\n\n- Detail 1\n- Detail 2");
+    (execFileSync as ReturnType<typeof vi.fn>).mockImplementation((cmd: string) => {
+      if (cmd === "kimi") {
+        writeFileSync(titleFile, "feat: test message\n", "utf8");
+        writeFileSync(bodyFile, "- Detail 1\n- Detail 2", "utf8");
+      }
+      return "";
+    });
 
     await generateWithKimi(titleFile, bodyFile, diff);
 
@@ -52,6 +58,19 @@ describe("generateWithKimi", () => {
 
     const kimiCall = (execFileSync as ReturnType<typeof vi.fn>).mock.calls.find(([cmd]) => cmd === "kimi");
     expect(kimiCall?.[2]?.env?.NODE_OPTIONS).toBe("--max-old-space-size=4096");
+    expect(readFileSync(titleFile, "utf8").trim()).toBe("feat: test message");
+    expect(readFileSync(bodyFile, "utf8").trim()).toBe("- Detail 1\n- Detail 2");
+  });
+
+  it("should fall back to parsing stdout when kimi did not write files", async () => {
+    const diff = "some diff content";
+
+    (execFileSync as ReturnType<typeof vi.fn>).mockReturnValue("feat: fallback message\n\n- Fallback detail");
+
+    await generateWithKimi(titleFile, bodyFile, diff);
+
+    expect(readFileSync(titleFile, "utf8").trim()).toBe("feat: fallback message");
+    expect(readFileSync(bodyFile, "utf8").trim()).toBe("- Fallback detail");
   });
 
   it("should throw error when kimi fails", async () => {
