@@ -52,7 +52,7 @@ export function loadKimiApiKeyFromConfig(configFile?: string): string | undefine
   return undefined;
 }
 
-export function resolveKimiApiKey(opts: AiEngineOptions): string {
+export function resolveKimiApiKey(opts: AiEngineOptions = {}): string {
   if (opts.apiKey) {
     return opts.apiKey;
   }
