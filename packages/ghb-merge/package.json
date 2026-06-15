@@ -19,10 +19,11 @@
     "dist"
   ],
   "dependencies": {
-    "clipanion": "^4.0.0-rc.4"
-  },
-  "optionalDependencies": {
-    "@moonshot-ai/kimi-code": "^0.14.0"
+    "@ai-sdk/openai": "^3.0.0",
+    "ai": "^6.0.0",
+    "clipanion": "^4.0.0-rc.4",
+    "smol-toml": "^1.6.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
