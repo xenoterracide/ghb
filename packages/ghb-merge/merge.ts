@@ -10,6 +10,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSyn
 import { tmpdir } from "os";
 import { join } from "path";
 import { logger } from "./logger.js";
+import { type AiEngineOptions, createAiEngine } from "./ai/index.js";
 
 export type Engine = "kimi" | "junie" | "copilot";
 
@@ -142,6 +143,7 @@ export async function generateMessage(
   tmpDir: string,
   runner: CommandRunner = defaultRunner,
   engine: Engine = "kimi",
+  aiOpts: AiEngineOptions = {},
 ): Promise<void> {
   const diffRange = "origin/HEAD...HEAD";
 
@@ -158,7 +160,7 @@ export async function generateMessage(
   const changedDiff = runner.run(`git diff ${diffRange}`).split("\n").slice(0, 2000).join("\n");
 
   if (engine === "kimi") {
-    await generateWithKimi(titleFile, bodyFile, changedDiff);
+    await generateWithKimi(titleFile, bodyFile, changedDiff, aiOpts);
   } else if (engine === "junie") {
     await generateWithJunie(titleFile, bodyFile, changedDiff, tmpDir);
   } else {
@@ -202,7 +204,12 @@ function execFileSyncClean(
   return execFileSync(file, args, { ...options, encoding: "utf8", env });
 }
 
-export async function generateWithKimi(titleFile: string, bodyFile: string, diff: string): Promise<void> {
+export async function generateWithKimi(
+  titleFile: string,
+  bodyFile: string,
+  diff: string,
+  opts: AiEngineOptions = {},
+): Promise<void> {
   const allowedTypes = "ci feat fix perf refactor style test build ops docs chore merge revert";
 
   const prompt = `Generate a conventional commit message for the following diff.
@@ -217,33 +224,11 @@ Rules:
 - Output plain text only. No markdown fences.
 - Do not run any tests or gradle commands.
 
-After composing the message, write the subject line to '${titleFile}' and the body to '${bodyFile}'.
-
 Diff:
 ${diff}`;
 
-  let output = "";
-  try {
-    output = execFileSyncClean("kimi", ["-p", prompt]);
-  } catch (e) {
-    logger.debug("kimi failed:", e instanceof Error ? e.message : String(e));
-    throw new Error("kimi failed to generate message");
-  }
-
-  // kimi-code writes the files directly via tool calls. Validate and use them.
-  try {
-    const title = readFileSync(titleFile, "utf8").trim();
-    const allowedTypesAlt = allowedTypes.replace(/ /g, "|");
-    const pattern = new RegExp(`^(${allowedTypesAlt})(\\(([^)]+)\\))?(!)?: .+`);
-    if (title && pattern.test(title)) {
-      return;
-    }
-    logger.debug("kimi wrote an invalid subject: %s", title);
-  } catch (e) {
-    logger.debug("kimi did not write expected files:", e instanceof Error ? e.message : String(e));
-  }
-
-  // Fallback for CLIs that print the message instead of writing files.
+  const engine = createAiEngine("kimi", opts);
+  const output = await engine.generate(prompt);
   await parseAndWriteMessage(output, titleFile, bodyFile);
 }
 
@@ -461,6 +446,7 @@ export async function createOrUpdatePR(
   runner: CommandRunner = defaultRunner,
   fs: FileSystem = { existsSync, readFileSync, writeFileSync, unlinkSync, mkdtempSync, rmSync },
   engine: Engine = "kimi",
+  aiOpts: AiEngineOptions = {},
 ): Promise<void> {
   const tmpDir = fs.mkdtempSync(join(tmpdir(), "pr-"));
   const titleFile = join(tmpDir, "title.txt");
@@ -480,12 +466,12 @@ export async function createOrUpdatePR(
       console.log("Updating PR message...");
     }
 
-    await generateMessage(titleFile, bodyFile, tmpDir, runner, engine);
+    await generateMessage(titleFile, bodyFile, tmpDir, runner, engine, aiOpts);
     const headAfter = getHead(runner);
 
     // Regenerate if HEAD changed during generation
     if (headBefore !== headAfter) {
-      await generateMessage(titleFile, bodyFile, tmpDir, runner, engine);
+      await generateMessage(titleFile, bodyFile, tmpDir, runner, engine, aiOpts);
     }
 
     const title = fs.readFileSync(titleFile, { encoding: "utf8" }).trim();
@@ -561,6 +547,18 @@ export class PrMessageCommand extends Command {
     description: "Use Copilot engine",
   });
 
+  public model = Option.String("--model", {
+    description: "Model ID for the selected AI engine",
+  });
+
+  public keyFile = Option.String("--key-file", {
+    description: "Path to a 0o600 file containing the API key",
+  });
+
+  public configFile = Option.String("--config-file", {
+    description: "Path to an engine config file (Kimi: ~/.kimi-code/config.toml)",
+  });
+
   private readonly runner: CommandRunner;
 
   public constructor(runner: CommandRunner = defaultRunner) {
@@ -576,7 +574,11 @@ export class PrMessageCommand extends Command {
         junie: this.junie,
         copilot: this.copilot,
       });
-      await generateMessage(this.titleFile, this.bodyFile, tmpDir, this.runner, engine);
+      await generateMessage(this.titleFile, this.bodyFile, tmpDir, this.runner, engine, {
+        model: this.model,
+        keyFile: this.keyFile,
+        configFile: this.configFile,
+      });
       return 0;
     } catch (e) {
       console.error(e instanceof Error ? e.message : String(e));
@@ -616,6 +618,18 @@ export class MergeCommand extends Command {
     description: "Use Copilot engine",
   });
 
+  public model = Option.String("--model", {
+    description: "Model ID for the selected AI engine",
+  });
+
+  public keyFile = Option.String("--key-file", {
+    description: "Path to a 0o600 file containing the API key",
+  });
+
+  public configFile = Option.String("--config-file", {
+    description: "Path to an engine config file (Kimi: ~/.kimi-code/config.toml)",
+  });
+
   private readonly runner: CommandRunner;
 
   public constructor(runner: CommandRunner = defaultRunner) {
@@ -632,6 +646,12 @@ export class MergeCommand extends Command {
         copilot: this.copilot,
       });
 
+      const aiOpts = {
+        model: this.model,
+        keyFile: this.keyFile,
+        configFile: this.configFile,
+      };
+
       // Full merge workflow
       // Capture branch name BEFORE any git operations that might change it
       const currentBranch = getBranch(this.runner);
@@ -647,9 +667,9 @@ export class MergeCommand extends Command {
       const hasExistingPR = hasPR(currentBranch, this.runner);
       if (hasExistingPR) {
         await waitForChecks();
-        await createOrUpdatePR(currentBranch, this.runner, undefined, engine);
+        await createOrUpdatePR(currentBranch, this.runner, undefined, engine, aiOpts);
       } else {
-        await createOrUpdatePR(currentBranch, this.runner, undefined, engine);
+        await createOrUpdatePR(currentBranch, this.runner, undefined, engine, aiOpts);
         await waitForChecks();
       }
 
