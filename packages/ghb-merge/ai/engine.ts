@@ -14,5 +14,5 @@ export interface AiEngineOptions {
 
 export interface AiEngine {
   readonly name: EngineName;
-  generate(prompt: string): Promise<string>;
+  generate: (prompt: string) => Promise<string>;
 }
