@@ -203,27 +203,47 @@ function execFileSyncClean(
 }
 
 export async function generateWithKimi(titleFile: string, bodyFile: string, diff: string): Promise<void> {
-  const skillsDir = ".agents/skills";
-  const hasSkillsDir = existsSync(skillsDir);
+  const allowedTypes = "ci feat fix perf refactor style test build ops docs chore merge revert";
 
-  const prompt = `Generate a conventional commit message for the following diff and write the subject line to '${titleFile}' and the body to '${bodyFile}'. Do not run any tests or gradle commands.
+  const prompt = `Generate a conventional commit message for the following diff.
+
+Rules:
+- First line MUST be a valid Conventional Commit subject.
+- Use ONLY these commit types: ${allowedTypes}
+- If unsure, choose 'chore'.
+- Keep the subject <= 72 characters.
+- Use a specific scope when possible.
+- Body: 0-6 bullet points explaining WHAT changed and WHY, wrap lines <= 72 characters.
+- Output plain text only. No markdown fences.
+- Do not run any tests or gradle commands.
+
+After composing the message, write the subject line to '${titleFile}' and the body to '${bodyFile}'.
 
 Diff:
 ${diff}`;
 
-  const kimiArgs = ["-p", prompt];
-  if (hasSkillsDir) {
-    kimiArgs.unshift("--skills-dir", skillsDir);
-  }
-
-  let output: string;
+  let output = "";
   try {
-    output = execFileSyncClean("kimi", kimiArgs);
+    output = execFileSyncClean("kimi", ["-p", prompt]);
   } catch (e) {
     logger.debug("kimi failed:", e instanceof Error ? e.message : String(e));
     throw new Error("kimi failed to generate message");
   }
 
+  // kimi-code writes the files directly via tool calls. Validate and use them.
+  try {
+    const title = readFileSync(titleFile, "utf8").trim();
+    const allowedTypesAlt = allowedTypes.replace(/ /g, "|");
+    const pattern = new RegExp(`^(${allowedTypesAlt})(\\(([^)]+)\\))?(!)?: .+`);
+    if (title && pattern.test(title)) {
+      return;
+    }
+    logger.debug("kimi wrote an invalid subject: %s", title);
+  } catch (e) {
+    logger.debug("kimi did not write expected files:", e instanceof Error ? e.message : String(e));
+  }
+
+  // Fallback for CLIs that print the message instead of writing files.
   await parseAndWriteMessage(output, titleFile, bodyFile);
 }
 
