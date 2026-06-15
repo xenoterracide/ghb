@@ -18,6 +18,10 @@ interface KimiProviderConfig {
   readonly api_key?: string;
 }
 
+export interface CredentialResolver {
+  resolve: () => string;
+}
+
 function kimiConfigHome(): string {
   return process.env.KIMI_CODE_HOME ?? join(homedir(), ".kimi-code");
 }
@@ -29,15 +33,18 @@ function assertSecureKeyFile(path: string): void {
   }
 }
 
-function readKeyFile(keyFile: string): string {
-  assertSecureKeyFile(keyFile);
-  return readFileSync(keyFile, "utf8").trim();
-}
+export class KimiConfigCredentialResolver implements CredentialResolver {
+  public constructor(private readonly configFile?: string) {}
 
-export function loadKimiApiKeyFromConfig(configFile?: string): string | undefined {
-  const path = configFile ?? join(kimiConfigHome(), "config.toml");
-  try {
-    const raw = readFileSync(path, "utf8");
+  public resolve(): string {
+    const path = this.configFile ?? join(kimiConfigHome(), "config.toml");
+    let raw: string;
+    try {
+      raw = readFileSync(path, "utf8");
+    } catch {
+      throw new Error(`Kimi config file not found at ${path}`);
+    }
+
     const parsed = parseToml(raw) as {
       providers?: Record<string, KimiProviderConfig>;
     };
@@ -46,36 +53,67 @@ export function loadKimiApiKeyFromConfig(configFile?: string): string | undefine
         return provider.api_key;
       }
     }
-  } catch {
-    // Config missing or malformed; fall through.
+    throw new Error(`No kimi provider found in ${path}`);
   }
-  return undefined;
 }
 
-export function resolveKimiApiKey(opts: AiEngineOptions = {}): string {
-  if (opts.apiKey) {
-    return opts.apiKey;
+export class KeyFileCredentialResolver implements CredentialResolver {
+  public constructor(private readonly keyFile: string) {}
+
+  public resolve(): string {
+    assertSecureKeyFile(this.keyFile);
+    return readFileSync(this.keyFile, "utf8").trim();
   }
-  const configKey = loadKimiApiKeyFromConfig(opts.configFile);
-  if (configKey) {
-    return configKey;
+}
+
+export class EnvCredentialResolver implements CredentialResolver {
+  public constructor(private readonly envVar: string) {}
+
+  public resolve(): string {
+    const value = process.env[this.envVar];
+    if (!value) {
+      throw new Error(`Environment variable ${this.envVar} is not set`);
+    }
+    return value;
+  }
+}
+
+export class ChainCredentialResolver implements CredentialResolver {
+  public constructor(private readonly resolvers: CredentialResolver[]) {}
+
+  public resolve(): string {
+    for (const resolver of this.resolvers) {
+      try {
+        return resolver.resolve();
+      } catch {
+        // Try the next resolver in the chain.
+      }
+    }
+    throw new Error(
+      "Kimi API key not found. Configure a kimi provider in ~/.kimi-code/config.toml, pass --key-file, or set KIMI_API_KEY.",
+    );
+  }
+}
+
+function createKimiCredentialResolver(opts: AiEngineOptions): CredentialResolver {
+  const { apiKey } = opts;
+  if (apiKey) {
+    return { resolve: () => apiKey };
   }
   if (opts.keyFile) {
-    return readKeyFile(opts.keyFile);
+    return new KeyFileCredentialResolver(opts.keyFile);
   }
-  const envKey = process.env.KIMI_API_KEY;
-  if (envKey) {
-    return envKey;
-  }
-  throw new Error(
-    "Kimi API key not found. Configure a kimi provider in ~/.kimi-code/config.toml, pass --key-file, or set KIMI_API_KEY.",
-  );
+  return new ChainCredentialResolver([
+    new KimiConfigCredentialResolver(opts.configFile),
+    new EnvCredentialResolver("KIMI_API_KEY"),
+  ]);
 }
 
 export function createKimiProvider(opts: AiEngineOptions = {}): OpenAIProvider {
+  const credentials = createKimiCredentialResolver(opts);
   return createOpenAI({
     baseURL: opts.baseUrl ?? DEFAULT_KIMI_BASE_URL,
-    apiKey: resolveKimiApiKey(opts),
+    apiKey: credentials.resolve(),
   });
 }
 

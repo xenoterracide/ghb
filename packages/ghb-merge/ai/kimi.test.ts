@@ -3,7 +3,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { KimiEngine, loadKimiApiKeyFromConfig, resolveKimiApiKey, DEFAULT_KIMI_MODEL } from "./kimi";
+import {
+  KimiEngine,
+  DEFAULT_KIMI_MODEL,
+  KimiConfigCredentialResolver,
+  KeyFileCredentialResolver,
+  EnvCredentialResolver,
+  ChainCredentialResolver,
+} from "./kimi";
 
 vi.mock("ai", () => ({ generateText: vi.fn() }));
 vi.mock("@ai-sdk/openai", () => ({
@@ -16,45 +23,7 @@ import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-describe("resolveKimiApiKey", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  it("uses explicit apiKey", () => {
-    expect(resolveKimiApiKey({ apiKey: "sk-explicit" })).toBe("sk-explicit");
-  });
-
-  it("reads from a secure key file", () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), "kimi-key-"));
-    const keyFile = join(tmpDir, "key.txt");
-    writeFileSync(keyFile, "sk-from-file\n", "utf8");
-    chmodSync(keyFile, 0o600);
-    expect(resolveKimiApiKey({ keyFile })).toBe("sk-from-file");
-    rmSync(tmpDir, { recursive: true, force: true });
-  });
-
-  it("throws when an explicit key file is insecure", () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), "kimi-key-"));
-    const keyFile = join(tmpDir, "key.txt");
-    writeFileSync(keyFile, "sk-from-file\n", "utf8");
-    chmodSync(keyFile, 0o644);
-    expect(() => resolveKimiApiKey({ keyFile })).toThrow(/must have permissions 0o600/);
-    rmSync(tmpDir, { recursive: true, force: true });
-  });
-
-  it("falls back to KIMI_API_KEY env var", () => {
-    vi.stubEnv("KIMI_API_KEY", "sk-env");
-    expect(resolveKimiApiKey()).toBe("sk-env");
-  });
-
-  it("throws when no source is available", () => {
-    vi.stubEnv("KIMI_API_KEY", "");
-    expect(() => resolveKimiApiKey()).toThrow(/Kimi API key not found/);
-  });
-});
-
-describe("loadKimiApiKeyFromConfig", () => {
+describe("KimiConfigCredentialResolver", () => {
   it("extracts the first kimi provider api_key", () => {
     const tmpDir = mkdtempSync(join(tmpdir(), "kimi-cfg-"));
     const configFile = join(tmpDir, "config.toml");
@@ -63,12 +32,94 @@ describe("loadKimiApiKeyFromConfig", () => {
       `[providers.openai]\ntype = "openai"\napi_key = "sk-openai"\n\n[providers.kimi]\ntype = "kimi"\napi_key = "sk-kimi"\n`,
       "utf8",
     );
-    expect(loadKimiApiKeyFromConfig(configFile)).toBe("sk-kimi");
+    const resolver = new KimiConfigCredentialResolver(configFile);
+    expect(resolver.resolve()).toBe("sk-kimi");
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("returns undefined for a missing file", () => {
-    expect(loadKimiApiKeyFromConfig("/nonexistent/config.toml")).toBeUndefined();
+  it("throws when the file is missing", () => {
+    const resolver = new KimiConfigCredentialResolver("/nonexistent/config.toml");
+    expect(() => resolver.resolve()).toThrow(/config file not found/);
+  });
+
+  it("throws when no kimi provider exists", () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), "kimi-cfg-"));
+    const configFile = join(tmpDir, "config.toml");
+    writeFileSync(configFile, `[providers.openai]\ntype = "openai"\napi_key = "sk-openai"\n`, "utf8");
+    const resolver = new KimiConfigCredentialResolver(configFile);
+    expect(() => resolver.resolve()).toThrow(/No kimi provider found/);
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+});
+
+describe("KeyFileCredentialResolver", () => {
+  it("reads from a secure key file", () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), "kimi-key-"));
+    const keyFile = join(tmpDir, "key.txt");
+    writeFileSync(keyFile, "sk-from-file\n", "utf8");
+    chmodSync(keyFile, 0o600);
+    const resolver = new KeyFileCredentialResolver(keyFile);
+    expect(resolver.resolve()).toBe("sk-from-file");
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("throws when the key file is insecure", () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), "kimi-key-"));
+    const keyFile = join(tmpDir, "key.txt");
+    writeFileSync(keyFile, "sk-from-file\n", "utf8");
+    chmodSync(keyFile, 0o644);
+    const resolver = new KeyFileCredentialResolver(keyFile);
+    expect(() => resolver.resolve()).toThrow(/must have permissions 0o600/);
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+});
+
+describe("EnvCredentialResolver", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("reads the configured environment variable", () => {
+    vi.stubEnv("KIMI_API_KEY", "sk-env");
+    const resolver = new EnvCredentialResolver("KIMI_API_KEY");
+    expect(resolver.resolve()).toBe("sk-env");
+  });
+
+  it("throws when the environment variable is not set", () => {
+    vi.stubEnv("KIMI_API_KEY", "");
+    const resolver = new EnvCredentialResolver("KIMI_API_KEY");
+    expect(() => resolver.resolve()).toThrow(/is not set/);
+  });
+});
+
+describe("ChainCredentialResolver", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("returns the first successful resolver", () => {
+    const resolver = new ChainCredentialResolver([
+      {
+        resolve: (): string => {
+          throw new Error("first");
+        },
+      },
+      { resolve: (): string => "second" },
+      { resolve: (): string => "third" },
+    ]);
+    expect(resolver.resolve()).toBe("second");
+  });
+
+  it("throws a friendly message when all resolvers fail", () => {
+    vi.stubEnv("KIMI_API_KEY", "");
+    const resolver = new ChainCredentialResolver([
+      {
+        resolve: (): string => {
+          throw new Error("fail");
+        },
+      },
+    ]);
+    expect(() => resolver.resolve()).toThrow(/Kimi API key not found/);
   });
 });
 
