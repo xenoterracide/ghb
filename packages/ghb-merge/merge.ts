@@ -144,8 +144,7 @@ function assertAiOptsCompatible(engine: EngineName, aiOpts: AiEngineOptions): vo
     .map(([key]) => `--${key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}`);
   if (provided.length > 0) {
     throw new Error(
-      `Options ${provided.join(", ")} are only supported by the Kimi engine. ` +
-        `Remove them or use --kimi.`,
+      `Options ${provided.join(", ")} are only supported by the Kimi engine. ` + `Remove them or use --kimi.`,
     );
   }
 }
