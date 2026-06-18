@@ -58,6 +58,10 @@ ghb merge --kimi --model kimi-latest
 # Provide a key file instead of using the Kimi CLI config
 # (the file must have permissions 0o600)
 ghb merge --kimi --key-file ~/.keys/kimi.txt
+
+# Provide a custom Kimi Code CLI config file
+# (the file must have permissions 0o600)
+ghb merge --kimi --config-file ~/.kimi-code/config.toml
 ```
 
 ## License

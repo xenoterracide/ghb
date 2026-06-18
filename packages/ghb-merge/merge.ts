@@ -10,9 +10,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSyn
 import { tmpdir } from "os";
 import { join } from "path";
 import { logger } from "./logger.js";
-import { type AiEngineOptions, createAiEngine } from "./ai/index.js";
-
-export type Engine = "kimi" | "junie" | "copilot";
+import { type AiEngineOptions, type EngineName, createAiEngine } from "./ai/index.js";
 
 export class EngineResolutionError extends Error {
   public constructor(message: string) {
@@ -21,8 +19,8 @@ export class EngineResolutionError extends Error {
   }
 }
 
-export function resolveEngine(flags: Record<Engine, boolean>): Engine {
-  const active = (Object.entries(flags) as [Engine, boolean][]).filter(([, v]) => v).map(([k]) => k);
+export function resolveEngine(flags: Record<EngineName, boolean>): EngineName {
+  const active = (Object.entries(flags) as [EngineName, boolean][]).filter(([, v]) => v).map(([k]) => k);
   if (active.length > 1) {
     throw new EngineResolutionError(`Error: Multiple engines specified: ${active.join(", ")}. Use only one.`);
   }
@@ -137,14 +135,31 @@ export function getHead(runner: CommandRunner = defaultRunner): string {
   return runner.run("git rev-parse --verify HEAD");
 }
 
+function assertAiOptsCompatible(engine: EngineName, aiOpts: AiEngineOptions): void {
+  if (engine === "kimi") {
+    return;
+  }
+  const provided = Object.entries(aiOpts)
+    .filter(([, value]) => value !== undefined && value !== "")
+    .map(([key]) => `--${key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}`);
+  if (provided.length > 0) {
+    throw new Error(
+      `Options ${provided.join(", ")} are only supported by the Kimi engine. ` +
+        `Remove them or use --kimi.`,
+    );
+  }
+}
+
 export async function generateMessage(
   titleFile: string,
   bodyFile: string,
   tmpDir: string,
   runner: CommandRunner = defaultRunner,
-  engine: Engine = "kimi",
+  engine: EngineName = "kimi",
   aiOpts: AiEngineOptions = {},
 ): Promise<void> {
+  assertAiOptsCompatible(engine, aiOpts);
+
   const diffRange = "origin/HEAD...HEAD";
 
   // Check for changes
@@ -445,7 +460,7 @@ export async function createOrUpdatePR(
   branch: string,
   runner: CommandRunner = defaultRunner,
   fs: FileSystem = { existsSync, readFileSync, writeFileSync, unlinkSync, mkdtempSync, rmSync },
-  engine: Engine = "kimi",
+  engine: EngineName = "kimi",
   aiOpts: AiEngineOptions = {},
 ): Promise<void> {
   const tmpDir = fs.mkdtempSync(join(tmpdir(), "pr-"));

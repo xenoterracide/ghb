@@ -32,6 +32,7 @@ describe("KimiConfigCredentialResolver", () => {
       `[providers.openai]\ntype = "openai"\napi_key = "sk-openai"\n\n[providers.kimi]\ntype = "kimi"\napi_key = "sk-kimi"\n`,
       "utf8",
     );
+    chmodSync(configFile, 0o600);
     const resolver = new KimiConfigCredentialResolver(configFile);
     expect(resolver.resolve()).toBe("sk-kimi");
     rmSync(tmpDir, { recursive: true, force: true });
@@ -46,8 +47,19 @@ describe("KimiConfigCredentialResolver", () => {
     const tmpDir = mkdtempSync(join(tmpdir(), "kimi-cfg-"));
     const configFile = join(tmpDir, "config.toml");
     writeFileSync(configFile, `[providers.openai]\ntype = "openai"\napi_key = "sk-openai"\n`, "utf8");
+    chmodSync(configFile, 0o600);
     const resolver = new KimiConfigCredentialResolver(configFile);
     expect(() => resolver.resolve()).toThrow(/No kimi provider found/);
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("throws when the config file is insecure", () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), "kimi-cfg-"));
+    const configFile = join(tmpDir, "config.toml");
+    writeFileSync(configFile, `[providers.kimi]\ntype = "kimi"\napi_key = "sk-kimi"\n`, "utf8");
+    chmodSync(configFile, 0o644);
+    const resolver = new KimiConfigCredentialResolver(configFile);
+    expect(() => resolver.resolve()).toThrow(/must have permissions 0o600/);
     rmSync(tmpDir, { recursive: true, force: true });
   });
 });

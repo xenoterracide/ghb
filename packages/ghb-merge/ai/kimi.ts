@@ -4,10 +4,11 @@
 
 import { createOpenAI, type OpenAIProvider } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { readFileSync, statSync } from "fs";
+import { existsSync, readFileSync, statSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { parse as parseToml } from "smol-toml";
+import { logger } from "../logger.js";
 import type { AiEngine, AiEngineOptions } from "./engine.js";
 
 export const DEFAULT_KIMI_MODEL = "kimi-k2-0712-preview";
@@ -38,6 +39,10 @@ export class KimiConfigCredentialResolver implements CredentialResolver {
 
   public resolve(): string {
     const path = this.configFile ?? join(kimiConfigHome(), "config.toml");
+    if (!existsSync(path)) {
+      throw new Error(`Kimi config file not found at ${path}`);
+    }
+    assertSecureKeyFile(path);
     let raw: string;
     try {
       raw = readFileSync(path, "utf8");
@@ -82,15 +87,19 @@ export class ChainCredentialResolver implements CredentialResolver {
   public constructor(private readonly resolvers: CredentialResolver[]) {}
 
   public resolve(): string {
+    const errors: string[] = [];
     for (const resolver of this.resolvers) {
       try {
         return resolver.resolve();
-      } catch {
-        // Try the next resolver in the chain.
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        logger.debug("Credential resolver failed:", message);
+        errors.push(message);
       }
     }
     throw new Error(
-      "Kimi API key not found. Configure a kimi provider in ~/.kimi-code/config.toml, pass --key-file, or set KIMI_API_KEY.",
+      "Kimi API key not found. Configure a kimi provider in ~/.kimi-code/config.toml, pass --key-file, or set KIMI_API_KEY. " +
+        `Details: ${errors.join("; ")}`,
     );
   }
 }

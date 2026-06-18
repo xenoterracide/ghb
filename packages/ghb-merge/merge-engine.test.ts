@@ -4,9 +4,9 @@
 
 import { describe, it, expect } from "vitest";
 import { resolveEngine, EngineResolutionError } from "./merge";
-import type { Engine } from "./merge";
+import type { EngineName } from "./ai/index.js";
 
-function flags(overrides: Partial<Record<Engine, boolean>> = {}): Record<Engine, boolean> {
+function flags(overrides: Partial<Record<EngineName, boolean>> = {}): Record<EngineName, boolean> {
   return {
     kimi: false,
     junie: false,
