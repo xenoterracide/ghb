@@ -3569,13 +3569,13 @@ __metadata:
   linkType: hard
 
 "prettier-plugin-java@npm:^2.7.5":
-  version: 2.9.7
-  resolution: "prettier-plugin-java@npm:2.9.7"
+  version: 2.10.0
+  resolution: "prettier-plugin-java@npm:2.10.0"
   dependencies:
     web-tree-sitter: "npm:0.26.9"
   peerDependencies:
     prettier: ^3.0.0
-  checksum: 10c0/2394746eb78f88d211e2ec4530d485142551c5db47cd4143f25887efe9815dd449488fecc3b64186c2424c142bbff33fd272bbf09178b5b3d165e767e13a38c0
+  checksum: 10c0/4f905f400cd4c273a09ed499c4fe92d98542c81f53c4decc299a738dcfbe9fe85b13d77639251c98a5ac274830b09c14e582fbe9e00aa2f8d1167e52a1aaa26e
   languageName: node
   linkType: hard
 
