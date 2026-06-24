@@ -562,8 +562,8 @@ __metadata:
   linkType: hard
 
 "@moonshot-ai/kimi-code@npm:^0.19.0":
-  version: 0.19.0
-  resolution: "@moonshot-ai/kimi-code@npm:0.19.0"
+  version: 0.19.1
+  resolution: "@moonshot-ai/kimi-code@npm:0.19.1"
   dependencies:
     "@mariozechner/clipboard": "npm:^0.3.2"
     koffi: "npm:^2.16.0"
@@ -577,7 +577,7 @@ __metadata:
       optional: true
   bin:
     kimi: dist/main.mjs
-  checksum: 10c0/88a3f01aea24ade65cbddedb50a4890a45506399d425b1adeb27be007eacbc9233663f8aef5659e7aaa5e6dd747dc4a3d7ea9708c36dd5bbb14b1826cc02eb11
+  checksum: 10c0/5f63e2290b9b67344af8a0425860efb4223c5f325e9e5aa7caeebe185b818536279ce8ea0695db3083998e481836ca3bc1e97febb0f3ca9b1f583255b907d73c
   languageName: node
   linkType: hard
 
