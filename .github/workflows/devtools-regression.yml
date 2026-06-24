@@ -8,4 +8,4 @@ permissions:
   contents: read
 jobs:
   node-cli:
-    uses: xenoterracide/github/.github/workflows/node-cli.yml@05b1195e8d14a0947b0b6baa72ac75861ac23cfe # develop
+    uses: xenoterracide/github/.github/workflows/node-cli.yml@79a04b34942931e6c7e9446cae8476c3d08edcc5 # develop
