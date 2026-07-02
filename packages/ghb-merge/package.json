@@ -22,7 +22,7 @@
     "clipanion": "^4.0.0-rc.4"
   },
   "optionalDependencies": {
-    "@moonshot-ai/kimi-code": "^0.20.0"
+    "@moonshot-ai/kimi-code": "^0.22.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
