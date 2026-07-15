@@ -7,5 +7,11 @@ on: push
 permissions:
   contents: read
 jobs:
-  node-cli:
-    uses: xenoterracide/github/.github/workflows/node-cli.yml@2cbe15e8b03a049a30e364c16cde78038c443eda # develop
+  prettier:
+    uses: xenoterracide/github/.github/workflows/regression-devtool-prettier.yml@develop
+  lint-staged:
+    uses: xenoterracide/github/.github/workflows/regression-devtool-lint-staged.yml@develop
+  git-conventional-commits:
+    uses: xenoterracide/github/.github/workflows/regression-devtool-git-conventional-commits.yml@develop
+  reuse:
+    uses: xenoterracide/github/.github/workflows/regression-devtool-reuse.yml@develop
