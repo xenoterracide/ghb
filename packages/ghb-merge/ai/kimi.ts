@@ -4,7 +4,7 @@
 
 import { createOpenAI, type OpenAIProvider } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { existsSync, readFileSync, statSync } from "fs";
+import { readFileSync, statSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { parse as parseToml } from "smol-toml";
@@ -39,10 +39,6 @@ export class KimiConfigCredentialResolver implements CredentialResolver {
 
   public resolve(): string {
     const path = this.configFile ?? join(kimiConfigHome(), "config.toml");
-    if (!existsSync(path)) {
-      throw new Error(`Kimi config file not found at ${path}`);
-    }
-    assertSecureKeyFile(path);
     let raw: string;
     try {
       raw = readFileSync(path, "utf8");

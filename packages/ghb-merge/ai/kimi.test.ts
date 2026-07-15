@@ -53,13 +53,13 @@ describe("KimiConfigCredentialResolver", () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("throws when the config file is insecure", () => {
+  it("does not require a secure config file", () => {
     const tmpDir = mkdtempSync(join(tmpdir(), "kimi-cfg-"));
     const configFile = join(tmpDir, "config.toml");
     writeFileSync(configFile, `[providers.kimi]\ntype = "kimi"\napi_key = "sk-kimi"\n`, "utf8");
     chmodSync(configFile, 0o644);
     const resolver = new KimiConfigCredentialResolver(configFile);
-    expect(() => resolver.resolve()).toThrow(/must have permissions 0o600/);
+    expect(resolver.resolve()).toBe("sk-kimi");
     rmSync(tmpDir, { recursive: true, force: true });
   });
 });
