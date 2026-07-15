@@ -13,12 +13,12 @@ import {
 } from "./kimi";
 
 vi.mock("ai", () => ({ generateText: vi.fn() }));
-vi.mock("@ai-sdk/openai", () => ({
-  createOpenAI: vi.fn(() => vi.fn((model: string) => ({ model }))),
+vi.mock("@ai-sdk/anthropic", () => ({
+  createAnthropic: vi.fn(() => vi.fn((model: string) => ({ model }))),
 }));
 
 import { generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { chmodSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -67,6 +67,27 @@ describe("KimiConfigCredentialResolver", () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
+  it("falls back to credentials directory when the OAuth file is empty or missing", () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), "kimi-cfg-"));
+    const configFile = join(tmpDir, "config.toml");
+    const oauthDir = join(tmpDir, "oauth");
+    const oauthFile = join(oauthDir, "kimi-code");
+    const credentialsDir = join(tmpDir, "credentials");
+    const credentialsFile = join(credentialsDir, "kimi-code.json");
+    writeFileSync(
+      configFile,
+      `[providers.kimi]\ntype = "kimi"\nbase_url = "https://api.kimi.com/coding/v1"\n\n[providers.kimi.oauth]\nstorage = "file"\nkey = "oauth/kimi-code"\n`,
+      "utf8",
+    );
+    mkdirSync(oauthDir, { recursive: true });
+    writeFileSync(oauthFile, "", "utf8");
+    mkdirSync(credentialsDir, { recursive: true });
+    writeFileSync(credentialsFile, JSON.stringify({ access_token: "fallback-token" }), "utf8");
+    const resolver = new KimiConfigCredentialResolver(configFile, tmpDir);
+    expect(resolver.resolve()).toEqual({ apiKey: "fallback-token", baseUrl: "https://api.kimi.com/coding/v1" });
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
   it("throws when the OAuth credentials file is missing", () => {
     const tmpDir = mkdtempSync(join(tmpdir(), "kimi-cfg-"));
     const configFile = join(tmpDir, "config.toml");
@@ -76,7 +97,7 @@ describe("KimiConfigCredentialResolver", () => {
       "utf8",
     );
     const resolver = new KimiConfigCredentialResolver(configFile);
-    expect(() => resolver.resolve()).toThrow(/OAuth credentials file not found/);
+    expect(() => resolver.resolve()).toThrow(/OAuth credentials file not found or contained no access_token/);
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -191,8 +212,8 @@ describe("KimiEngine", () => {
     const engine = new KimiEngine({ apiKey: "sk-test" });
     const result = await engine.generate("my prompt");
 
-    expect(createOpenAI).toHaveBeenCalledWith({
-      baseURL: "https://api.moonshot.cn/v1",
+    expect(createAnthropic).toHaveBeenCalledWith({
+      baseURL: "https://api.kimi.com/coding/v1",
       apiKey: "sk-test",
     });
     expect(generateText).toHaveBeenCalledWith(

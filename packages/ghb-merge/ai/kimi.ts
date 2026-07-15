@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { createOpenAI, type OpenAIProvider } from "@ai-sdk/openai";
+import { createAnthropic, type AnthropicProvider } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { readFileSync, statSync } from "fs";
 import { homedir } from "os";
@@ -11,8 +11,8 @@ import { parse as parseToml } from "smol-toml";
 import { logger } from "../logger.js";
 import type { AiEngine, AiEngineOptions } from "./engine.js";
 
-export const DEFAULT_KIMI_MODEL = "kimi-k2-0712-preview";
-const DEFAULT_KIMI_BASE_URL = "https://api.moonshot.cn/v1";
+export const DEFAULT_KIMI_MODEL = "kimi-for-coding";
+const DEFAULT_KIMI_BASE_URL = "https://api.kimi.com/coding/v1";
 
 interface KimiOAuthConfig {
   readonly storage?: string;
@@ -61,18 +61,27 @@ function readOAuthCredentials(configHome: string, oauth: KimiOAuthConfig): strin
   }
 
   const credentialsPath = join(configHome, oauth.key);
-  let raw: string;
-  try {
-    raw = readFileSync(credentialsPath, "utf8");
-  } catch {
-    throw new Error(`OAuth credentials file not found at ${credentialsPath}`);
+  const fallbackPath = join(configHome, "credentials", `${oauth.key.split("/").pop() ?? ""}.json`);
+  const paths = [credentialsPath, fallbackPath];
+
+  for (const path of paths) {
+    let raw: string;
+    try {
+      raw = readFileSync(path, "utf8").trim();
+    } catch {
+      continue;
+    }
+    if (!raw) {
+      continue;
+    }
+    const parsed = JSON.parse(raw) as KimiCredentialsFile;
+    if (parsed.access_token) {
+      return parsed.access_token;
+    }
   }
 
-  const parsed = JSON.parse(raw) as KimiCredentialsFile;
-  if (!parsed.access_token) {
-    throw new Error(`No access_token found in OAuth credentials file ${credentialsPath}`);
-  }
-  return parsed.access_token;
+  const checked = paths.join(", ");
+  throw new Error(`OAuth credentials file not found or contained no access_token (checked: ${checked})`);
 }
 
 export class KimiConfigCredentialResolver implements CredentialResolver {
@@ -166,9 +175,9 @@ function createKimiCredentialResolver(opts: AiEngineOptions): CredentialResolver
   ]);
 }
 
-export function createKimiProvider(opts: AiEngineOptions = {}): OpenAIProvider {
+export function createKimiProvider(opts: AiEngineOptions = {}): AnthropicProvider {
   const credentials = createKimiCredentialResolver(opts).resolve();
-  return createOpenAI({
+  return createAnthropic({
     baseURL: opts.baseUrl ?? credentials.baseUrl ?? DEFAULT_KIMI_BASE_URL,
     apiKey: credentials.apiKey,
   });
