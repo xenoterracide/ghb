@@ -2,7 +2,7 @@
   "name": "@xenoterracide/ghb-secrets-sync",
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
-  "packageManager": "yarn@4.17.0",
+  "packageManager": "yarn@4.17.1",
   "main": "src/index.ts",
   "publishConfig": {
     "access": "public",
