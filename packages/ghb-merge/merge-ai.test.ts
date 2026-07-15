@@ -14,73 +14,50 @@ vi.mock("child_process", () => ({
   execFileSync: vi.fn(),
 }));
 
+vi.mock("./ai/index.js", () => ({
+  createAiEngine: vi.fn(),
+  DEFAULT_KIMI_MODEL: "kimi-k2-0712-preview",
+}));
+
 import { execFileSync } from "child_process";
+import { createAiEngine } from "./ai/index.js";
 
 describe("generateWithKimi", () => {
-  const nodeOptions =
-    "--require /project/.pnp.cjs --experimental-loader file:///project/.pnp.loader.mjs --max-old-space-size=4096";
   let tmpDir: string;
   let titleFile: string;
   let bodyFile: string;
-  let originalExit: typeof process.exit;
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), "kimi-test-"));
     titleFile = join(tmpDir, "title.txt");
     bodyFile = join(tmpDir, "body.txt");
-    originalExit = process.exit;
-    vi.stubEnv("NODE_OPTIONS", nodeOptions);
-    process.exit = vi.fn();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    process.exit = originalExit;
-    vi.unstubAllEnvs();
     rmSync(tmpDir, { recursive: true, force: true });
     vi.clearAllMocks();
   });
 
-  it("should use files written by kimi-code", async () => {
+  it("writes a generated conventional commit message to the title and body files", async () => {
     const diff = "some diff content";
+    const generate = vi.fn().mockResolvedValue("feat: test message\n\n- Detail 1\n- Detail 2");
+    (createAiEngine as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({ generate }));
 
-    (execFileSync as ReturnType<typeof vi.fn>).mockImplementation((cmd: string) => {
-      if (cmd === "kimi") {
-        writeFileSync(titleFile, "feat: test message\n", "utf8");
-        writeFileSync(bodyFile, "- Detail 1\n- Detail 2", "utf8");
-      }
-      return "";
-    });
+    await generateWithKimi(titleFile, bodyFile, diff, { apiKey: "sk-test" });
 
-    await generateWithKimi(titleFile, bodyFile, diff);
-
-    expect(execFileSync).toHaveBeenCalledWith("kimi", expect.arrayContaining(["-p"]), expect.any(Object));
-
-    const kimiCall = (execFileSync as ReturnType<typeof vi.fn>).mock.calls.find(([cmd]) => cmd === "kimi");
-    expect(kimiCall?.[2]?.env?.NODE_OPTIONS).toBe("--max-old-space-size=4096");
+    expect(createAiEngine).toHaveBeenCalledWith("kimi", { apiKey: "sk-test" });
+    expect(generate).toHaveBeenCalledWith(expect.stringContaining(diff));
     expect(readFileSync(titleFile, "utf8").trim()).toBe("feat: test message");
     expect(readFileSync(bodyFile, "utf8").trim()).toBe("- Detail 1\n- Detail 2");
   });
 
-  it("should fall back to parsing stdout when kimi did not write files", async () => {
+  it("throws when the engine fails", async () => {
     const diff = "some diff content";
+    const generate = vi.fn().mockRejectedValue(new Error("network error"));
+    (createAiEngine as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({ generate }));
 
-    (execFileSync as ReturnType<typeof vi.fn>).mockReturnValue("feat: fallback message\n\n- Fallback detail");
-
-    await generateWithKimi(titleFile, bodyFile, diff);
-
-    expect(readFileSync(titleFile, "utf8").trim()).toBe("feat: fallback message");
-    expect(readFileSync(bodyFile, "utf8").trim()).toBe("- Fallback detail");
-  });
-
-  it("should throw error when kimi fails", async () => {
-    const diff = "some diff content";
-
-    (execFileSync as ReturnType<typeof vi.fn>).mockImplementation(() => {
-      throw new Error("kimi failed");
-    });
-
-    await expect(generateWithKimi(titleFile, bodyFile, diff)).rejects.toThrow("kimi failed to generate message");
+    await expect(generateWithKimi(titleFile, bodyFile, diff)).rejects.toThrow("network error");
   });
 });
 

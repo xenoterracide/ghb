@@ -43,19 +43,25 @@ ghb pr-message --title-file title.txt --body-file body.txt
 - Git
 - GitHub CLI (`gh`) authenticated
 - Node.js 24+
-- One of: [Kimi CLI](https://www.kimi.com/), [Junie](https://www.jetbrains.com/junie/), or [GitHub Copilot CLI](https://github.com/github/copilot.vim)
+- For the Kimi engine: a Moonshot API key configured via the Kimi Code CLI config file (`~/.kimi-code/config.toml`), `--key-file`, or the `KIMI_API_KEY` environment variable
+- For Junie or Copilot engines: their respective CLIs
 
 ### AI Engine Dependencies
 
-The `ghb` package declares all three AI CLIs as `optionalDependencies` via `ghb-merge`. They are installed by default, but you can skip the ones you don't need:
+- `ghb merge --kimi` now uses the Vercel AI SDK to call the Moonshot API directly; no `kimi` CLI is required.
+- `ghb merge --junie` and `ghb merge --copilot` still require their respective CLIs.
 
 ```bash
-# Install only Kimi (skip Junie and Copilot)
-npm install -g @xenoterracide/ghb --omit optional
-npm install -g @moonshot-ai/kimi-code
+# Override the Kimi model
+ghb merge --kimi --model kimi-latest
 
-# Or install them all (default)
-npm install -g @xenoterracide/ghb
+# Provide a key file instead of using the Kimi CLI config
+# (the file must have permissions 0o600)
+ghb merge --kimi --key-file ~/.keys/kimi.txt
+
+# Provide a custom Kimi Code CLI config file
+# (the file must have permissions 0o600)
+ghb merge --kimi --config-file ~/.kimi-code/config.toml
 ```
 
 ## License
