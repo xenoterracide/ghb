@@ -14,13 +14,29 @@ import type { AiEngine, AiEngineOptions } from "./engine.js";
 export const DEFAULT_KIMI_MODEL = "kimi-k2-0712-preview";
 const DEFAULT_KIMI_BASE_URL = "https://api.moonshot.cn/v1";
 
+interface KimiOAuthConfig {
+  readonly storage?: string;
+  readonly key?: string;
+}
+
 interface KimiProviderConfig {
   readonly type?: string;
   readonly api_key?: string;
+  readonly base_url?: string;
+  readonly oauth?: KimiOAuthConfig;
+}
+
+interface KimiResolvedConfig {
+  readonly apiKey: string;
+  readonly baseUrl?: string;
+}
+
+interface KimiCredentialsFile {
+  readonly access_token?: string;
 }
 
 export interface CredentialResolver {
-  resolve: () => string;
+  resolve: () => KimiResolvedConfig;
 }
 
 function kimiConfigHome(): string {
@@ -34,11 +50,40 @@ function assertSecureKeyFile(path: string): void {
   }
 }
 
-export class KimiConfigCredentialResolver implements CredentialResolver {
-  public constructor(private readonly configFile?: string) {}
+function readSecureKeyFile(keyFile: string): string {
+  assertSecureKeyFile(keyFile);
+  return readFileSync(keyFile, "utf8").trim();
+}
 
-  public resolve(): string {
-    const path = this.configFile ?? join(kimiConfigHome(), "config.toml");
+function readOAuthCredentials(configHome: string, oauth: KimiOAuthConfig): string {
+  if (oauth.storage !== "file" || !oauth.key) {
+    throw new Error(`Unsupported OAuth storage: ${oauth.storage ?? "missing"}`);
+  }
+
+  const credentialsPath = join(configHome, oauth.key);
+  let raw: string;
+  try {
+    raw = readFileSync(credentialsPath, "utf8");
+  } catch {
+    throw new Error(`OAuth credentials file not found at ${credentialsPath}`);
+  }
+
+  const parsed = JSON.parse(raw) as KimiCredentialsFile;
+  if (!parsed.access_token) {
+    throw new Error(`No access_token found in OAuth credentials file ${credentialsPath}`);
+  }
+  return parsed.access_token;
+}
+
+export class KimiConfigCredentialResolver implements CredentialResolver {
+  public constructor(
+    private readonly configFile?: string,
+    private readonly configHome?: string,
+  ) {}
+
+  public resolve(): KimiResolvedConfig {
+    const configHome = this.configHome ?? kimiConfigHome();
+    const path = this.configFile ?? join(configHome, "config.toml");
     let raw: string;
     try {
       raw = readFileSync(path, "utf8");
@@ -50,8 +95,16 @@ export class KimiConfigCredentialResolver implements CredentialResolver {
       providers?: Record<string, KimiProviderConfig>;
     };
     for (const provider of Object.values(parsed.providers ?? {})) {
-      if (provider.type === "kimi" && provider.api_key) {
-        return provider.api_key;
+      if (provider.type === "kimi") {
+        if (provider.oauth) {
+          return {
+            apiKey: readOAuthCredentials(configHome, provider.oauth),
+            baseUrl: provider.base_url,
+          };
+        }
+        if (provider.api_key) {
+          return { apiKey: provider.api_key, baseUrl: provider.base_url };
+        }
       }
     }
     throw new Error(`No kimi provider found in ${path}`);
@@ -61,28 +114,27 @@ export class KimiConfigCredentialResolver implements CredentialResolver {
 export class KeyFileCredentialResolver implements CredentialResolver {
   public constructor(private readonly keyFile: string) {}
 
-  public resolve(): string {
-    assertSecureKeyFile(this.keyFile);
-    return readFileSync(this.keyFile, "utf8").trim();
+  public resolve(): KimiResolvedConfig {
+    return { apiKey: readSecureKeyFile(this.keyFile) };
   }
 }
 
 export class EnvCredentialResolver implements CredentialResolver {
   public constructor(private readonly envVar: string) {}
 
-  public resolve(): string {
+  public resolve(): KimiResolvedConfig {
     const value = process.env[this.envVar];
     if (!value) {
       throw new Error(`Environment variable ${this.envVar} is not set`);
     }
-    return value;
+    return { apiKey: value };
   }
 }
 
 export class ChainCredentialResolver implements CredentialResolver {
   public constructor(private readonly resolvers: CredentialResolver[]) {}
 
-  public resolve(): string {
+  public resolve(): KimiResolvedConfig {
     const errors: string[] = [];
     for (const resolver of this.resolvers) {
       try {
@@ -103,7 +155,7 @@ export class ChainCredentialResolver implements CredentialResolver {
 function createKimiCredentialResolver(opts: AiEngineOptions): CredentialResolver {
   const { apiKey } = opts;
   if (apiKey) {
-    return { resolve: () => apiKey };
+    return { resolve: () => ({ apiKey }) };
   }
   if (opts.keyFile) {
     return new KeyFileCredentialResolver(opts.keyFile);
@@ -115,10 +167,10 @@ function createKimiCredentialResolver(opts: AiEngineOptions): CredentialResolver
 }
 
 export function createKimiProvider(opts: AiEngineOptions = {}): OpenAIProvider {
-  const credentials = createKimiCredentialResolver(opts);
+  const credentials = createKimiCredentialResolver(opts).resolve();
   return createOpenAI({
-    baseURL: opts.baseUrl ?? DEFAULT_KIMI_BASE_URL,
-    apiKey: credentials.resolve(),
+    baseURL: opts.baseUrl ?? credentials.baseUrl ?? DEFAULT_KIMI_BASE_URL,
+    apiKey: credentials.apiKey,
   });
 }
 
