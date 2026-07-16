@@ -44,34 +44,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/provider-utils@npm:5.0.10":
-  version: 5.0.10
-  resolution: "@ai-sdk/provider-utils@npm:5.0.10"
-  dependencies:
-    "@ai-sdk/provider": "npm:4.0.3"
-    "@standard-schema/spec": "npm:^1.1.0"
-    "@workflow/serde": "npm:4.1.0"
-    eventsource-parser: "npm:^3.0.8"
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/f8ee71420d44dd9ab8f2020cc5dbdc51ea4c13d4a83903efc7f4e05c5465954569116a95ed746cae6c19a4d170e87ab66fea6f9d017ba09ba7f8b146da7b9929
-  languageName: node
-  linkType: hard
-
-"@ai-sdk/provider-utils@npm:5.0.9":
-  version: 5.0.9
-  resolution: "@ai-sdk/provider-utils@npm:5.0.9"
-  dependencies:
-    "@ai-sdk/provider": "npm:4.0.3"
-    "@standard-schema/spec": "npm:^1.1.0"
-    "@workflow/serde": "npm:4.1.0"
-    eventsource-parser: "npm:^3.0.8"
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/a495185eb779669d1ada7f6cde5aa7a25b9e0bc097756d5c120d6a1cbd0821e4fc6268488957f465d9a6b9788151628f42b0a116a7cac24dc8ad574405f1001b
-  languageName: node
-  linkType: hard
-
 "@ai-sdk/provider@npm:4.0.3":
   version: 4.0.3
   resolution: "@ai-sdk/provider@npm:4.0.3"
