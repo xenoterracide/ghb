@@ -8,6 +8,6 @@ permissions:
   contents: read
 jobs:
   license:
-    uses: xenoterracide/github/.github/workflows/license.yml@276bde62feca30ae210963bdf01dcd45447c47f1 # develop
+    uses: xenoterracide/github/.github/workflows/license.yml@93b2f2bc37fd6d4c095231a880adc9c8723bda3c # develop
   prettier:
-    uses: xenoterracide/github/.github/workflows/prettier.yml@276bde62feca30ae210963bdf01dcd45447c47f1 # develop
+    uses: xenoterracide/github/.github/workflows/prettier.yml@93b2f2bc37fd6d4c095231a880adc9c8723bda3c # develop
