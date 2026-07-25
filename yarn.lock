@@ -6,14 +6,14 @@ __metadata:
   cacheKey: 10c0
 
 "@ai-sdk/anthropic@npm:^4.0.14":
-  version: 4.0.19
-  resolution: "@ai-sdk/anthropic@npm:4.0.19"
+  version: 4.0.20
+  resolution: "@ai-sdk/anthropic@npm:4.0.20"
   dependencies:
     "@ai-sdk/provider": "npm:4.0.3"
     "@ai-sdk/provider-utils": "npm:5.0.12"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/9b1d080f81dc4c1fb871db05c9fe6b9c5d0a6c69f09f3172c6a0e0591c2f9211a31fc33d591a4244487642a7c9ac86fce88c6998515014293b7b60e8b6996350
+  checksum: 10c0/1da60a614b0e9ca9f22545efc20036ce8216c6f8b8d78adcc3ac6bcd5e43b13831eadf511975d753d5639e0877a0271d8c48040eaa7ba128f71b90f216f50a6c
   languageName: node
   linkType: hard
 
