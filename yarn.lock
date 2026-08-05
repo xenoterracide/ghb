@@ -6,14 +6,14 @@ __metadata:
   cacheKey: 10c0
 
 "@ai-sdk/anthropic@npm:^4.0.14":
-  version: 4.0.27
-  resolution: "@ai-sdk/anthropic@npm:4.0.27"
+  version: 4.0.28
+  resolution: "@ai-sdk/anthropic@npm:4.0.28"
   dependencies:
-    "@ai-sdk/provider": "npm:4.0.4"
-    "@ai-sdk/provider-utils": "npm:5.0.18"
+    "@ai-sdk/provider": "npm:4.0.5"
+    "@ai-sdk/provider-utils": "npm:5.0.19"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/f99180d7f10b2bc1a7ad3f386f8eb470ba1c62f62238c0e1f6ffa08b3e6d6772c798a5d8bf7c27813548da8ff2b34d824b57ffcb4943b0e83b005314356f955e
+  checksum: 10c0/0456078058d6472940ce8e89e4433dd9851b9539d7a4774cab5fd97be63b303235b17e2e275dab0ee16dbb86a04cbc6432ea64009380dfd4a1deef0c421c401b
   languageName: node
   linkType: hard
 
@@ -45,12 +45,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ai-sdk/provider-utils@npm:5.0.19":
+  version: 5.0.19
+  resolution: "@ai-sdk/provider-utils@npm:5.0.19"
+  dependencies:
+    "@ai-sdk/provider": "npm:4.0.5"
+    "@standard-schema/spec": "npm:^1.1.0"
+    "@workflow/serde": "npm:4.1.0"
+    eventsource-parser: "npm:^3.0.8"
+    undici: "npm:^7.28.0"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/68ef6b9e781acacaf79b44f449a73f47ac71c60d024e33ee109afb12c2946fae18352812c6e7ee54ed4f38afb45f94525dbb657ab3e5efe70820b33f00820c18
+  languageName: node
+  linkType: hard
+
 "@ai-sdk/provider@npm:4.0.4":
   version: 4.0.4
   resolution: "@ai-sdk/provider@npm:4.0.4"
   dependencies:
     json-schema: "npm:^0.4.0"
   checksum: 10c0/ad8841d2592d16911e35eed82e77dca8a2bc46f6379fe5488c34d6fe3f5f4e4d8f87960acb4fef45b5896f8445dee63c4c249a8b4a1fb7703c10a2af0f731fb9
+  languageName: node
+  linkType: hard
+
+"@ai-sdk/provider@npm:4.0.5":
+  version: 4.0.5
+  resolution: "@ai-sdk/provider@npm:4.0.5"
+  dependencies:
+    json-schema: "npm:^0.4.0"
+  checksum: 10c0/8093e662a085528efa6b425cdbcba3d934a0cbf498b35f76f4444a3c3549d8363accf2021480b5fa1c6298cbfa4a9b163069404988dc34550f3e5328a59c57a9
   languageName: node
   linkType: hard
 
