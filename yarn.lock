@@ -17,16 +17,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/gateway@npm:4.0.41":
-  version: 4.0.41
-  resolution: "@ai-sdk/gateway@npm:4.0.41"
+"@ai-sdk/gateway@npm:4.0.42":
+  version: 4.0.42
+  resolution: "@ai-sdk/gateway@npm:4.0.42"
   dependencies:
     "@ai-sdk/provider": "npm:4.0.5"
-    "@ai-sdk/provider-utils": "npm:5.0.21"
+    "@ai-sdk/provider-utils": "npm:5.0.22"
     "@vercel/oidc": "npm:3.2.0"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/684b18ccef8b61da9f3ce617b5f6603d751406f4bb9b96b18a522dc86ecf7f3bd94f84a4c7c42722b4ac687d8b384564865514ada0d7c926fba5b7e02dfe0b0b
+  checksum: 10c0/1432cbcb0ac1e760f5c9ea1f028c12caac36869f1a4ec94aadd434fbced280fc02f976d35a9d91a5005fb996b0977c180a1764ce04d690412395107bc65ec98a
   languageName: node
   linkType: hard
 
@@ -42,6 +42,21 @@ __metadata:
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
   checksum: 10c0/000819267825d7cbdb1af4d63d51f488b3b04d371a12a2fa5226f5b4bbc86208396b5a09f6cf524fa36d0e2826bdb327a6212f1149db816526a04ea9c185c6e2
+  languageName: node
+  linkType: hard
+
+"@ai-sdk/provider-utils@npm:5.0.22":
+  version: 5.0.22
+  resolution: "@ai-sdk/provider-utils@npm:5.0.22"
+  dependencies:
+    "@ai-sdk/provider": "npm:4.0.5"
+    "@standard-schema/spec": "npm:^1.1.0"
+    "@workflow/serde": "npm:4.1.0"
+    eventsource-parser: "npm:^3.0.8"
+    undici: "npm:^7.28.0"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/d7a0a5261d3270469685c2e4def6989925e640a2d0b4e193eca1240005670db95cf26ee722e84e5fe3fa2fe3dbf79258bfa18ba06ec0bd30a23af2aaf75fbcaf
   languageName: node
   linkType: hard
 
@@ -1131,15 +1146,15 @@ __metadata:
   linkType: hard
 
 "ai@npm:^7.0.0":
-  version: 7.0.52
-  resolution: "ai@npm:7.0.52"
+  version: 7.0.54
+  resolution: "ai@npm:7.0.54"
   dependencies:
-    "@ai-sdk/gateway": "npm:4.0.41"
+    "@ai-sdk/gateway": "npm:4.0.42"
     "@ai-sdk/provider": "npm:4.0.5"
-    "@ai-sdk/provider-utils": "npm:5.0.21"
+    "@ai-sdk/provider-utils": "npm:5.0.22"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/24cf58842cfae5c5e2528318870ce953c8cfa36650d602443799ad3c973d5bd2433cfa94a908809b342b2780d4a55625fb3aed8c6ba2c75e45c4127adaf10436
+  checksum: 10c0/f7e068115f3fadd9e5639a2d468e9e10cf95abda80235f6f6d6a9bac576e5669d74663a6e7841c4142d98c3bdfeaa4bd5940e50da550b2bcf4b9f2f95f334f79
   languageName: node
   linkType: hard
 
