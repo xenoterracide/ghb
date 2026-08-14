@@ -6,14 +6,14 @@ __metadata:
   cacheKey: 10c0
 
 "@ai-sdk/anthropic@npm:^4.0.14":
-  version: 4.0.37
-  resolution: "@ai-sdk/anthropic@npm:4.0.37"
+  version: 4.0.38
+  resolution: "@ai-sdk/anthropic@npm:4.0.38"
   dependencies:
     "@ai-sdk/provider": "npm:4.0.7"
-    "@ai-sdk/provider-utils": "npm:5.0.26"
+    "@ai-sdk/provider-utils": "npm:5.0.27"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/2e093e0bfbdcda542bf08737f8f9f879f344d799f2828cfdbdf2015b33a125f49b4c0c81985233ce5ca62a8df02d0d8bb3fa737e352ac648420a5201692faeb4
+  checksum: 10c0/cf2a6763ae850c2b7826f31f528b4d02f8a2d6fda20fc902fab853315093a111eb9c4156ec89aa7d6697a597fe5740f6b5bd61f3613581a5934317a69de788aa
   languageName: node
   linkType: hard
 
@@ -27,21 +27,6 @@ __metadata:
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
   checksum: 10c0/a8abd0b34430dc3b90300c031a857917916c892ebef78bcb472690ae7612f895749e0114be0d4e181f98695bbca81ebea6d6c8ef1652004d52a1dbb7e85b0a23
-  languageName: node
-  linkType: hard
-
-"@ai-sdk/provider-utils@npm:5.0.26":
-  version: 5.0.26
-  resolution: "@ai-sdk/provider-utils@npm:5.0.26"
-  dependencies:
-    "@ai-sdk/provider": "npm:4.0.7"
-    "@standard-schema/spec": "npm:^1.1.0"
-    "@workflow/serde": "npm:4.1.0"
-    eventsource-parser: "npm:^3.0.8"
-    undici: "npm:^7.28.0"
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/a0e39b3f5ed14692755cc8b3c9d37cb07ce592dab3786fbd66aa8d2a559c715ee0e3818c4534184dc38eb42afaa74b74b49d2ad2a22614f18ea0fd262f097212
   languageName: node
   linkType: hard
 
