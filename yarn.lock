@@ -30,21 +30,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/provider-utils@npm:5.0.34":
-  version: 5.0.34
-  resolution: "@ai-sdk/provider-utils@npm:5.0.34"
-  dependencies:
-    "@ai-sdk/provider": "npm:4.0.9"
-    "@standard-schema/spec": "npm:^1.1.0"
-    "@workflow/serde": "npm:4.1.0"
-    eventsource-parser: "npm:^3.0.8"
-    undici: "npm:^7.28.0"
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/5dc03e0424de6131d512821f7b734cdab4c0aa66baa0bb472d5aab731e550e13d12ad1164e2cdd658db1726b5509de7c746191170fe7f13e163a604ad965da28
-  languageName: node
-  linkType: hard
-
 "@ai-sdk/provider-utils@npm:5.0.35":
   version: 5.0.35
   resolution: "@ai-sdk/provider-utils@npm:5.0.35"
@@ -66,15 +51,6 @@ __metadata:
   dependencies:
     json-schema: "npm:^0.4.0"
   checksum: 10c0/20e9cc820a90296469180d929ac9051cd71399e46073d829517ccda75d2406f86ad9f0ee554a1d1a34126c56dad40c223c761c4ca9a24cd00dbcb7c1e808434f
-  languageName: node
-  linkType: hard
-
-"@ai-sdk/provider@npm:4.0.9":
-  version: 4.0.9
-  resolution: "@ai-sdk/provider@npm:4.0.9"
-  dependencies:
-    json-schema: "npm:^0.4.0"
-  checksum: 10c0/e7433df83c955657a441618138c99f85dd109d33169d808b981737ee9687efcb5b450b9da4611777d1920dd0924633430d8205b821a2c711e6301d95a176f2c4
   languageName: node
   linkType: hard
 
@@ -390,14 +366,14 @@ __metadata:
   linkType: hard
 
 "@eslint/json@npm:^2.0.0":
-  version: 2.0.1
-  resolution: "@eslint/json@npm:2.0.1"
+  version: 2.1.0
+  resolution: "@eslint/json@npm:2.1.0"
   dependencies:
     "@eslint/core": "npm:^1.2.1"
     "@eslint/plugin-kit": "npm:^0.7.2"
     "@humanwhocodes/momoa": "npm:^3.3.10"
     natural-compare: "npm:^1.4.0"
-  checksum: 10c0/7dcf19d9dad8e74081a56987bde94579042811217d659fc5e13e87a67cdfd9a6c70e127dc797ddd925807d8e5377e97ce0f250639e29fbd4d427c6e8e5160044
+  checksum: 10c0/9495e62dbf3ad32e2348963599743e8bedb0561bfcac83fc5d4fbd2acb7eb75ac1940912354e0d22ecc78a1ce0385a39c575a266273c2ad0fa47b89eac1dfbfc
   languageName: node
   linkType: hard
 
