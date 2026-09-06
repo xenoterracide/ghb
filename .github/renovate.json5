@@ -6,14 +6,15 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["config:recommended"],
   dependencyDashboard: true,
+  lockFileMaintenance: {
+    enabled: true,
+    automerge: true,
+  },
   timezone: "UTC",
   platformAutomerge: true,
   automergeStrategy: "rebase",
   // Rebase whenever PR falls behind base branch to keep them mergeable
   rebaseWhen: "behind-base-branch",
-  // Subtrees are excluded - updates should be pulled via git subtree pull, not Renovate
-  // Squash merges break subtree history
-  ignorePaths: [".share/**", ".agents/**"],
   // Remove the 'controls' section from PR body to avoid config noise in squash commits
   prBodyTemplate: "{{{header}}}{{{table}}}{{{notes}}}{{{changelogs}}}{{{footer}}}",
   hostRules: [
@@ -34,7 +35,7 @@
       matchManagers: ["github-actions"],
       matchDepNames: ["xenoterracide/**"],
       extends: ["helpers:pinGitHubActionDigests"],
-      branchTopic: "{{{depNameSanitized}}}-{{{newDigestShort}}}",
+      branchTopic: "{{{depNameSanitized}}}-{{{newDigest}}}",
       automerge: true,
     },
   ],
