@@ -15,6 +15,10 @@
   automergeStrategy: "rebase",
   // Rebase whenever PR falls behind base branch to keep them mergeable
   rebaseWhen: "behind-base-branch",
+  // Recreate PRs even when a matching PR was previously merged, so that
+  // re-created branches keep automerge enabled instead of being disabled
+  // by the "merged previously" guard.
+  recreateWhen: "always",
   // Remove the 'controls' section from PR body to avoid config noise in squash commits
   prBodyTemplate: "{{{header}}}{{{table}}}{{{notes}}}{{{changelogs}}}{{{footer}}}",
   hostRules: [
