@@ -25,6 +25,12 @@
   ],
   packageRules: [
     {
+      /* typescript-eslint (and the TS7 compiler) do not yet support TS 7,
+         and the TS7 compiler lacks native Yarn PnP support. */
+      matchDepNames: ["typescript"],
+      allowedVersions: "<7",
+    },
+    {
       matchManagers: ["asdf", "maven", "npm", "pyenv", "pep621", "github-actions"],
       branchTopic: "{{{depNameSanitized}}}-{{{newVersion}}}",
       automerge: true,
