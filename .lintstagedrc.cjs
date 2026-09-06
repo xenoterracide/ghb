@@ -46,5 +46,5 @@ module.exports = {
   // avoid adding the Unicode copyright symbol
   "*.properties": run([`${reuse} ${copyright} ${licenseConfiguration}`, prettier]),
   // code our real business logic lives in
-  "*.{ts,mts,cts,java}": run([`${reuse} ${copyright} ${symbol} ${licenseCode}`, prettier]),
+  "*.{ts,mts,java}": run([`${reuse} ${copyright} ${symbol} ${licenseCode}`, prettier]),
 };
