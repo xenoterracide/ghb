@@ -14,8 +14,7 @@ monorepo managed with Yarn 4 PnP workspaces.
 - **`packages/ghb/`** — aggregated CLI entrypoint.
 - **`packages/ghb-merge/`** — AI-assisted PR merge workflow.
 - **`packages/ghb-secrets-sync/`** — GitHub secrets sync utilities.
-- **`.share/`** — shared tooling imported as a git subtree; see
-  [`.share/CONTRIBUTING.md`](./.share/CONTRIBUTING.md) for subtree conventions.
+- **`.share/git/hooks/`** — custom git hooks.
 - **`.github/workflows/`** — CI workflows.
 
 ## Setup
