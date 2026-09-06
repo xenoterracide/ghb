@@ -1,0 +1,11 @@
+// SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
+//
+// SPDX-License-Identifier: CC0-1.0
+
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"],
+  "skills": {
+    "urls": ["https://raw.githubusercontent.com/xenoterracide/agent-skills/develop/skills/"],
+  },
+}
