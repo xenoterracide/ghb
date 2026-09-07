@@ -33,7 +33,9 @@ module.exports = {
   // package.json can contain logic via the scripts segment
   "package.json": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
   "{.config/git/hooks/**,**/*.*sh}": run([`${reuse} ${copyright} ${symbol} ${licenseScripts} --style python`, shfmt]),
-  "*.{md,adoc}": run([`${reuse} ${copyright} ${symbol} ${licenseDocumentation}`, prettier]),
+  "*.adoc": run([`${reuse} ${copyright} ${symbol} ${licenseDocumentation}`, prettier]),
+  // don't run reuse for markdown in this repo because it doesn't deal with frontmatter properly
+  "*.md": run([prettier]),
   "*.{xml,yaml,properties,toml,json5}": run([`${reuse} ${copyright} ${licenseConfiguration} ${symbol}`, prettier]),
   // yml is different from yaml extension as the only known yaml required file is for git-conventional-commits, but yml
   // contains files like GitHub workflows which can have significant logic
