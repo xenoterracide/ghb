@@ -30,21 +30,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/provider-utils@npm:5.0.43":
-  version: 5.0.43
-  resolution: "@ai-sdk/provider-utils@npm:5.0.43"
-  dependencies:
-    "@ai-sdk/provider": "npm:4.0.17"
-    "@standard-schema/spec": "npm:^1.1.0"
-    "@workflow/serde": "npm:4.1.0"
-    eventsource-parser: "npm:^3.0.8"
-    undici: "npm:^7.29.0"
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/4534f0ce7c753368dea81bb98e738ee608f03ddd696302d6ca8e1f44be40bb2b8a2d70d8eee118f3273865fbb0cedbf05c461c0e0a87776b1d6120dcdcdd88c4
-  languageName: node
-  linkType: hard
-
 "@ai-sdk/provider-utils@npm:5.0.44":
   version: 5.0.44
   resolution: "@ai-sdk/provider-utils@npm:5.0.44"
