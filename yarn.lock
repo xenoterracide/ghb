@@ -1182,15 +1182,15 @@ __metadata:
   linkType: hard
 
 "ai@npm:^7.0.0":
-  version: 7.0.108
-  resolution: "ai@npm:7.0.108"
+  version: 7.0.109
+  resolution: "ai@npm:7.0.109"
   dependencies:
     "@ai-sdk/gateway": "npm:4.0.88"
     "@ai-sdk/provider": "npm:4.0.17"
     "@ai-sdk/provider-utils": "npm:5.0.45"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/3193a778efe951e53d234939de919ce5cbf189e54c70035c87303c093c682288a47cf980c9d1d55960b8414001c8b8476e92c4d1a7a921ba52a36fbcec243cba
+  checksum: 10c0/c2b32cdbd6b06c3537c632b6b3ec4faa3ada08859d3086ab9a252cc81ba836cca4db2f343dc8e840be6f8f390189866019927fd9bab59dc95137fca7b8a96b68
   languageName: node
   linkType: hard
 
