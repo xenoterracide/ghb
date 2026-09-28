@@ -17,16 +17,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/gateway@npm:4.0.94":
-  version: 4.0.94
-  resolution: "@ai-sdk/gateway@npm:4.0.94"
+"@ai-sdk/gateway@npm:4.0.95":
+  version: 4.0.95
+  resolution: "@ai-sdk/gateway@npm:4.0.95"
   dependencies:
     "@ai-sdk/provider": "npm:4.0.18"
     "@ai-sdk/provider-utils": "npm:5.0.49"
     "@vercel/oidc": "npm:3.2.0"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/7a729f976e063c580e5a89840a58eea0f947191a96213e1b2fec37bf234cfd138e8ac33bff12ae6eb3921c58d9769d17459af67441f9ae87f06d23b501286536
+  checksum: 10c0/341a5cef751bfa8e9440012d193534bf5b90ee15517397d1fc0d5bb740a4a7d950d821341876201da80cbb6dd2d07937bcbad9370f65ca97b9119b0ee8d17042
   languageName: node
   linkType: hard
 
@@ -1182,15 +1182,15 @@ __metadata:
   linkType: hard
 
 "ai@npm:^7.0.0":
-  version: 7.0.116
-  resolution: "ai@npm:7.0.116"
+  version: 7.0.117
+  resolution: "ai@npm:7.0.117"
   dependencies:
-    "@ai-sdk/gateway": "npm:4.0.94"
+    "@ai-sdk/gateway": "npm:4.0.95"
     "@ai-sdk/provider": "npm:4.0.18"
     "@ai-sdk/provider-utils": "npm:5.0.49"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/a53e89e6f70a6458da1bae93593e5d1b5e93a0067607057d37e30ca120389adfb959fcb412492a17a6a2567cbfcfc678ba2c8672eb0524ae03125be0e37677f5
+  checksum: 10c0/447e9fd527524cbc5c36de3417b59ced5b6acf1d0276cd7c40f132a875acce4c36bd46ec9c6b3eb4183e2b2ab3bcd858e86cc12327d52268a5cc5c253b518ea6
   languageName: node
   linkType: hard
 
