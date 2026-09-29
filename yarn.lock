@@ -6,14 +6,14 @@ __metadata:
   cacheKey: 10c0
 
 "@ai-sdk/anthropic@npm:^4.0.14":
-  version: 4.0.67
-  resolution: "@ai-sdk/anthropic@npm:4.0.67"
+  version: 4.0.68
+  resolution: "@ai-sdk/anthropic@npm:4.0.68"
   dependencies:
     "@ai-sdk/provider": "npm:4.0.19"
-    "@ai-sdk/provider-utils": "npm:5.0.50"
+    "@ai-sdk/provider-utils": "npm:5.0.51"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/c15182afc6730f169b1a83fdf931a1fe9548f2960e9e40220e4877f06c3e12916a7b9275363079701f0f76921ee890c4c6aca5c89c6eec949e305f4676d9b02a
+  checksum: 10c0/d14bbb16f970d91fff23ee4854ef7407004887486f6ca91dd60843d4ec61b29888be91ee840fc7a26eefbb308083d13b286daa6d3cb5936c1aca79b24dc7ed7b
   languageName: node
   linkType: hard
 
@@ -27,21 +27,6 @@ __metadata:
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
   checksum: 10c0/ccc67e9eedb7c1b467bc722e0da18d261e273cc63140bfa10a58c593c733b4366408d64662f3e4ed4ca86d9203f5b9b02aaab58fad174d96f6cda2a33b14dbf0
-  languageName: node
-  linkType: hard
-
-"@ai-sdk/provider-utils@npm:5.0.49":
-  version: 5.0.49
-  resolution: "@ai-sdk/provider-utils@npm:5.0.49"
-  dependencies:
-    "@ai-sdk/provider": "npm:4.0.18"
-    "@standard-schema/spec": "npm:^1.1.0"
-    "@workflow/serde": "npm:4.1.0"
-    eventsource-parser: "npm:^3.0.8"
-    undici: "npm:^7.29.0"
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/c8335d1c0c6b784ca3a757e1868bef9e8170ee27747afbfde5b2a95199f1496334da6f1d0c006006b0b9f20aa82e6db732ae07550ca9cd284586863c0d54cc48
   languageName: node
   linkType: hard
 
@@ -60,12 +45,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/provider@npm:4.0.18":
-  version: 4.0.18
-  resolution: "@ai-sdk/provider@npm:4.0.18"
+"@ai-sdk/provider-utils@npm:5.0.51":
+  version: 5.0.51
+  resolution: "@ai-sdk/provider-utils@npm:5.0.51"
   dependencies:
-    json-schema: "npm:^0.4.0"
-  checksum: 10c0/bfc6d708afd4e1f22daa8741e7fb517364708c369ec54f0b2aa187291cbc85164198c92e8334f2883123a2440656caef35339242c4b01f2a62faecd16e002d82
+    "@ai-sdk/provider": "npm:4.0.19"
+    "@standard-schema/spec": "npm:^1.1.0"
+    "@workflow/serde": "npm:4.1.0"
+    eventsource-parser: "npm:^3.0.8"
+    undici: "npm:^7.29.0"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/55e95dd3be16b7ec6b8a47e872261e74b8e5d3e8719f5e6a13261c9e63187cbe7d1c4d921731984f8a4a9935a8f0524548baf640faf4547d32f0682b45c45c29
   languageName: node
   linkType: hard
 
