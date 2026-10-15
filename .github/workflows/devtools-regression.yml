@@ -8,10 +8,10 @@ permissions:
   contents: read
 jobs:
   regression-prettier:
-    uses: xenoterracide/github/.github/workflows/regression-devtool-prettier.yml@45fc25e664cd989ac99ab51b4ef28daf6c987ff3 # develop
+    uses: xenoterracide/github/.github/workflows/regression-devtool-prettier.yml@3911412a9e18b41ae1b22b0fd556d092c234d544 # develop
   regression-lint-staged:
-    uses: xenoterracide/github/.github/workflows/regression-devtool-lint-staged.yml@45fc25e664cd989ac99ab51b4ef28daf6c987ff3 # develop
+    uses: xenoterracide/github/.github/workflows/regression-devtool-lint-staged.yml@3911412a9e18b41ae1b22b0fd556d092c234d544 # develop
   regression-git-conventional-commits:
-    uses: xenoterracide/github/.github/workflows/regression-devtool-git-conventional-commits.yml@45fc25e664cd989ac99ab51b4ef28daf6c987ff3 # develop
+    uses: xenoterracide/github/.github/workflows/regression-devtool-git-conventional-commits.yml@3911412a9e18b41ae1b22b0fd556d092c234d544 # develop
   regression-reuse:
-    uses: xenoterracide/github/.github/workflows/regression-devtool-reuse.yml@45fc25e664cd989ac99ab51b4ef28daf6c987ff3 # develop
+    uses: xenoterracide/github/.github/workflows/regression-devtool-reuse.yml@3911412a9e18b41ae1b22b0fd556d092c234d544 # develop
