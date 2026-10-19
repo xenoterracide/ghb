@@ -721,19 +721,92 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@taplo/core@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@taplo/core@npm:0.2.0"
-  checksum: 10c0/4bbc3b696c49e267da2dfcd13e7812e5c09febda583856b35569773542e93f9c28a50dab69c635e1d5e11a4de6962ab08e006985fa38d2df1b3ef19d471efa05
+"@tombi-toml/lib-darwin-arm64@npm:1.8.7":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib-darwin-arm64@npm:1.8.7"
+  conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@taplo/lib@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "@taplo/lib@npm:0.5.0"
+"@tombi-toml/lib-darwin-x64@npm:1.8.7":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib-darwin-x64@npm:1.8.7"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@tombi-toml/lib-linux-arm64-musl@npm:1.8.7":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib-linux-arm64-musl@npm:1.8.7"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@tombi-toml/lib-linux-arm64@npm:1.8.7":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib-linux-arm64@npm:1.8.7"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@tombi-toml/lib-linux-x64-musl@npm:1.8.7":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib-linux-x64-musl@npm:1.8.7"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@tombi-toml/lib-linux-x64@npm:1.8.7":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib-linux-x64@npm:1.8.7"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@tombi-toml/lib-win32-arm64@npm:1.8.7":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib-win32-arm64@npm:1.8.7"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@tombi-toml/lib-win32-x64@npm:1.8.7":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib-win32-x64@npm:1.8.7"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@tombi-toml/lib@npm:^1.8.4":
+  version: 1.8.7
+  resolution: "@tombi-toml/lib@npm:1.8.7"
   dependencies:
-    "@taplo/core": "npm:^0.2.0"
-  checksum: 10c0/0d1ea190586cac09a1c28fc43f807ba843a3313329744aacf49200da909beacbc43e5ebb89677d608b821458ad9378bc3d398c2aa7eff7e567ad59f85cc5ed82
+    "@tombi-toml/lib-darwin-arm64": "npm:1.8.7"
+    "@tombi-toml/lib-darwin-x64": "npm:1.8.7"
+    "@tombi-toml/lib-linux-arm64": "npm:1.8.7"
+    "@tombi-toml/lib-linux-arm64-musl": "npm:1.8.7"
+    "@tombi-toml/lib-linux-x64": "npm:1.8.7"
+    "@tombi-toml/lib-linux-x64-musl": "npm:1.8.7"
+    "@tombi-toml/lib-win32-arm64": "npm:1.8.7"
+    "@tombi-toml/lib-win32-x64": "npm:1.8.7"
+  dependenciesMeta:
+    "@tombi-toml/lib-darwin-arm64":
+      optional: true
+    "@tombi-toml/lib-darwin-x64":
+      optional: true
+    "@tombi-toml/lib-linux-arm64":
+      optional: true
+    "@tombi-toml/lib-linux-arm64-musl":
+      optional: true
+    "@tombi-toml/lib-linux-x64":
+      optional: true
+    "@tombi-toml/lib-linux-x64-musl":
+      optional: true
+    "@tombi-toml/lib-win32-arm64":
+      optional: true
+    "@tombi-toml/lib-win32-x64":
+      optional: true
+  checksum: 10c0/bcdabc3c7a404498986c52f8bf617bc5e918cd5179ef0f199487283c230ecee33bbdba324f4d2c98ef67aab43555f0e9d0daf92cd03989db90ca737d40540c71
   languageName: node
   linkType: hard
 
@@ -1939,7 +2012,7 @@ __metadata:
     prettier: "npm:^3.6.2"
     prettier-plugin-java: "npm:^2.7.5"
     prettier-plugin-properties: "npm:^0.3.0"
-    prettier-plugin-toml: "npm:^2.0.6"
+    prettier-plugin-toml: "npm:^4.0.0"
     rimraf: "npm:^6.1.2"
     tsx: "npm:^4.21.0"
     typescript: "npm:^6.0.0"
@@ -3280,14 +3353,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-toml@npm:^2.0.6":
-  version: 2.0.6
-  resolution: "prettier-plugin-toml@npm:2.0.6"
+"prettier-plugin-toml@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "prettier-plugin-toml@npm:4.0.0"
   dependencies:
-    "@taplo/lib": "npm:^0.5.0"
+    "@tombi-toml/lib": "npm:^1.8.4"
+    smol-toml: "npm:^1.8.0"
   peerDependencies:
     prettier: ^3.0.3
-  checksum: 10c0/8fd0817c2dfe64e694424498c901228e304b76c0909e3ba8a1baff4d259c6f65bb742362859148c3438accd8248b0cf2efd2c89e1d73f9f469cd5ed82b60e5af
+  checksum: 10c0/f89035a3715c7380045a1e671b99933660e1fae1ffe29acc6414dfbae049bba8ea78e839de8f1a4b2d00da22799f61c17ef08e9387641bcf916044ac59e24ecb
   languageName: node
   linkType: hard
 
@@ -3469,7 +3543,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"smol-toml@npm:^1.6.1":
+"smol-toml@npm:^1.6.1, smol-toml@npm:^1.8.0":
   version: 1.9.1
   resolution: "smol-toml@npm:1.9.1"
   checksum: 10c0/8acccf7bbc063f29405f58f5014ab39bf4eb9d7f0e000e5e3f140f7d4d6ead5696681a7c15260d1f2910213012c0af43b31a05bf94f704b0bdf39989fba08c02
