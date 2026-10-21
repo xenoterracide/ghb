@@ -6,14 +6,14 @@ __metadata:
   cacheKey: 10c0
 
 "@ai-sdk/anthropic@npm:^4.0.14":
-  version: 4.0.83
-  resolution: "@ai-sdk/anthropic@npm:4.0.83"
+  version: 4.0.84
+  resolution: "@ai-sdk/anthropic@npm:4.0.84"
   dependencies:
-    "@ai-sdk/provider": "npm:4.0.30"
-    "@ai-sdk/provider-utils": "npm:5.0.63"
+    "@ai-sdk/provider": "npm:4.0.31"
+    "@ai-sdk/provider-utils": "npm:5.0.64"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/7a4c1cebf98b5c04441eeb02301bad399340c254f2802d8ec28461faba4c0f68aabaea5f62a862bab9c89fdf2452b0a7a9c3bfd28470568337818d867c229f15
+  checksum: 10c0/7d506c9c2ad044658ba032656db41d5e4837dd90b1191ceb68da8030565b025371ecabe13907197799c8fcce33ed2788ae1325f4be322090710c1d68bc418bb3
   languageName: node
   linkType: hard
 
@@ -45,12 +45,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ai-sdk/provider-utils@npm:5.0.64":
+  version: 5.0.64
+  resolution: "@ai-sdk/provider-utils@npm:5.0.64"
+  dependencies:
+    "@ai-sdk/provider": "npm:4.0.31"
+    "@standard-schema/spec": "npm:^1.1.0"
+    "@workflow/serde": "npm:4.1.0"
+    eventsource-parser: "npm:^3.0.8"
+    undici: "npm:^7.29.0"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/e33c8f160ddc9f9f8acd14e11ca8ece97d90b40defdfdb9b0c3cfe8b20023c61dbb3df2a3dd3fbb529ddfadaa4f56e15a5769174a3ccd4adf71332cb9194e439
+  languageName: node
+  linkType: hard
+
 "@ai-sdk/provider@npm:4.0.30":
   version: 4.0.30
   resolution: "@ai-sdk/provider@npm:4.0.30"
   dependencies:
     json-schema: "npm:^0.4.0"
   checksum: 10c0/7f690a6c21ddea8ba92f75c64b6f9b873476c7c2b628b5278983f74e270931f9fb23797bea28e5f10e242f54ee81ca0d0c66af6c8d4838b23d3332924c68a628
+  languageName: node
+  linkType: hard
+
+"@ai-sdk/provider@npm:4.0.31":
+  version: 4.0.31
+  resolution: "@ai-sdk/provider@npm:4.0.31"
+  dependencies:
+    json-schema: "npm:^0.4.0"
+  checksum: 10c0/606efa6857d81c9e381a1c3b9fb092402e0feba4f1fce77979694954a7dc7bf8c63feb268510254207688056f36394ac9e2933372e1107cfabb182677b317516
   languageName: node
   linkType: hard
 
