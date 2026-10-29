@@ -17,31 +17,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/gateway@npm:4.0.127":
-  version: 4.0.127
-  resolution: "@ai-sdk/gateway@npm:4.0.127"
+"@ai-sdk/gateway@npm:4.0.128":
+  version: 4.0.128
+  resolution: "@ai-sdk/gateway@npm:4.0.128"
   dependencies:
     "@ai-sdk/provider": "npm:4.0.34"
-    "@ai-sdk/provider-utils": "npm:5.0.69"
+    "@ai-sdk/provider-utils": "npm:5.0.70"
     "@vercel/oidc": "npm:3.2.0"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/3e9de007c9b3af458d4a217b1a923308cc3fdf3b0b2bb49dd548b8ea9a5b505c0317a89548c69e20bb13d3b71b92d22b2d3aabbbe40eae08660d7d640db3b507
-  languageName: node
-  linkType: hard
-
-"@ai-sdk/provider-utils@npm:5.0.69":
-  version: 5.0.69
-  resolution: "@ai-sdk/provider-utils@npm:5.0.69"
-  dependencies:
-    "@ai-sdk/provider": "npm:4.0.34"
-    "@standard-schema/spec": "npm:^1.1.0"
-    "@workflow/serde": "npm:4.1.0"
-    eventsource-parser: "npm:^3.0.8"
-    undici: "npm:^7.29.0"
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/0a697959da7c60a2e18955057f58caf4b3ec79bcfc29f51f901d7665bfe1631b5d539d27681978cef1bd50c2aa211c155a6a9d1938a8f27827b96162d0790987
+  checksum: 10c0/3ac2d0a82247ce499c5c004713fdf8366e457592abfd33e78eedaa7fd96fb04ba089daf1ea2a8cac38aeea24f55cfabc09b151c6aa8db0fd9eaac80f7950c4a3
   languageName: node
   linkType: hard
 
@@ -1197,15 +1182,15 @@ __metadata:
   linkType: hard
 
 "ai@npm:^7.0.0":
-  version: 7.0.154
-  resolution: "ai@npm:7.0.154"
+  version: 7.0.155
+  resolution: "ai@npm:7.0.155"
   dependencies:
-    "@ai-sdk/gateway": "npm:4.0.127"
+    "@ai-sdk/gateway": "npm:4.0.128"
     "@ai-sdk/provider": "npm:4.0.34"
-    "@ai-sdk/provider-utils": "npm:5.0.69"
+    "@ai-sdk/provider-utils": "npm:5.0.70"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/e56516b467fbaa8251277a606baa8e344bfb2f03c832dc734a9f818e11e4755bd9fc3cbd9fb52dcd30cc56e95fc280d7e2fbc4920890cce9a7a29776a2e0a5b0
+  checksum: 10c0/7037e6851bca003ea6e0302a48f117cab31353aa876b35bb86fb85cadf6c395a5581ca8c2d488bed8733cd7cd2ec53e7c868f4860df0cc0bf96be2b6e14192b5
   languageName: node
   linkType: hard
 
