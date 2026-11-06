@@ -337,9 +337,12 @@ A docs tweak suffices; the tag is the event. Human gates the tag push.
 
 Expect automatic PRs in github and ghb (java-commons once bootstrapped). Resolve `.rej` if any appear, standard watch and merge flow. If no PR arrives within a day, diagnose before touching anything by hand — the loop is the deliverable.
 
-### Task 13: Decide the name
+### Task 13: Decide the name and the license
 
-**Human decision.** The window closes at first publish: before it, a rename is nearly free; after it, the name is API and only deprecate-and-redirect remains. Beta runs under any name.
+**Human decisions.** Both windows close at first publish.
+
+- Name: before it, a rename is nearly free; after it, the name is API and only deprecate-and-redirect remains. Beta runs under any name.
+- License: the project is GPL-3.0-or-later today; the file scheme (MIT for `package.json` and scripts, CC0-1.0 configuration, CC-BY-NC-SA-4.0 docs) is independent of it. A change is the sole holder's to make and awaits investigation. Published versions keep the license they shipped under, so the clean moment is before `v1.0.0`. The adoption (Task 10) renders today's GPL answer; a decision to change updates it before publish, not after.
 
 ### Task 14: Publish
 
@@ -380,5 +383,5 @@ Family convention: completed plans die before the final PR.
 - `NPM_TOKEN` secret in ghb; npm access to the `@xenoterracide` scope
 - Tag pushes: `v26.11.1`, `v26.11.2`, `v1.0.0`
 - Re-enable tag-deletion protection on base-template
-- The name decision (Task 13)
+- The name and license decisions (Task 13)
 - The usual per-PR merge approvals
