@@ -169,7 +169,9 @@ install has carried real merges.
   npm release is `1.0.0`.
 - Release workflow on tag push runs `pnpm publish`; `NPM_TOKEN` is a
   human-required secret.
-- Both names are free on npm today (`@xenoterracide/ghb` returns 404).
+- The scoped names are free on npm. The bare `ghb` is not — an
+  unrelated GitHub CLI holds it, dormant since 2018 — so no squat stub
+  publishes and the scoped name carries alone.
 
 ## agent-skills
 
