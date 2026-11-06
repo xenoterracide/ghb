@@ -6,6 +6,7 @@
 
 import { Cli, Builtins } from "clipanion";
 import { PrSyncCommand } from "./commands/pr-sync.js";
+import { PrVerifyCommand } from "./commands/pr-verify.js";
 import { GetCommand, SyncCommand, UpdateCommand } from "@xenoterracide/ghb-secrets-sync";
 
 export function createCli(): Cli {
@@ -16,6 +17,7 @@ export function createCli(): Cli {
 
   cli.register(Builtins.HelpCommand);
   cli.register(PrSyncCommand);
+  cli.register(PrVerifyCommand);
   cli.register(SyncCommand);
   cli.register(UpdateCommand);
   cli.register(GetCommand);

@@ -14,15 +14,16 @@ describe("ghb CLI", () => {
     const paths = definitions.map((def: { path: string }) => def.path);
 
     expect(paths).toContain("ghb pr sync");
+    expect(paths).toContain("ghb pr verify");
     expect(paths).toContain("ghb secrets sync");
     expect(paths).toContain("ghb secrets update");
     expect(paths).toContain("ghb secrets get");
   });
 
-  it("should register 4 commands", () => {
+  it("should register 5 commands", () => {
     const cli = createCli();
     const definitions = Array.from(cli.definitions());
-    expect(definitions.length).toBe(4);
+    expect(definitions.length).toBe(5);
   });
 
   it("should print help when run with no args", async () => {
@@ -45,6 +46,7 @@ describe("ghb CLI", () => {
 
     expect(exitCode).toBe(0);
     expect(output).toContain("ghb pr sync");
+    expect(output).toContain("ghb pr verify");
     expect(output).toContain("ghb secrets sync");
     expect(output).toContain("ghb secrets update");
     expect(output).toContain("ghb secrets get");
