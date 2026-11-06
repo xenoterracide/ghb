@@ -131,8 +131,8 @@ https://github.com/xenoterracide/base-template`. Managed files adopt;
    product files stay; seeded versions skip; `.rej` resolved by hand;
    lockfiles regenerate, never merge. Slim first — the render carries
    less surface after the deletions. Prerequisite: base-template's staged
-   workflows gain `timeout-minutes: 10` first, so the render inherits the
-   ceiling.
+   workflows gain `timeout-minutes: 5` first, so the render inherits the
+   default.
 3. **Adapt the workspace.** The template renders a single-package
    project; ghb is packages/*. After the render:
    - add `pnpm-workspace.yaml` listing `packages/*`
@@ -149,7 +149,7 @@ https://github.com/xenoterracide/base-template`. Managed files adopt;
    slim. #342, #515, #514, #550, #579 are superseded or rebased. #360 is
    unrelated feature work on its own track.
 6. **Go green.** Every workflow runs pnpm and defaults to
-   `timeout-minutes: 10` — more only where shown necessary; hooks no-op
+   `timeout-minutes: 5` — more only where shown necessary; hooks no-op
    in CI; the full suite passes on the adopted tree.
 7. **Publish.** Manifests carry bare `26.11.0`; tag `v26.11.0`; the
    release workflow publishes with NPM_TOKEN. pnpm replaces `workspace:^`
@@ -195,5 +195,6 @@ Version bump to `26.11.4` at PR time, per the repo's maintenance rule.
 - Checks watched are all checks, always
 - `pr sync` always pushes; a current branch is a no-op
 - Quiet by default; failures print their real output
-- Ten minutes is the default bound for every workflow and poll; more is
-  allowed only where shown necessary, and the showing is project-specific
+- New workflows default to a five-minute timeout; the check watch
+  defaults to ten; more is allowed only where shown necessary, and the
+  showing is project-specific
