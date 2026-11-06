@@ -55,22 +55,40 @@ package exists). Publishing is what makes the skill reference portable:
 commands in `packages/ghb/src/commands/`, following the secrets-sync
 structure. Each is one mechanical step the agent no longer thinks about.
 
+### Output contract
+
+The commands encode the discipline the skills teach: output-hygiene for
+the patterns, the bootstrap skill's quiet-flag table for the flags. The
+tool embodies them so agents inherit them for free.
+
+- Quiet on success, loud on failure. `--quiet` on `git fetch`, `merge`,
+  `push`, `checkout`, `pull`. On failure the real output prints; no flag
+  may hide a warning or an error.
+- One line per verdict, gh-pr-wait style. Exit codes carry the meaning.
+- Structured reads only: `--json` with `--jq`, `git rev-list --count`,
+  `git status --porcelain`. Never parse a human table.
+- `NO_COLOR=1` in the environment of every captured command.
+- Polling is bounded: `--interval` and `--timeout` flags, a 30-minute
+  default.
+
 ### `ghb pr sync`
 
-1. `git fetch --all --prune`
+1. `git fetch --all --prune --quiet`
 2. If `origin/<branch>` has commits local lacks — the human clicked Update
    Branch — `git reset --hard origin/<branch>`
-3. Else `git merge origin/HEAD`; conflicts fail loudly and stop for agent
-   judgment
-4. `git push`
+3. Else `git merge origin/HEAD --quiet`; on conflict, print
+   `git status --porcelain` and exit non-zero — agent judgment resolves
+4. `git push --quiet`
 
 Prints one line: `merged N commits`, `reset to remote`, or `up to date`.
 
 ### `ghb pr verify`
 
-1. `git fetch --all --prune`
-2. Currency: ahead/behind counts against the base and the remote branch
-3. PR state: `state`, `mergeable`, `mergeStateStatus` via `gh pr view`
+1. `git fetch --all --prune --quiet`
+2. Currency: `git rev-list --left-right --count` against the base and the
+   remote branch
+3. PR state: `state`, `mergeable`, `mergeStateStatus` via
+   `gh pr view --json`
 4. Checks: poll `gh pr checks --json name,bucket` until every check is
    terminal — a TypeScript port of `gh-pr-wait.sh`, watching ALL checks,
    not just required ones
@@ -81,10 +99,10 @@ current, mergeable, and every check passes.
 ### `ghb pr merge`
 
 1. Runs verify; any failure stops here
-2. Pulls subject and body from the PR so the squash commit keeps the
-   reviewed message
+2. Pulls subject and body via `gh pr view --json` so the squash commit
+   keeps the reviewed message
 3. `gh pr merge --squash --delete-branch`
-4. Checks out the default branch and pulls
+4. `git checkout <default> --quiet` and `git pull --quiet`
 
 A TTY prompts Y/n — humans merging by hand keep a gate. `--yes` skips it
 for agents acting on the human's explicit yes. No TTY and no `--yes`
@@ -159,3 +177,4 @@ stays on its own track.
 - No `pr message`, no `--dry-run`
 - Checks watched are all checks, always
 - `pr sync` always pushes; a current branch is a no-op
+- Quiet by default; failures print their real output
