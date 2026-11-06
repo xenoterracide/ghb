@@ -70,7 +70,7 @@ tool embodies them so agents inherit them for free.
 - Structured reads only: `--json` with `--jq`, `git rev-list --count`,
   `git status --porcelain`. Never parse a human table.
 - `NO_COLOR=1` in the environment of every captured command.
-- Polling is bounded: `--interval` and `--timeout` flags, a 30-minute
+- Polling is bounded: `--interval` and `--timeout` flags, a 10-minute
   default.
 
 ### `ghb pr sync`
@@ -130,7 +130,9 @@ the re-adoption github and java-commons completed, plus a workspace.
 https://github.com/xenoterracide/base-template`. Managed files adopt;
    product files stay; seeded versions skip; `.rej` resolved by hand;
    lockfiles regenerate, never merge. Slim first — the render carries
-   less surface after the deletions.
+   less surface after the deletions. Prerequisite: base-template's staged
+   workflows gain `timeout-minutes: 10` first, so the render inherits the
+   ceiling.
 3. **Adapt the workspace.** The template renders a single-package
    project; ghb is packages/*. After the render:
    - add `pnpm-workspace.yaml` listing `packages/*`
@@ -146,8 +148,9 @@ https://github.com/xenoterracide/base-template`. Managed files adopt;
 5. **Triage Renovate.** The render replaces the config. #578 died in the
    slim. #342, #515, #514, #550, #579 are superseded or rebased. #360 is
    unrelated feature work on its own track.
-6. **Go green.** Every workflow runs pnpm; hooks no-op in CI; the full
-   suite passes on the adopted tree.
+6. **Go green.** Every workflow runs pnpm and defaults to
+   `timeout-minutes: 10` — more only where shown necessary; hooks no-op
+   in CI; the full suite passes on the adopted tree.
 7. **Publish.** Manifests carry bare `26.11.0`; tag `v26.11.0`; the
    release workflow publishes with NPM_TOKEN. pnpm replaces `workspace:^`
    with real versions at publish.
@@ -172,7 +175,8 @@ One edit to `git-workflow/references/pull-request.md`:
 
 `gh-pr-wait.sh` stays in output-hygiene for non-merge watching. The poll
 logic exists twice by design: shell for plugin portability, TypeScript
-inside ghb.
+inside ghb. Its default timeout drops from 30 minutes to 10 and its skill
+wording follows; no test pins the default.
 
 Version bump to `26.11.4` at PR time, per the repo's maintenance rule.
 
@@ -191,3 +195,5 @@ Version bump to `26.11.4` at PR time, per the repo's maintenance rule.
 - Checks watched are all checks, always
 - `pr sync` always pushes; a current branch is a no-op
 - Quiet by default; failures print their real output
+- Ten minutes is the default bound for every workflow and poll; more is
+  allowed only where shown necessary, and the showing is project-specific
