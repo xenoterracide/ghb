@@ -13,17 +13,15 @@ describe("ghb CLI", () => {
 
     const paths = definitions.map((def: { path: string }) => def.path);
 
-    expect(paths).toContain("ghb pr merge");
-    expect(paths).toContain("ghb pr message");
     expect(paths).toContain("ghb secrets sync");
     expect(paths).toContain("ghb secrets update");
     expect(paths).toContain("ghb secrets get");
   });
 
-  it("should register 5 commands", () => {
+  it("should register 3 commands", () => {
     const cli = createCli();
     const definitions = Array.from(cli.definitions());
-    expect(definitions.length).toBe(5);
+    expect(definitions.length).toBe(3);
   });
 
   it("should print help when run with no args", async () => {
@@ -45,35 +43,9 @@ describe("ghb CLI", () => {
     const output = stdoutChunks.join("");
 
     expect(exitCode).toBe(0);
-    expect(output).toContain("ghb pr merge");
-    expect(output).toContain("ghb pr message");
     expect(output).toContain("ghb secrets sync");
     expect(output).toContain("ghb secrets update");
     expect(output).toContain("ghb secrets get");
-  });
-
-  it("should print help for pr merge subcommand", async () => {
-    const cli = createCli();
-    const stdoutChunks: string[] = [];
-    const mockContext = {
-      ...Cli.defaultContext,
-      stdout: {
-        write: (chunk: string | Uint8Array): boolean => {
-          stdoutChunks.push(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
-          return true;
-        },
-      } as NodeJS.WriteStream,
-      stderr: process.stderr,
-      stdin: process.stdin,
-    };
-
-    const exitCode = await cli.run(["pr", "merge", "--help"], mockContext);
-    const output = stdoutChunks.join("");
-
-    expect(exitCode).toBe(0);
-    expect(output).toContain("AI-assisted PR merge workflow");
-    expect(output).toContain("--dry-run");
-    expect(output).toContain("--kimi");
   });
 
   it("should print help for secrets sync subcommand", async () => {
