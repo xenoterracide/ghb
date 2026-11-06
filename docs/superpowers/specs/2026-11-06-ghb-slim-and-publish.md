@@ -169,7 +169,9 @@ One edit to `git-workflow/references/pull-request.md`:
 `gh-pr-wait.sh` stays in output-hygiene for non-merge watching. The poll
 logic exists twice by design: shell for plugin portability, TypeScript
 inside ghb. Its default timeout drops from 30 minutes to 10 and its skill
-wording follows; no test pins the default.
+wording follows; no test pins the default. Both implementations treat a
+head with no check runs yet as pending, not error — the window after a
+push.
 
 Version bump to `26.11.4` at PR time, per the repo's maintenance rule.
 
