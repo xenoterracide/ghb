@@ -40,6 +40,8 @@ package exists). Publishing is what makes the skill reference portable:
 - `.github/workflows/ai-engines.yml`
 - Root `merge:*` scripts
 - Deps: `ai`, `@ai-sdk/anthropic`, `smol-toml`, `zod`
+- Engine references everywhere: root README, packages/ghb README, AGENTS.md,
+  the `--kimi` help assertion in cli.test.ts
 - Renovate #578 closes with the engine layer
 
 ## What stays
@@ -114,21 +116,43 @@ Two workspaces: `ghb` (aggregator plus the pr commands) and
 `ghb-secrets-sync`. Both publish. `ghb-merge` folds into `ghb`; it existed
 to carry the AI deps, and those are gone.
 
-## Template adoption
+## Migration, in order
 
-Render the typescript variant from the template URL, per the update-contract
-design in base-template:
+Every step lands before publish. Each is its own PR. ghb was born from an
+older template generation and is the family's last yarn holdout; this is
+the re-adoption github and java-commons completed, plus a workspace.
 
-- `copier copy --trust https://github.com/xenoterracide/base-template`
-- Managed files adopt; product files stay; seeded versions skip
-- `.rej` files resolved by hand
-- Lockfiles regenerate; they are never merged
-- `yarn.lock`, `.yarnrc.yml`, and PnP files delete; pnpm renders fresh
-- The staged workflow copy into `.github/workflows/` the agent can run
-
-Order matters: slim first, adopt second. Adoption carries less surface
-after the deletions, and `cleanNodeOptions` dies with the PnP runtime it
-worked around.
+1. **Slim.** Delete ghb-merge, its deps, ai-engines.yml, the root
+   `merge:*` scripts. Fold the three pr commands into packages/ghb.
+   Tests stay green under yarn.
+2. **Adopt.** Render the typescript variant from the template URL, per
+   the update-contract design: `copier copy --trust
+https://github.com/xenoterracide/base-template`. Managed files adopt;
+   product files stay; seeded versions skip; `.rej` resolved by hand;
+   lockfiles regenerate, never merge. Slim first — the render carries
+   less surface after the deletions.
+3. **Adapt the workspace.** The template renders a single-package
+   project; ghb is packages/*. After the render:
+   - add `pnpm-workspace.yaml` listing `packages/*`
+   - root scripts drive workspaces — lint, test, typecheck fan out
+   - per-package scripts and deps stay package-owned
+   - staged workflows need workspace-aware run commands when copied
+   - a monorepo-aware template is a future base-template concern; ghb
+     reconciles locally
+4. **Cut over.** Delete `yarn.lock`, `.yarnrc.yml`, the PnP files.
+   `contribute` re-points core.hooksPath from `.share/git/hooks` to
+   `.config/git/hooks`; delete the old hooks dir. Update README.md,
+   AGENTS.md, CONTRIBUTING.md for pnpm.
+5. **Triage Renovate.** The render replaces the config. #578 died in the
+   slim. #342, #515, #514, #550, #579 are superseded or rebased. #360 is
+   unrelated feature work on its own track.
+6. **Go green.** Every workflow runs pnpm; hooks no-op in CI; the full
+   suite passes on the adopted tree.
+7. **Publish.** Manifests carry bare `26.11.0`; tag `v26.11.0`; the
+   release workflow publishes with NPM_TOKEN. pnpm replaces `workspace:^`
+   with real versions at publish.
+8. **agent-skills.** After publish — the reference is only truthful once
+   the package installs.
 
 ## Publishing
 
@@ -152,17 +176,6 @@ inside ghb.
 
 Version bump to `26.11.4` at PR time, per the repo's maintenance rule.
 
-## Order of work
-
-1. Slim ghb — deletions, fold, three commands, tests green under yarn
-2. Adopt base-template — pnpm, toolchain, staged workflows
-3. Publish — token, release workflow, tag
-4. agent-skills — reference edit, version bump
-
-Each step is its own PR. Renovate #342, #515, #514, #550, and #579 are
-superseded or rebased by adoption. #360 is unrelated feature work and
-stays on its own track.
-
 ## Human-required
 
 - `NPM_TOKEN` secret in ghb
@@ -172,7 +185,7 @@ stays on its own track.
 
 ## Decisions already made
 
-- No AI anything in ghb: the agent is the model
+- No SDK, no engine flags: the agent calls ghb; ghb calls no AI
 - No submodule handling
 - No `pr message`, no `--dry-run`
 - Checks watched are all checks, always
