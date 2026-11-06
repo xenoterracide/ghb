@@ -17,9 +17,8 @@ four runtime deps, a credential chain, an output sanitizer, and a CI
 workflow that installs two global CLIs to test it.
 
 Meanwhile agents re-type the mechanical steps at every merge: sync the
-branch, verify currency and state, watch checks, execute the squash. Those
-steps belong in the tool. The tool belongs on npm, so any agent on any
-machine can run it.
+branch, verify currency, state, and checks. Those steps belong in the
+tool. The tool belongs on npm, so any agent on any machine can run it.
 
 ## Decision
 
@@ -53,7 +52,7 @@ package exists). Publishing is what makes the skill reference portable:
 
 ## New commands
 
-`packages/ghb-merge` is deleted. Its useful flow is rewritten as three
+`packages/ghb-merge` is deleted. Its useful flow is rewritten as two
 commands in `packages/ghb/src/commands/`, following the secrets-sync
 structure. Each is one mechanical step the agent no longer thinks about.
 
@@ -98,18 +97,6 @@ Prints one line: `merged N commits`, `reset to remote`, or `up to date`.
 Prints one line per failed dimension. Exits 0 only when the PR is open,
 current, mergeable, and every check passes.
 
-### `ghb pr merge`
-
-1. Runs verify; any failure stops here
-2. Pulls subject and body via `gh pr view --json` so the squash commit
-   keeps the reviewed message
-3. `gh pr merge --squash --delete-branch`
-4. `git checkout <default> --quiet` and `git pull --quiet`
-
-A TTY prompts Y/n — humans merging by hand keep a gate. `--yes` skips it
-for agents acting on the human's explicit yes. No TTY and no `--yes`
-aborts, as before.
-
 ## Package structure
 
 Two workspaces: `ghb` (aggregator plus the pr commands) and
@@ -123,7 +110,7 @@ older template generation and is the family's last yarn holdout; this is
 the re-adoption github and java-commons completed, plus a workspace.
 
 1. **Slim.** Delete ghb-merge, its deps, ai-engines.yml, the root
-   `merge:*` scripts. Fold the three pr commands into packages/ghb.
+   `merge:*` scripts. Fold the two pr commands into packages/ghb.
    Tests stay green under yarn.
 2. **Adopt.** Render the typescript variant from the template URL, per
    the update-contract design: `copier copy --trust
@@ -170,7 +157,11 @@ https://github.com/xenoterracide/base-template`. Managed files adopt;
 One edit to `git-workflow/references/pull-request.md`:
 
 - Routine sync is `ghb pr sync`
-- After the human's yes: `ghb pr verify`, then `ghb pr merge`
+- PRs are born current: fetch and check develop immediately before
+  `gh pr create`, and sync then
+- Before the human's yes: `ghb pr verify`
+- After it: the agent runs the squash merge itself, passing the PR's own
+  title and body so the squash commit keeps the reviewed message
 - Message writing and the human gate stay prose, unchanged
 
 `gh-pr-wait.sh` stays in output-hygiene for non-merge watching. The poll
@@ -191,7 +182,8 @@ Version bump to `26.11.4` at PR time, per the repo's maintenance rule.
 
 - No SDK, no engine flags: the agent calls ghb; ghb calls no AI
 - No submodule handling
-- No `pr message`, no `--dry-run`
+- No `pr message`, no `--dry-run`, no `pr merge` — the agent runs the
+  squash merge after the human's yes
 - Checks watched are all checks, always
 - `pr sync` always pushes; a current branch is a no-op
 - Quiet by default; failures print their real output
