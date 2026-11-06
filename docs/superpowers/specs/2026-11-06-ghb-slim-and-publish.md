@@ -92,7 +92,9 @@ Prints one line: `merged N commits`, `reset to remote`, or `up to date`.
    `gh pr view --json`
 4. Checks: poll `gh pr checks --json name,bucket` until every check is
    terminal — a TypeScript port of `gh-pr-wait.sh`, watching ALL checks,
-   not just required ones
+   not just required ones. A check that has not queued yet is invisible
+   to the list, so the state in step 3 gates too: mergeStateStatus turns
+   CLEAN only when every rule is satisfied.
 
 Prints one line per failed dimension. Exits 0 only when the PR is open,
 current, mergeable, and every check passes.
