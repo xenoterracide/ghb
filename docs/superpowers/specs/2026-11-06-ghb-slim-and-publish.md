@@ -22,10 +22,11 @@ tool. The tool belongs on npm, so any agent on any machine can run it.
 
 ## Decision
 
-Slim ghb, adopt base-template, publish to npm, then point agent-skills at
-the commands. Chosen over bridge scripts in agent-skills (throwaway code)
-and deferred publish (the skill reference stays machine-specific until the
-package exists). Publishing is what makes the skill reference portable:
+Slim ghb, adopt base-template, install the CLI locally, beta test it on
+real merges, then publish to npm and point agent-skills at the commands.
+Chosen over bridge scripts in agent-skills (throwaway code) and over
+publishing before a beta — the commands are unproven until real merges
+run them. Publishing stays what makes the skill reference portable:
 `npm i -g @xenoterracide/ghb` puts the commands on every machine.
 
 ## What dies
@@ -107,9 +108,10 @@ to carry the AI deps, and those are gone.
 
 ## Migration, in order
 
-Every step lands before publish. Each is its own PR. ghb was born from an
-older template generation and is the family's last yarn holdout; this is
-the re-adoption github and java-commons completed, plus a workspace.
+The work runs in this order; each code step is its own PR. ghb was born
+from an older template generation and is the family's last yarn holdout;
+this is the re-adoption github and java-commons completed, plus a
+workspace.
 
 1. **Slim.** Delete ghb-merge, its deps, ai-engines.yml, the root
    `merge:*` scripts. Fold the two pr commands into packages/ghb.
@@ -140,16 +142,30 @@ https://github.com/xenoterracide/base-template`. Managed files adopt;
 6. **Go green.** Every workflow runs pnpm and defaults to
    `timeout-minutes: 5` — more only where shown necessary; hooks no-op
    in CI; the full suite passes on the adopted tree.
-7. **Publish.** Manifests carry bare `26.11.0`; tag `v26.11.0`; the
-   release workflow publishes with NPM_TOKEN. pnpm replaces `workspace:^`
-   with real versions at publish.
-8. **agent-skills.** After publish — the reference is only truthful once
-   the package installs.
+7. **Install locally and beta test.** Build the CLI and link it into
+   PATH — a bin symlink or a `pnpm deploy` plus `npm i -g`; the exact
+   mechanism is proven during the step. Real merges on the family's
+   repos run through the commands until they stop surprising. Fixes
+   land as ordinary PRs.
+8. **Publish.** Semver replaces the placeholder versions — manifests
+   carry bare `1.0.0`, tag `v1.0.0`; the release workflow publishes
+   with NPM_TOKEN. pnpm replaces `workspace:^` with real versions at
+   publish.
+9. **agent-skills.** After publish — the plugin is public, so the
+   reference ships only once `npm i -g` works for everyone. The beta
+   rides direct invocation.
 
 ## Publishing
 
-- Calver, matching the family: tag `vYY.MM.micro`, bare in manifests. First
-  release `26.11.0`.
+The beta precedes all of this; nothing below runs until the local
+install has carried real merges.
+
+- Semver, not calver — the family's calver marks dated checkpoints, and
+  ghb is a tool with a user API. The tag carries the `v`; manifests
+  carry the bare version.
+- The user API is the commands: names, flags, output lines, exit codes.
+  Breaking any of them is a major. The beta stabilizes it; the first
+  npm release is `1.0.0`.
 - Release workflow on tag push runs `pnpm publish`; `NPM_TOKEN` is a
   human-required secret.
 - Both names are free on npm today (`@xenoterracide/ghb` returns 404).
@@ -191,6 +207,9 @@ Version bump to `26.11.4` at PR time, per the repo's maintenance rule.
 - Checks watched are all checks, always
 - `pr sync` always pushes; a current branch is a no-op
 - Quiet by default; failures print their real output
+- Local install and a beta precede the npm release
+- Semver, not calver: the commands are a user API, and breaking one is
+  a major
 - New workflows default to a five-minute timeout; the check watch
   defaults to ten; more is allowed only where shown necessary, and the
   showing is project-specific
