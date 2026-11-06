@@ -160,9 +160,10 @@ https://github.com/xenoterracide/base-template`. Managed files adopt;
 The beta precedes all of this; nothing below runs until the local
 install has carried real merges.
 
-- Semver, not calver — the family's calver marks dated checkpoints, and
-  ghb is a tool with a user API. The tag carries the `v`; manifests
-  carry the bare version.
+- Semver, not calver — calver fits what has no concept of a breaking
+  change, where things just march on: templates, skills, internal
+  tooling. ghb has a user API, so a break must signal. The tag carries
+  the `v`; manifests carry the bare version.
 - The user API is the commands: names, flags, output lines, exit codes.
   Breaking any of them is a major. The beta stabilizes it; the first
   npm release is `1.0.0`.
