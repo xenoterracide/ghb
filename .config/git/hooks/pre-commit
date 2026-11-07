@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# SPDX-FileCopyrightText: Copyright © Caleb Cushing
+#
+# SPDX-License-Identifier: MIT
+[ -n "$CI" ] && exit 0
+
+set -e
+pnpm exec lint-staged --quiet
+# lint-staged annotated above; download exactly the texts the tree now
+# references and stage them, so the commit carries LICENSES and the first
+# push passes the license job, which lints without downloading
+uv run --frozen --group dev reuse download --all
+git add LICENSES

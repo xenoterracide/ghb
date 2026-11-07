@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# SPDX-FileCopyrightText: Copyright © Caleb Cushing
+#
+# SPDX-License-Identifier: MIT
+
+# Skip in CI environments
+[ -n "$CI" ] && exit 0
+
+# post-checkout receives: $1 = previous HEAD, $2 = new HEAD, $3 = flag (1=branch, 0=file)
+PREV_HEAD="$1"
+CHECKOUT_TYPE="$3"
+
+# Only run on branch checkouts (not file checkouts)
+[ "$CHECKOUT_TYPE" = "1" ] || exit 0
+
+# Check if toolchain or lockfiles changed between previous and current HEAD
+TOOL_VERSIONS_CHANGED=0
+PNPM_LOCK_CHANGED=0
+UV_LOCK_CHANGED=0
+
+if ! git diff --quiet "$PREV_HEAD" HEAD -- .tool-versions 2>/dev/null; then
+  TOOL_VERSIONS_CHANGED=1
+fi
+
+if ! git diff --quiet "$PREV_HEAD" HEAD -- pnpm-lock.yaml 2>/dev/null; then
+  PNPM_LOCK_CHANGED=1
+fi
+
+if ! git diff --quiet "$PREV_HEAD" HEAD -- uv.lock 2>/dev/null; then
+  UV_LOCK_CHANGED=1
+fi
+
+# Heal once, naming every marker that changed.
+CHANGED=""
+
+if [ "$TOOL_VERSIONS_CHANGED" -eq 1 ]; then
+  CHANGED=".tool-versions"
+fi
+
+if [ "$PNPM_LOCK_CHANGED" -eq 1 ]; then
+  CHANGED="$CHANGED pnpm-lock.yaml"
+fi
+
+if [ "$UV_LOCK_CHANGED" -eq 1 ]; then
+  CHANGED="$CHANGED uv.lock"
+fi
+
+if [ -n "$CHANGED" ]; then
+  echo "$CHANGED changed, healing toolchain..."
+  "$(dirname "$0")/heal.sh"
+fi

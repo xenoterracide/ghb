@@ -7,38 +7,53 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 # Contributing
 
 Thank you for your interest in improving `ghb`. This repository is a TypeScript
-monorepo managed with Yarn 4 PnP workspaces.
+monorepo managed with pnpm workspaces.
 
 ## Repository Overview
 
 - **`packages/ghb/`** — the `ghb` CLI aggregator.
 - **`packages/ghb-pr/`** — `pr sync` and `pr verify`.
 - **`packages/ghb-secrets-sync/`** — GitHub secrets sync utilities.
-- **`.share/git/hooks/`** — custom git hooks.
+- **`.config/git/hooks/`** — git hooks; they heal the toolchain and gate
+  commits.
 - **`.github/workflows/`** — CI workflows.
 
 ## Setup
 
 1. Ensure `asdf` and `direnv` are installed and allowed.
-2. Run `asdf install` (or let `.envrc` run it).
-3. Run `yarn contribute` to create `.venv`, sync Python deps, install Node
-   dependencies, and configure git hooks.
+2. Run `pnpm contribute` — it installs tools, syncs Node and Python
+   dependencies, and points `core.hooksPath` at `.config/git/hooks`.
+
+`contribute` and the post-checkout/post-merge hooks all call
+`.config/git/hooks/heal.sh`; a failed heal never breaks a checkout.
 
 ## Build, Test, and Lint
 
 ```bash
 # Run all checks
-yarn check
+pnpm check
 
 # Individual commands
-yarn test              # tests with coverage
-yarn build             # build packages topologically
-yarn typecheck         # build, then typecheck all workspaces
-yarn lint              # eslint + prettier + reuse
-yarn lint:eslint
-yarn lint:prettier
-yarn lint:reuse
+pnpm test              # tests with coverage across the workspace
+pnpm build             # build every package topologically
+pnpm typecheck         # root project, then every package
+pnpm lint              # eslint + prettier + reuse
+pnpm lint:eslint
+pnpm lint:prettier
+pnpm lint:reuse
 ```
+
+## Updating from the Template
+
+This repository is managed with
+[copier](https://copier.readthedocs.io); [`.copier-answers.yml`](./.copier-answers.yml)
+holds the answers. Refresh from
+[xenoterracide/base-template](https://github.com/xenoterracide/base-template):
+
+    copier update --trust
+
+Conflicts appear as `.rej` files; resolve and commit. Renovate automerges
+clean template updates.
 
 ## Pull Requests
 

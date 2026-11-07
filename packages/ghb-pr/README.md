@@ -32,5 +32,5 @@ Both commands are quiet on success and loud on failure. Reads are structured
 Part of the [ghb monorepo](../../README.md). Run the checks from the root:
 
 ```bash
-yarn check
+pnpm check
 ```

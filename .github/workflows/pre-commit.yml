@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright © 2024-2026 Caleb Cushing
+# SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
 #
 # SPDX-License-Identifier: MIT
 
@@ -11,3 +11,7 @@ jobs:
     uses: xenoterracide/github/.github/workflows/license.yml@75d7980e5d2cba1e05e66ad418e41d7f3d875c33 # develop
   prettier:
     uses: xenoterracide/github/.github/workflows/prettier.yml@75d7980e5d2cba1e05e66ad418e41d7f3d875c33 # develop
+  shfmt:
+    uses: xenoterracide/github/.github/workflows/shfmt.yml@75d7980e5d2cba1e05e66ad418e41d7f3d875c33 # develop
+  shellcheck:
+    uses: xenoterracide/github/.github/workflows/shellcheck.yml@75d7980e5d2cba1e05e66ad418e41d7f3d875c33 # develop

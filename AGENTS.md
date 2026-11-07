@@ -20,8 +20,35 @@ contributor workflow.
 
 ## Key Commands
 
-Run `yarn check` for eslint, typecheck, and tests. Run `yarn lint` for eslint,
-prettier, and reuse. See [`package.json`](./package.json) for other scripts.
+- `pnpm contribute` — bootstrap tooling (run once after clone); heals the
+  toolchain through `.config/git/hooks/heal.sh`
+- `pnpm check` — prettier, eslint, typecheck, and tests
+- `pnpm lint` — eslint, prettier, and reuse
+- `pnpm build` — build every package topologically
+- `pnpm test` — vitest with coverage across the workspace
+
+## Source of Truth
+
+Read these files instead of trusting a copy of their contents here. Versions
+and rules drift; these do not.
+
+| For                                             | See                                                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Install, update, usage, contribution            | [`README.md`](./README.md), [`CONTRIBUTING.md`](./CONTRIBUTING.md)                                                             |
+| Tool versions (Node, Python, shfmt, shellcheck) | [`.tool-versions`](./.tool-versions)                                                                                           |
+| pnpm version and workspace layout               | `packageManager` in [`package.json`](./package.json), [`pnpm-workspace.yaml`](./pnpm-workspace.yaml)                           |
+| Scripts and root Node dependencies              | [`package.json`](./package.json)                                                                                               |
+| Per-package scripts and dependencies            | `packages/*/package.json`                                                                                                      |
+| Python dependencies                             | [`pyproject.toml`](./pyproject.toml), [`uv.lock`](./uv.lock)                                                                   |
+| Lint, format, and staged-file config            | [`eslint.config.cts`](./eslint.config.cts), [`.prettierrc.cjs`](./.prettierrc.cjs), [`.lintstagedrc.cjs`](./.lintstagedrc.cjs) |
+| Conventional commit types                       | [`git-conventional-commits.yaml`](./git-conventional-commits.yaml)                                                             |
+| Vitest and coverage configuration               | [`vitest.config.ts`](./vitest.config.ts)                                                                                       |
+| Template and answers                            | [xenoterracide/base-template](https://github.com/xenoterracide/base-template), [`.copier-answers.yml`](./.copier-answers.yml)  |
+| Renovate configuration                          | [`.github/renovate.json5`](./.github/renovate.json5)                                                                           |
+
+Template updates land with `copier update --trust`; conflicts appear as `.rej`
+files. Hooks heal the toolchain: `.envrc`, `contribute`, and the post hooks
+call `.config/git/hooks/heal.sh`. A failed heal never breaks a checkout.
 
 ## Conventions
 
@@ -35,19 +62,6 @@ prettier, and reuse. See [`package.json`](./package.json) for other scripts.
   via argv.
 - **File permissions.** Env files use `0o600`. Referenced secret files accept
   `0o400` or `0o600`.
-
-## Source of Truth
-
-- Tool versions → [`.tool-versions`](./.tool-versions)
-- Scripts and Node dependencies → [`package.json`](./package.json)
-- Python dependencies → [`pyproject.toml`](./pyproject.toml),
-  [`uv.lock`](./uv.lock)
-- Lint, format, and staged-file config → [`eslint.config.cts`](./eslint.config.cts),
-  [`.prettierrc.cjs`](./.prettierrc.cjs), [`.lintstagedrc.cjs`](./.lintstagedrc.cjs)
-- Conventional commit types →
-  [`git-conventional-commits.yaml`](./git-conventional-commits.yaml)
-- Vitest and coverage configuration → [`vitest.config.ts`](./vitest.config.ts)
-- Renovate configuration → [`.github/renovate.json5`](./.github/renovate.json5)
 
 ## Maintenance
 
