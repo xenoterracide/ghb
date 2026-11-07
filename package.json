@@ -28,9 +28,6 @@
   },
   "scripts": {
     "contribute": "{ [ -d .venv ] || uv venv --relocatable; } && uv sync --frozen && git config core.hooksPath .share/git/hooks",
-    "merge:copilot": "yarn ghb pr merge --copilot",
-    "merge:junie": "yarn ghb pr merge --junie",
-    "merge:kimi": "yarn ghb pr merge --kimi",
     "secrets": "yarn ghb secrets",
     "ghb": "yarn workspace @xenoterracide/ghb run ghb",
     "lint:prettier": "prettier --ignore-unknown --cache --check '**'",

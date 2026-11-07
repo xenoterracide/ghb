@@ -6,14 +6,12 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 # Project Overview
 
-**ghb** (GitHub Bridge) is a TypeScript CLI devtools monorepo with three
+**ghb** (GitHub Bridge) is a TypeScript CLI devtools monorepo with two
 packages:
 
-1. **`@xenoterracide/ghb`** — aggregated `ghb` CLI that composes subcommands from
-   the other packages.
-2. **`@xenoterracide/ghb-merge`** — AI-assisted PR creation/merge workflow
-   (Kimi, Junie, Copilot).
-3. **`@xenoterracide/ghb-secrets-sync`** — sync GitHub repository secrets from
+1. **`@xenoterracide/ghb`** — the aggregated `ghb` CLI: `pr sync`, `pr verify`,
+   and the secrets commands.
+2. **`@xenoterracide/ghb-secrets-sync`** — sync GitHub repository secrets from
    environment variables or local env files.
 
 The repository is REUSE-compliant: every file must carry an SPDX license header.
@@ -24,8 +22,7 @@ The repository is REUSE-compliant: every file must carry an SPDX license header.
 ```text
 .
 ├── packages/
-│   ├── ghb/                    # Aggregated CLI
-│   ├── ghb-merge/              # AI-assisted merge workflow
+│   ├── ghb/                    # The ghb CLI
 │   └── ghb-secrets-sync/       # GitHub secrets sync CLI
 ├── .share/git/hooks/           # Custom git hooks
 ├── .github/workflows/          # GitHub Actions
