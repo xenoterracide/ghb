@@ -11,8 +11,8 @@ monorepo managed with Yarn 4 PnP workspaces.
 
 ## Repository Overview
 
-- **`packages/ghb/`** — aggregated CLI entrypoint.
-- **`packages/ghb-merge/`** — AI-assisted PR merge workflow.
+- **`packages/ghb/`** — the `ghb` CLI aggregator.
+- **`packages/ghb-pr/`** — `pr sync` and `pr verify`.
 - **`packages/ghb-secrets-sync/`** — GitHub secrets sync utilities.
 - **`.share/git/hooks/`** — custom git hooks.
 - **`.github/workflows/`** — CI workflows.

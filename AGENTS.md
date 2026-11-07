@@ -10,8 +10,8 @@ GitHub Bridge: a TypeScript CLI devtools monorepo.
 
 - **`@xenoterracide/ghb`** — aggregated `ghb` CLI. Composes subcommands from
   the other packages.
-- **`@xenoterracide/ghb-merge`** — AI-assisted PR creation and merge (Kimi,
-  Junie, Copilot).
+- **`@xenoterracide/ghb-pr`** — `pr sync` and `pr verify`: keep a PR branch
+  current and prove it is mergeable and green.
 - **`@xenoterracide/ghb-secrets-sync`** — GitHub repository secret sync from
   environment variables or local env files.
 
@@ -35,10 +35,6 @@ prettier, and reuse. See [`package.json`](./package.json) for other scripts.
   via argv.
 - **File permissions.** Env files use `0o600`. Referenced secret files accept
   `0o400` or `0o600`.
-- **Yarn PnP isolation.** Strip PnP loader flags from `NODE_OPTIONS` before
-  spawning external Node.js tools.
-- **Submodules.** `findMainRepoRoot()` walks up past submodules so git
-  operations run in the true repo root.
 
 ## Source of Truth
 

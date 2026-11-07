@@ -22,15 +22,15 @@ npm install -g @xenoterracide/ghb
 # Show help
 ghb --help
 
-# AI-assisted PR merge workflow
-ghb merge
-ghb merge --dry-run
-ghb merge --kimi
-ghb merge --junie
-ghb merge --copilot
+# Sync the current branch with its remote and the default branch
+# Prints one line: merged N commits, reset to remote, or up to date
+# Exits 1 when local and remote diverged, or on a merge conflict
+ghb pr sync
 
-# Generate PR title/body files
-ghb pr-message --title-file title.txt --body-file body.txt
+# Verify the current PR is current, mergeable, and every check passes
+# Prints pass, or one line per failed dimension
+# Exits 0 on pass, 1 on failure, 2 when checks stay pending past the timeout
+ghb pr verify
 
 # Sync GitHub secrets
 ghb sync --env-file secrets.env

@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { Cli, Builtins } from "clipanion";
-import { MergeCommand, PrMessageCommand } from "@xenoterracide/ghb-merge";
+import { PrSyncCommand, PrVerifyCommand } from "@xenoterracide/ghb-pr";
 import { GetCommand, SyncCommand, UpdateCommand } from "@xenoterracide/ghb-secrets-sync";
 
 export function createCli(): Cli {
@@ -15,8 +15,8 @@ export function createCli(): Cli {
   });
 
   cli.register(Builtins.HelpCommand);
-  cli.register(MergeCommand);
-  cli.register(PrMessageCommand);
+  cli.register(PrSyncCommand);
+  cli.register(PrVerifyCommand);
   cli.register(SyncCommand);
   cli.register(UpdateCommand);
   cli.register(GetCommand);

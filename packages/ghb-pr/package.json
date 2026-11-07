@@ -1,17 +1,17 @@
 {
-  "name": "@xenoterracide/ghb-merge",
+  "name": "@xenoterracide/ghb-pr",
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "packageManager": "yarn@4.18.1",
-  "main": "merge.ts",
+  "main": "src/index.ts",
   "publishConfig": {
     "access": "public",
-    "main": "dist/merge.js",
-    "types": "dist/merge.d.ts",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "exports": {
       ".": {
-        "types": "./dist/merge.d.ts",
-        "default": "./dist/merge.js"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     }
   },
@@ -19,11 +19,7 @@
     "dist"
   ],
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.14",
-    "ai": "^7.0.0",
-    "clipanion": "^4.0.0-rc.4",
-    "smol-toml": "^1.6.1",
-    "zod": "^4.4.3"
+    "clipanion": "^4.0.0-rc.4"
   },
   "devDependencies": {
     "@types/node": "^26.0.0",
@@ -34,7 +30,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xenoterracide/ghb.git",
-    "directory": "packages/ghb-merge"
+    "directory": "packages/ghb-pr"
   },
   "engines": {
     "node": ">=24"
@@ -42,9 +38,6 @@
   "scripts": {
     "build": "tsc",
     "prepack": "yarn build",
-    "merge:copilot": "tsx merge.ts --copilot",
-    "merge:junie": "tsx merge.ts --junie",
-    "merge:kimi": "tsx merge.ts --kimi",
     "test": "vitest run && yarn typecheck",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
