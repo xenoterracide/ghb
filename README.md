@@ -47,6 +47,7 @@ ghb get --name API_KEY
 See the package READMEs for more detail:
 
 - [`packages/ghb`](./packages/ghb/README.md) — the `ghb` CLI
+- [`packages/ghb-pr`](./packages/ghb-pr/README.md) — `pr sync` and `pr verify`
 - [`packages/ghb-secrets-sync`](./packages/ghb-secrets-sync/README.md) — secrets sync
 
 ## Development
