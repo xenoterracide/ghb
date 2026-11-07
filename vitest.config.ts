@@ -33,10 +33,10 @@ export default defineConfig({
     coverage: {
       exclude: ["**/.share/**", "**/.pnp.*", "**/node_modules/**", "**/*.test.ts", "**/coverage/**"],
       thresholds: {
-        statements: 85,
+        statements: 90,
         branches: 85,
-        functions: 85,
-        lines: 85,
+        functions: 90,
+        lines: 90,
       },
     },
   },
