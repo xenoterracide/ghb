@@ -24,8 +24,14 @@ export function createCli(): Cli {
   return cli;
 }
 
+// The tsx dev entry (`pnpm ghb`) runs the source as argv[1]; every built
+// invocation — direct node or a bin symlink whose name is not cli.js — is
+// covered by the CommonJS entry identity, which node resolves through
+// symlinks. The typeof guards keep vitest's ESM import of this module inert.
 const cliPath = process.argv[1] ?? "";
-const isMainModule = cliPath.endsWith("cli.ts") || cliPath.endsWith("cli.js");
+const isMainModule =
+  cliPath.endsWith("cli.ts") ||
+  (typeof require === "function" && typeof module === "object" && module !== null && require.main === module);
 
 if (isMainModule) {
   const cli = createCli();
