@@ -31,6 +31,39 @@
       matchHost: "https://maven.pkg.github.com",
     },
   ],
+  customManagers: [
+    {
+      // Copyright end-years ride the release tag: the calver major is the
+      // year, so tagging v27.x turns every -2026 into -2027. The
+      // two-digit capture keeps the comparison aligned with the year
+      // extracted from the tag.
+      customType: "regex",
+      managerFilePatterns: [
+        "(\\.(cjs|cts|ts|java|xml|json5|jsonc|toml|ya?ml|md)|\\.editorconfig|\\.envrc|\\.gitignore|\\.gitattributes|\\.prettierignore|\\.config/git/hooks/[^/]+)(\\.jinja)?$",
+      ],
+      matchStrings: ["Copyright © (?<from>20\\d{2})-20(?<currentValue>\\d{2}) "],
+      depNameTemplate: "copyright-year",
+      packageNameTemplate: "xenoterracide/base-template",
+      datasourceTemplate: "github-tags",
+      extractVersionTemplate: "^v(?<version>\\d{2})",
+      autoReplaceStringTemplate: "Copyright © {{{from}}}-20{{{newVersion}}} ",
+    },
+    {
+      // single-year headers become ranges at the first bump; combination
+      // merges the start year with the comparable two-digit end
+      customType: "regex",
+      managerFilePatterns: [
+        "(\\.(cjs|cts|ts|java|xml|json5|jsonc|toml|ya?ml|md)|\\.editorconfig|\\.envrc|\\.gitignore|\\.gitattributes|\\.prettierignore|\\.config/git/hooks/[^/]+)(\\.jinja)?$",
+      ],
+      matchStrings: ["Copyright © (?<from>20\\d{2}) ", "Copyright © 20(?<currentValue>\\d{2}) "],
+      matchStringsStrategy: "combination",
+      depNameTemplate: "copyright-year",
+      packageNameTemplate: "xenoterracide/base-template",
+      datasourceTemplate: "github-tags",
+      extractVersionTemplate: "^v(?<version>\\d{2})",
+      autoReplaceStringTemplate: "Copyright © {{{from}}}-20{{{newVersion}}} ",
+    },
+  ],
   packageRules: [
     {
       // typescript-eslint does not yet support TS 7
@@ -69,6 +102,11 @@
       matchUpdateTypes: ["lockFileMaintenance"],
       branchTopic: "lock-file-maintenance",
       prPriority: -1,
+    },
+    {
+      // the copyright-year manager's whole job is a green automerge
+      matchDepNames: ["copyright-year"],
+      automerge: true,
     },
   ],
 }

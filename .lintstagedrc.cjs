@@ -1,4 +1,8 @@
+<<<<<<< before updating
 // SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
+=======
+// SPDX-FileCopyrightText: Copyright © 2023-2026 Caleb Cushing
+>>>>>>> after updating
 //
 // SPDX-License-Identifier: MIT
 
@@ -14,8 +18,9 @@ const licenseDocumentation = "--license 'CC-BY-NC-SA-4.0'";
 const licenseScripts = "--license 'MIT' --fallback-dot-license";
 
 // pnpm-lock.yaml and the maven wrapper properties are generated; header
-// comments and formatting break them. `.jinja` templates are mass-licensed
-// via REUSE.toml's **/*.jinja annotation, so annotate must not stamp them.
+// comments and formatting break them. `.jinja` sources carry their baked
+// lineage headers (REUSE.toml's **/*.jinja annotation backstops the
+// headerless JSON-jinja), so annotate must not stamp them.
 // Hooks run while lint-staged does, and annotating one rewrites the script
 // under its own executing shell; they carry their headers from the template.
 const withoutManaged = (files) =>
