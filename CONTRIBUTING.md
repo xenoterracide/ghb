@@ -1,5 +1,13 @@
 <!--
 SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
+<<<<<<< before updating
+=======
+
+SPDX-License-Identifier: CC-BY-NC-SA-4.0
+-->
+
+# Contributing to ghb
+>>>>>>> after updating
 
 SPDX-License-Identifier: CC-BY-NC-SA-4.0
 -->

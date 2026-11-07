@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# SPDX-FileCopyrightText: Copyright © Caleb Cushing
+# SPDX-FileCopyrightText: Copyright © 2021-2026 Caleb Cushing
 #
 # SPDX-License-Identifier: MIT
 [ -n "$CI" ] && exit 0
