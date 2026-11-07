@@ -12,17 +12,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 const jsonPlugin = (jsonPluginImport as { default?: typeof jsonPluginImport }).default ?? jsonPluginImport;
 
 export default defineConfig([
-  globalIgnores([
-    ".yarn/",
-    ".pnp.*",
-    "**/dist/",
-    "**/build/",
-    "node_modules/",
-    ".agents/",
-    ".superpowers/",
-    ".venv/",
-    "coverage/",
-  ]),
+  globalIgnores(["**/dist/", "**/build/", "node_modules/", ".agents/", ".superpowers/", ".venv/", "coverage/"]),
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
     languageOptions: { globals: globals.node },
@@ -111,22 +101,22 @@ export default defineConfig([
   {
     files: ["**/*.json"],
     ignores: ["**/tsconfig.json", "**/tsconfig.*.json"],
+    ...jsonPlugin.configs.recommended,
     plugins: { json: jsonPlugin },
     language: "json/json",
-    ...jsonPlugin.configs.recommended,
   },
   {
     files: ["**/*.json5"],
+    ...jsonPlugin.configs.recommended,
     plugins: { json: jsonPlugin },
     language: "json/json5",
-    ...jsonPlugin.configs.recommended,
   },
   {
     files: ["**/*.jsonc", "**/tsconfig.json", "**/tsconfig.*.json"],
+    ...jsonPlugin.configs.recommended,
     plugins: { json: jsonPlugin },
     language: "json/jsonc",
     languageOptions: { allowTrailingCommas: true },
-    ...jsonPlugin.configs.recommended,
   },
   {
     files: ["**/*.md"],

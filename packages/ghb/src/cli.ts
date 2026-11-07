@@ -25,7 +25,6 @@ export function createCli(): Cli {
 }
 
 const cliPath = process.argv[1] ?? "";
-// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 const isMainModule = cliPath.endsWith("cli.ts") || cliPath.endsWith("cli.js");
 
 if (isMainModule) {

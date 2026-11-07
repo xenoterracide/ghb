@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    exclude: ["**/node_modules/**", "**/.share/**", "**/.agents/**", "**/.pnp.*"],
+    exclude: ["**/node_modules/**", "**/.agents/**"],
     projects: [
       {
         test: {
@@ -31,7 +31,7 @@ export default defineConfig({
       },
     ],
     coverage: {
-      exclude: ["**/.share/**", "**/.pnp.*", "**/node_modules/**", "**/*.test.ts", "**/coverage/**"],
+      exclude: ["**/node_modules/**", "**/*.test.ts", "**/coverage/**"],
       thresholds: {
         statements: 90,
         branches: 85,

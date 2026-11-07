@@ -10,15 +10,26 @@ const symbol = "--copyright-prefix spdx-string-symbol";
 
 const licenseCode = "--license 'GPL-3.0-or-later'";
 const licenseConfiguration = "--license 'CC0-1.0' --fallback-dot-license";
-const licenseDocumentation = "--license 'CC-BY-NC-SA-4.0";
+const licenseDocumentation = "--license 'CC-BY-NC-SA-4.0'";
 const licenseScripts = "--license 'MIT' --fallback-dot-license";
 
-const withoutYarn = (files) => files.filter((file) => !file.includes("/.yarn/") && !file.startsWith(".yarn/"));
+// pnpm-lock.yaml and the maven wrapper properties are generated; header
+// comments and formatting break them. `.jinja` templates are mass-licensed
+// via REUSE.toml's **/*.jinja annotation, so annotate must not stamp them.
+// Hooks run while lint-staged does, and annotating one rewrites the script
+// under its own executing shell; they carry their headers from the template.
+const withoutManaged = (files) =>
+  files.filter(
+    (file) =>
+      !/(^|\/)(pnpm-lock\.yaml|maven-wrapper\.properties)$/.test(file) &&
+      !/(^|\/)\.config\/git\/hooks\//.test(file) &&
+      !/\.jinja$/.test(file),
+  );
 
 const withFiles = (command, files) => `${command} ${files.map((file) => `"${file.replace(/"/g, '\\"')}"`).join(" ")}`;
 
 const run = (commands) => (files) => {
-  const filtered = withoutYarn(files);
+  const filtered = withoutManaged(files);
 
   if (!filtered.length) {
     return [];
@@ -32,12 +43,18 @@ module.exports = {
   "!(package).json": run([`${reuse} ${copyright} ${symbol} ${licenseConfiguration}`, prettier]),
   // package.json can contain logic via the scripts segment
   "package.json": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
-  "{.config/git/hooks/**,**/*.*sh}": run([`${reuse} ${copyright} ${symbol} ${licenseScripts} --style python`, shfmt]),
+  "{.config/git/hooks/**,**/*.*sh,.envrc}": run([
+    `${reuse} ${copyright} ${symbol} ${licenseScripts} --style python`,
+    shfmt,
+  ]),
   "*.{md,adoc}": run([`${reuse} ${copyright} ${symbol} ${licenseDocumentation}`, prettier]),
-  "*.{xml,yaml,properties,toml,json5}": run([`${reuse} ${copyright} ${licenseConfiguration} ${symbol}`, prettier]),
+  "*.{xml,yaml,properties,toml,json5,jsonc}": run([
+    `${reuse} ${copyright} ${licenseConfiguration} ${symbol}`,
+    prettier,
+  ]),
   // yml is different from yaml extension as the only known yaml required file is for git-conventional-commits, but yml
   // contains files like GitHub workflows which can have significant logic
-  "*.{js,cjs,yml}": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
+  "*.{js,cjs,cts,yml}": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
   ".{*ignore,editorconfig,gitattributes,mailmap}": run([
     `${reuse} ${copyright} ${symbol} ${licenseConfiguration}`,
     prettier,
@@ -45,6 +62,8 @@ module.exports = {
   // JetBrains obnoxiously assume that properties files aren't utf8 by default, and so to avoid rendering issues we
   // avoid adding the Unicode copyright symbol
   "*.properties": run([`${reuse} ${copyright} ${licenseConfiguration}`, prettier]),
-  // code our real business logic lives in
-  "*.{ts,mts,java}": run([`${reuse} ${copyright} ${symbol} ${licenseCode}`, prettier]),
+  // TypeScript code
+  "*.ts": run([`${reuse} ${copyright} ${symbol} ${licenseCode}`, prettier]),
+  // Java code
+  "*.java": run([`${reuse} ${copyright} ${symbol} ${licenseCode}`, prettier]),
 };

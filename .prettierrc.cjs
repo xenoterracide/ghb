@@ -7,10 +7,13 @@ module.exports = {
   printWidth: 120,
   xmlWhitespaceSensitivity: "ignore",
   keySeparator: "=",
-  plugins: [
-    require.resolve("@prettier/plugin-xml"),
-    require.resolve("prettier-plugin-properties"),
-    require.resolve("prettier-plugin-java"),
-    require.resolve("prettier-plugin-toml"),
-  ],
+  plugins: ["@prettier/plugin-xml", "prettier-plugin-properties", "prettier-plugin-java", "prettier-plugin-toml"]
+    .map((p) => {
+      try {
+        return require.resolve(p);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean),
 };

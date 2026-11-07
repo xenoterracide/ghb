@@ -9,6 +9,10 @@
   lockFileMaintenance: {
     enabled: true,
     automerge: true,
+    // daily window, after the day's dependency-update PRs have run;
+    // wide enough that the hosted app's runs land inside it, unlike
+    // the default weekly window that never coincided with one
+    schedule: ["before 4am"],
   },
   timezone: "UTC",
   platformAutomerge: true,
@@ -29,10 +33,17 @@
   ],
   packageRules: [
     {
-      /* typescript-eslint (and the TS7 compiler) do not yet support TS 7,
-         and the TS7 compiler lacks native Yarn PnP support. */
+      // typescript-eslint does not yet support TS 7
       matchDepNames: ["typescript"],
       allowedVersions: "<7",
+    },
+    {
+      // A conflicted copier update leaves `.rej` files, which fail
+      // `lint:reuse`; green checks mean the update landed cleanly, so it
+      // can automerge. No enable flag is needed: `copier.yml` carries no
+      // `_tasks`, so the hosted app can update without `--trust`.
+      matchManagers: ["copier"],
+      automerge: true,
     },
     {
       matchManagers: ["asdf", "maven", "npm", "pyenv", "pep621", "github-actions"],
@@ -47,6 +58,17 @@
       extends: ["helpers:pinGitHubActionDigests"],
       branchTopic: "{{{depNameSanitized}}}-{{{newDigest}}}",
       automerge: true,
+    },
+    {
+      // the branchTopic rules above also match lock file maintenance
+      // updates and render an empty topic, naming the branch "renovate"
+      // instead of "renovate/lock-file-maintenance"; rules override the
+      // lockFileMaintenance object, so restore the default topic here,
+      // after them; negative priority defers maintenance behind
+      // dependency-update PRs within a run
+      matchUpdateTypes: ["lockFileMaintenance"],
+      branchTopic: "lock-file-maintenance",
+      prPriority: -1,
     },
   ],
 }
