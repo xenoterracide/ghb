@@ -115,7 +115,14 @@ describe("PrVerifyCommand", () => {
   });
 
   it("treats a runless head as pending until timeout", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", new Error("no checks"), new Error("no checks")]);
+    const { run } = fakeRunner([
+      "",
+      greenView,
+      "0\t1",
+      "0\t0",
+      new Error("no checks reported on the 'topic' branch"),
+      new Error("no checks reported on the 'topic' branch"),
+    ]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -148,8 +155,93 @@ describe("PrVerifyCommand", () => {
     expect(logs).toEqual(["pass"]);
   });
 
-  it("fails when local has diverged from the remote head", async () => {
+  it("pends through UNKNOWN mergeability to pass", async () => {
+    const unknownView = JSON.stringify({
+      state: "OPEN",
+      mergeable: "UNKNOWN",
+      mergeStateStatus: "UNKNOWN",
+      baseRefName: "develop",
+      headRefName: "topic",
+    });
+    const { run } = fakeRunner([
+      "",
+      unknownView,
+      "0\t1",
+      "0\t0",
+      greenView,
+      JSON.stringify([{ name: "build", bucket: "pass" }]),
+    ]);
+    const { logs } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
+  });
+
+  it("times out on UNKNOWN mergeability", async () => {
+    const unknownView = JSON.stringify({
+      state: "OPEN",
+      mergeable: "UNKNOWN",
+      mergeStateStatus: "UNKNOWN",
+      baseRefName: "develop",
+      headRefName: "topic",
+    });
+    const { run } = fakeRunner(["", unknownView, "0\t1", "0\t0"]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    command.timeout = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(2);
+    expect(errors.join("\n")).toContain("pending after 0m: mergeability");
+  });
+
+  it("fails fast on a gh error that is not a runless head", async () => {
+    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", new Error("gh: Not logged in")]);
+    captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    command.timeout = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+  });
+
+  it("fails when local is ahead of the remote head", async () => {
     const { run } = fakeRunner(["", greenView, "0\t1", "1\t0"]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain("ahead of origin/topic by 1 commits");
+  });
+
+  it("fails when local is behind the remote head", async () => {
+    const { run } = fakeRunner(["", greenView, "0\t1", "0\t2"]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain("behind origin/topic by 2 commits");
+  });
+
+  it("fails when local has diverged from the remote head", async () => {
+    const { run } = fakeRunner(["", greenView, "0\t1", "1\t2"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();

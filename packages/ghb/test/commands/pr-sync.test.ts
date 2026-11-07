@@ -66,7 +66,7 @@ describe("PrSyncCommand", () => {
   });
 
   it("resets to remote when the remote branch is ahead and local is clean", async () => {
-    const { run, calls } = fakeRunner(["", "topic", "1", "0", "", ""]);
+    const { run, calls } = fakeRunner(["", "topic", "1", "0", "", "", ""]);
     const { logs } = captureConsole();
 
     const command = new PrSyncCommand();
@@ -77,6 +77,34 @@ describe("PrSyncCommand", () => {
     expect(logs).toEqual(["reset to remote"]);
     expect(calls).toContain("git reset --hard origin/topic");
     expect(calls).toContain("git push --quiet");
+  });
+
+  it("trims the newline git branch prints", async () => {
+    const { run, calls } = fakeRunner(["", "topic\n", "1", "0", "", "", ""]);
+    const { logs } = captureConsole();
+
+    const command = new PrSyncCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["reset to remote"]);
+    expect(calls).toContain("git reset --hard origin/topic");
+    expect(calls.some((call) => call.includes("\n"))).toBe(false);
+  });
+
+  it("refuses to reset over a dirty worktree", async () => {
+    const { run, calls } = fakeRunner(["", "topic", "1", "0", " M src/file.ts"]);
+    const { errors } = captureConsole();
+
+    const command = new PrSyncCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain("dirty worktree");
+    expect(calls.some((call) => call.startsWith("git reset"))).toBe(false);
+    expect(calls).not.toContain("git push --quiet");
   });
 
   it("refuses to reset when local and remote diverged", async () => {

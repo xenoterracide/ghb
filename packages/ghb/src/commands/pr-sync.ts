@@ -19,7 +19,7 @@ export class PrSyncCommand extends Command {
     const run = this.runner ?? execRunner;
 
     run("git", ["fetch", "--all", "--prune", "--quiet"]);
-    const branch = run("git", ["branch", "--show-current"]);
+    const branch = run("git", ["branch", "--show-current"]).trim();
     const remoteAhead = Number(run("git", ["rev-list", "--count", `HEAD..origin/${branch}`]));
     const localAhead = Number(run("git", ["rev-list", "--count", `origin/${branch}..HEAD`]));
 
@@ -29,6 +29,11 @@ export class PrSyncCommand extends Command {
     }
 
     if (remoteAhead > 0) {
+      // untracked files survive reset --hard; only tracked changes are at risk
+      if (run("git", ["status", "--porcelain", "--untracked-files=no"]).trim() !== "") {
+        console.error(`dirty worktree: refusing to reset to origin/${branch}`);
+        return 1;
+      }
       run("git", ["reset", "--hard", `origin/${branch}`]);
       console.log("reset to remote");
     } else {

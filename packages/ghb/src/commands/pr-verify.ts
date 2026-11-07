@@ -48,40 +48,74 @@ export class PrVerifyCommand extends Command {
   public async execute(): Promise<number> {
     const run = this.runner ?? execRunner;
 
+    const interval = this.toSeconds(this.interval, 10);
+    const timeout = this.toSeconds(this.timeout, 600);
+    const deadline = Date.now() + timeout * 1000;
+
     run("git", ["fetch", "--all", "--prune", "--quiet"]);
 
-    let view: PrView;
-    try {
-      view = JSON.parse(
-        run("gh", ["pr", "view", "--json", "state,mergeable,mergeStateStatus,baseRefName,headRefName"]),
-      ) as PrView;
-    } catch {
+    let view = this.readView(run);
+    if (view === undefined) {
       // the runner already printed gh's stderr
       return 1;
     }
 
     const failures: string[] = [];
 
-    const [baseLeft] = run("git", ["rev-list", "--left-right", "--count", `origin/${view.baseRefName}...HEAD`]).split(
-      "\t",
-    );
+    const [baseLeft = "0"] = run("git", [
+      "rev-list",
+      "--left-right",
+      "--count",
+      `origin/${view.baseRefName}...HEAD`,
+    ]).split("\t");
     if (Number(baseLeft) > 0) {
       failures.push(`behind base by ${baseLeft} commits`);
     }
 
-    const [headLeft, headRight] = run("git", [
+    const [ahead = 0, behind = 0] = run("git", [
       "rev-list",
       "--left-right",
       "--count",
       `HEAD...origin/${view.headRefName}`,
-    ]).split("\t");
-    if (Number(headLeft) > 0 || Number(headRight) > 0) {
+    ])
+      .split("\t")
+      .map(Number);
+    if (ahead > 0 && behind > 0) {
       failures.push(`diverged from origin/${view.headRefName}`);
+    } else if (ahead > 0) {
+      failures.push(`ahead of origin/${view.headRefName} by ${ahead} commits`);
+    } else if (behind > 0) {
+      failures.push(`behind origin/${view.headRefName} by ${behind} commits`);
     }
 
     if (view.state !== "OPEN") {
       failures.push(`state: ${view.state}`);
     }
+
+    if (failures.length > 0) {
+      for (const failure of failures) {
+        console.error(failure);
+      }
+      return 1;
+    }
+
+    // mergeability is computed asynchronously after a push; let UNKNOWN settle
+    while (view.mergeable === "UNKNOWN" || view.mergeStateStatus === "UNKNOWN") {
+      if (Date.now() >= deadline) {
+        console.error(`pending after ${Math.floor(timeout / 60)}m: mergeability`);
+        return 2;
+      }
+      await sleep(interval);
+      view = this.readView(run);
+      if (view === undefined) {
+        return 1;
+      }
+      if (view.state !== "OPEN") {
+        console.error(`state: ${view.state}`);
+        return 1;
+      }
+    }
+
     if (view.mergeable !== "MERGEABLE") {
       failures.push(`mergeable: ${view.mergeable}`);
     }
@@ -96,13 +130,15 @@ export class PrVerifyCommand extends Command {
       return 1;
     }
 
-    const interval = this.toSeconds(this.interval, 10);
-    const timeout = this.toSeconds(this.timeout, 600);
-    const deadline = Date.now() + timeout * 1000;
-
     for (;;) {
-      // undefined: runless head - gh errored or rendered no checks
-      const checks = this.readChecks(run);
+      // undefined: runless head - gh reported no checks
+      let checks: Check[] | undefined;
+      try {
+        checks = this.readChecks(run);
+      } catch {
+        // the runner already printed gh's stderr; not a runless head
+        return 1;
+      }
       if (checks === undefined) {
         if (Date.now() >= deadline) {
           console.error(`pending after ${Math.floor(timeout / 60)}m`);
@@ -132,12 +168,26 @@ export class PrVerifyCommand extends Command {
     }
   }
 
+  private readView(run: Runner): PrView | undefined {
+    try {
+      return JSON.parse(
+        run("gh", ["pr", "view", "--json", "state,mergeable,mergeStateStatus,baseRefName,headRefName"]),
+      ) as PrView;
+    } catch {
+      return undefined;
+    }
+  }
+
   private readChecks(run: Runner): Check[] | undefined {
     try {
       const checks = JSON.parse(run("gh", ["pr", "checks", "--json", "name,bucket", ...this.forwarded()])) as Check[];
       return checks.length > 0 ? checks : undefined;
-    } catch {
-      return undefined;
+    } catch (e) {
+      const message = `${e instanceof Error ? e.message : String(e)}\n${(e as { stderr?: string }).stderr ?? ""}`;
+      if (/no checks reported/i.test(message)) {
+        return undefined;
+      }
+      throw e;
     }
   }
 
