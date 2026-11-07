@@ -107,6 +107,35 @@ describe("PrSyncCommand", () => {
     expect(calls).not.toContain("git push --quiet");
   });
 
+  it("refuses to reset over an untracked file the target tracks", async () => {
+    const { run, calls } = fakeRunner(["", "topic", "1", "0", "", "new.txt", "new.txt"]);
+    const { errors } = captureConsole();
+
+    const command = new PrSyncCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain("untracked");
+    expect(errors.join("\n")).toContain("new.txt");
+    expect(calls.some((call) => call.startsWith("git reset"))).toBe(false);
+    expect(calls).not.toContain("git push --quiet");
+  });
+
+  it("resets when untracked files do not collide with the target", async () => {
+    const { run, calls } = fakeRunner(["", "topic", "1", "0", "", "scratch.txt", "src/new.txt"]);
+    const { logs } = captureConsole();
+
+    const command = new PrSyncCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["reset to remote"]);
+    expect(calls).toContain("git reset --hard origin/topic");
+    expect(calls).toContain("git push --quiet");
+  });
+
   it("refuses to reset when local and remote diverged", async () => {
     const { run, calls } = fakeRunner(["", "topic", "3", "1"]);
     const { errors } = captureConsole();

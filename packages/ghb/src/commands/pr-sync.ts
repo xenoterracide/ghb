@@ -9,7 +9,7 @@ export class PrSyncCommand extends Command {
   public static paths = [["pr", "sync"]];
 
   public static usage = Command.Usage({
-    description: "Sync the current branch with its remote and the base branch",
+    description: "Sync the current branch with its remote and the default branch",
   });
 
   // Optional runner for testing - uses the real runner if not set
@@ -29,10 +29,25 @@ export class PrSyncCommand extends Command {
     }
 
     if (remoteAhead > 0) {
-      // untracked files survive reset --hard; only tracked changes are at risk
       if (run("git", ["status", "--porcelain", "--untracked-files=no"]).trim() !== "") {
         console.error(`dirty worktree: refusing to reset to origin/${branch}`);
         return 1;
+      }
+      // reset --hard silently overwrites an untracked file the target tracks
+      const untracked = run("git", ["ls-files", "--others", "--exclude-standard"])
+        .split("\n")
+        .map((path) => path.trim())
+        .filter((path) => path !== "");
+      if (untracked.length > 0) {
+        const incoming = run("git", ["diff", "--name-only", "HEAD", `origin/${branch}`])
+          .split("\n")
+          .map((path) => path.trim())
+          .filter((path) => path !== "");
+        const collisions = untracked.filter((path) => incoming.includes(path));
+        if (collisions.length > 0) {
+          console.error(`untracked files in the way of origin/${branch}: ${collisions.join(", ")}`);
+          return 1;
+        }
       }
       run("git", ["reset", "--hard", `origin/${branch}`]);
       console.log("reset to remote");

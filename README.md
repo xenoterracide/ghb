@@ -22,7 +22,7 @@ Requires Node.js 24+ and the GitHub CLI (`gh`) authenticated.
 # Show help
 ghb --help
 
-# Sync the current branch with its remote and the base branch
+# Sync the current branch with its remote and the default branch
 # Prints one line: merged N commits, reset to remote, or up to date
 # Exits 1 when local and remote diverged, or on a merge conflict
 ghb pr sync
