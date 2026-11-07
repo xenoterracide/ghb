@@ -1,8 +1,4 @@
-<<<<<<< before updating
-// SPDX-FileCopyrightText: Copyright © 2025, 2026 Caleb Cushing
-=======
 // SPDX-FileCopyrightText: Copyright © 2020-2026 Caleb Cushing
->>>>>>> after updating
 //
 // SPDX-License-Identifier: MIT
 

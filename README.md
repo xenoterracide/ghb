@@ -1,9 +1,5 @@
 <!--
-<<<<<<< before updating
-SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
-=======
 SPDX-FileCopyrightText: Copyright © 2015-2026 Caleb Cushing
->>>>>>> after updating
 
 SPDX-License-Identifier: CC-BY-NC-SA-4.0
 -->
@@ -61,12 +57,4 @@ See the package READMEs for more detail:
 
 ## License
 
-<<<<<<< before updating
 [CC-BY-NC-SA-4.0](LICENSES/CC-BY-NC-SA-4.0.txt)
-=======
-    copier update --trust
-
-Renovate opens an update PR whenever
-[base-template](https://github.com/xenoterracide/base-template) tags a
-release. Merge it like any other dependency update.
->>>>>>> after updating

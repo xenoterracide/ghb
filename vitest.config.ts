@@ -34,11 +34,7 @@ export default defineConfig({
       exclude: ["**/node_modules/**", "**/*.test.ts", "**/coverage/**"],
       thresholds: {
         statements: 90,
-<<<<<<< before updating
         branches: 85,
-=======
-        branches: 90,
->>>>>>> after updating
         functions: 90,
         lines: 90,
       },
