@@ -31,11 +31,7 @@ SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
 path = "**/package.json"
-<<<<<<< before updating
-SPDX-FileCopyrightText = "Copyright © 2024-2026 Caleb Cushing"
-=======
 SPDX-FileCopyrightText = "Copyright © 2013-2026 Caleb Cushing"
->>>>>>> after updating
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]

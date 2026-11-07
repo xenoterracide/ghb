@@ -1,18 +1,10 @@
 <!--
 SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
-<<<<<<< before updating
-=======
 
 SPDX-License-Identifier: CC-BY-NC-SA-4.0
 -->
 
 # Contributing to ghb
->>>>>>> after updating
-
-SPDX-License-Identifier: CC-BY-NC-SA-4.0
--->
-
-# Contributing
 
 Thank you for your interest in improving `ghb`. This repository is a TypeScript
 monorepo managed with pnpm workspaces.
@@ -60,8 +52,9 @@ holds the answers. Refresh from
 
     copier update --trust
 
-Conflicts appear as `.rej` files; resolve and commit. Renovate automerges
-clean template updates.
+Conflicts appear as `.rej` files or inline markers; resolve and commit.
+Renovate opens an update PR on each template release and automerges clean
+updates.
 
 ## Pull Requests
 
