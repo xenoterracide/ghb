@@ -33,8 +33,10 @@ export class PrSyncCommand extends Command {
         console.error(`dirty worktree: refusing to reset to origin/${branch}`);
         return 1;
       }
-      // reset --hard silently overwrites an untracked file the target tracks
-      const untracked = run("git", ["ls-files", "--others", "--exclude-standard"])
+      // reset --hard replaces tracked-in-target paths on disk, including
+      // ignored ones; list every untracked path, ignored or not, and refuse
+      // when the target carries the same path
+      const untracked = run("git", ["ls-files", "--others"])
         .split("\n")
         .map((path) => path.trim())
         .filter((path) => path !== "");

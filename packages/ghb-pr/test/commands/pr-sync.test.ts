@@ -4,7 +4,9 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PrSyncCommand } from "../../src/commands/pr-sync.js";
-import type { Runner } from "../../src/exec.js";
+import { execRunner, type Runner } from "../../src/exec.js";
+
+vi.mock("../../src/exec.js", () => ({ execRunner: vi.fn() }));
 
 function fakeRunner(script: (string | Error)[]): { run: Runner; calls: string[] } {
   const calls: string[] = [];
@@ -122,6 +124,22 @@ describe("PrSyncCommand", () => {
     expect(calls).not.toContain("git push --quiet");
   });
 
+  it("includes ignored files in the collision check", async () => {
+    // reset --hard replaces an ignored file the target tracks, so the
+    // untracked set must not exclude them
+    const { run, calls } = fakeRunner(["", "topic", "1", "0", "", "ignored.txt", "ignored.txt"]);
+    const { errors } = captureConsole();
+
+    const command = new PrSyncCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain("ignored.txt");
+    expect(calls).toContain("git ls-files --others");
+    expect(calls).not.toContain("git ls-files --others --exclude-standard");
+  });
+
   it("resets when untracked files do not collide with the target", async () => {
     const { run, calls } = fakeRunner(["", "topic", "1", "0", "", "scratch.txt", "src/new.txt"]);
     const { logs } = captureConsole();
@@ -162,5 +180,25 @@ describe("PrSyncCommand", () => {
 
     expect(exit).toBe(1);
     expect(logs.join("\n")).toContain("UU src/file.ts");
+  });
+
+  it("uses the real runner when none is injected", async () => {
+    vi.mocked(execRunner).mockImplementation((cmd: "git" | "gh", args: string[]) => {
+      const [arg] = args;
+      if (arg === "branch") {
+        return "topic";
+      }
+      if (arg === "rev-list") {
+        return "0";
+      }
+      return "";
+    });
+    const { logs } = captureConsole();
+
+    const command = new PrSyncCommand();
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["up to date"]);
   });
 });
