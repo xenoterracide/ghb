@@ -5,7 +5,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Cli } from "clipanion";
 import { PrVerifyCommand } from "../../src/commands/pr-verify.js";
-import type { Runner } from "../../src/exec.js";
+import { execRunner, type Runner } from "../../src/exec.js";
+
+vi.mock("../../src/exec.js", () => ({ execRunner: vi.fn() }));
 
 const greenView = JSON.stringify({
   state: "OPEN",
@@ -401,5 +403,150 @@ describe("PrVerifyCommand", () => {
 
     expect(exit).toBe(0);
     expect(stdout.join("")).toContain("pr verify");
+  });
+
+  it("times out with the pending check names", async () => {
+    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", pendingChecks, pendingChecks]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    command.timeout = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(2);
+    expect(errors.join("\n")).toContain("pending after 0m: build");
+  });
+
+  it("fails when the PR closes during the poll", async () => {
+    const closedView = JSON.stringify({
+      state: "CLOSED",
+      mergeable: "MERGEABLE",
+      mergeStateStatus: "CLEAN",
+      baseRefName: "develop",
+      headRefName: "topic",
+    });
+    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", closedView]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain("state: CLOSED");
+  });
+
+  it("re-settles when the final view is UNKNOWN", async () => {
+    const unknownView = JSON.stringify({
+      state: "OPEN",
+      mergeable: "UNKNOWN",
+      mergeStateStatus: "UNKNOWN",
+      baseRefName: "develop",
+      headRefName: "topic",
+    });
+    const { run } = fakeRunner([
+      "",
+      greenView,
+      "0\t1",
+      "0\t0",
+      passingChecks,
+      "",
+      unknownView,
+      greenView,
+      passingChecks,
+      "",
+      greenView,
+      "0\t1",
+      "0\t0",
+    ]);
+    const { logs } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
+  });
+
+  it("fails when the runner errors at the final gate", async () => {
+    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", new Error("gh died")]);
+    captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+  });
+
+  it("fails at the final gate on a conflicting PR", async () => {
+    const conflictingView = JSON.stringify({
+      state: "OPEN",
+      mergeable: "CONFLICTING",
+      mergeStateStatus: "CLEAN",
+      baseRefName: "develop",
+      headRefName: "topic",
+    });
+    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", conflictingView, passingChecks]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain("mergeable: CONFLICTING");
+  });
+
+  it("falls back to the default interval on a non-numeric value", async () => {
+    const { run } = fakeRunner(["", blockedView, "0\t1", "0\t0", noChecks]);
+    captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "abc";
+    command.timeout = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(2);
+  });
+
+  it("falls back to the default interval on an empty value", async () => {
+    const { run } = fakeRunner(["", blockedView, "0\t1", "0\t0", noChecks]);
+    captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "";
+    command.timeout = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(2);
+  });
+
+  it("uses the real runner when none is injected", async () => {
+    vi.mocked(execRunner).mockImplementation((cmd: "git" | "gh", args: string[]) => {
+      if (cmd === "gh") {
+        return args[1] === "view" ? greenView : passingChecks;
+      }
+      if (args[0] === "rev-list") {
+        return args.includes("origin/develop...HEAD") ? "0\t1" : "0\t0";
+      }
+      return "";
+    });
+    const { logs } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
   });
 });
