@@ -1,6 +1,6 @@
 {
   "name": "ghb",
-  "packageManager": "pnpm@12.16.1",
+  "packageManager": "pnpm@12.18.0",
   "private": true,
   "license": "GPL-3.0-or-later",
   "devDependencies": {
