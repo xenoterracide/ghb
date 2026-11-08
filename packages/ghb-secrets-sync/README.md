@@ -111,7 +111,7 @@ For each secret, values are resolved in this order:
 
 ## Requirements
 
-- GitHub CLI (`gh`) authenticated
+- [GitHub CLI](https://cli.github.com/) (`gh`) authenticated
 - Node.js 24+
 
 ## License

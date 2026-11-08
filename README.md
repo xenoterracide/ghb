@@ -14,7 +14,8 @@ GitHub Bridge — TypeScript CLI devtools and utilities for GitHub workflow auto
 npm install -g @xenoterracide/ghb
 ```
 
-Requires Node.js 24+ and the GitHub CLI (`gh`) authenticated.
+Requires Node.js 24+ and the [GitHub CLI](https://cli.github.com/) (`gh`)
+authenticated.
 
 ## Usage
 
