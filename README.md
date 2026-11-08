@@ -17,6 +17,10 @@ npm install -g @xenoterracide/ghb
 Requires Node.js 24+ and the [GitHub CLI](https://cli.github.com/) (`gh`)
 authenticated.
 
+Until the first npm publish, the registry install above does not work —
+install a local build instead; see
+[Local Build](CONTRIBUTING.md#local-build) in CONTRIBUTING.
+
 ## Usage
 
 ```bash
