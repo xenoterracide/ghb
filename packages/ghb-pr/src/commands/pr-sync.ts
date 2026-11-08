@@ -19,6 +19,17 @@ export class PrSyncCommand extends Command {
     const run = this.runner ?? execRunner;
 
     run("git", ["fetch", "--all", "--prune", "--quiet"]);
+    // a remote branch named HEAD detaches refs/remotes/origin/HEAD at that
+    // branch instead of symref to the default; resolve through the symref
+    // so a detached or missing HEAD fails loud instead of silently syncing
+    // against the wrong base
+    let base: string;
+    try {
+      base = run("git", ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]).trim();
+    } catch {
+      console.error("origin/HEAD is detached or missing; run: git remote set-head origin -a");
+      return 1;
+    }
     const branch = run("git", ["branch", "--show-current"]).trim();
     const remoteAhead = Number(run("git", ["rev-list", "--count", `HEAD..origin/${branch}`]));
     const localAhead = Number(run("git", ["rev-list", "--count", `origin/${branch}..HEAD`]));
@@ -57,10 +68,10 @@ export class PrSyncCommand extends Command {
 
     // the base merge runs after a reset too: an ahead remote does not
     // mean the base is current
-    const behind = Number(run("git", ["rev-list", "--count", "HEAD..origin/HEAD"]));
+    const behind = Number(run("git", ["rev-list", "--count", `HEAD..${base}`]));
     if (behind > 0) {
       try {
-        run("git", ["merge", "origin/HEAD", "--quiet"]);
+        run("git", ["merge", base, "--quiet"]);
         console.log(`merged ${behind} commits`);
       } catch {
         console.log(run("git", ["status", "--porcelain"]));
