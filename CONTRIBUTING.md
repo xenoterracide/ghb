@@ -27,6 +27,26 @@ monorepo managed with pnpm workspaces.
 `contribute` and the post-checkout/post-merge hooks all call
 `.config/git/hooks/heal.sh`; a failed heal never breaks a checkout.
 
+## Local Build
+
+The registry install (`npm install -g @xenoterracide/ghb`) works only
+after the first publish. Until then — and whenever you want to run your
+own changes — install the packed tarballs. The unpacked workspace cannot
+run under plain node: workspace dependencies resolve `main` to TypeScript
+source, the tsx dev contract. Packing swaps `main` to `dist` and rewrites
+`workspace:^` to real versions:
+
+```bash
+pnpm -r pack --pack-destination /tmp/packs
+npm install -g /tmp/packs/*.tgz
+asdf reshim nodejs
+```
+
+`npm -g` installs into the active Node's global prefix, and asdf keeps
+one prefix per version. Run the install from a directory whose
+`.tool-versions` pins the target Node, and repeat per version — a Node
+without the install answers `command not found`.
+
 ## Build, Test, and Lint
 
 ```bash
