@@ -17,6 +17,25 @@ npm install -g @xenoterracide/ghb
 Requires Node.js 24+ and the [GitHub CLI](https://cli.github.com/) (`gh`)
 authenticated.
 
+### Local build
+
+The unpacked workspace cannot run under plain node — workspace
+dependencies resolve `main` to TypeScript source, the tsx dev contract —
+so the packed tarball is the only installable form. Packing swaps `main`
+to `dist` and rewrites `workspace:^` to real versions:
+
+```bash
+pnpm install
+pnpm -r pack --pack-destination /tmp/packs
+npm install -g /tmp/packs/*.tgz
+asdf reshim nodejs
+```
+
+`npm -g` installs into the active Node's global prefix, and asdf keeps
+one prefix per version. Run the install from a directory whose
+`.tool-versions` pins the target Node, and repeat per version — a Node
+without the install answers `command not found`.
+
 ## Usage
 
 ```bash
