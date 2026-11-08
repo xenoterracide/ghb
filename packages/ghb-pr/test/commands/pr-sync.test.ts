@@ -81,6 +81,21 @@ describe("PrSyncCommand", () => {
     expect(calls).toContain("git push --quiet");
   });
 
+  it("merges the base after resetting to an ahead remote", async () => {
+    const { run, calls } = fakeRunner(["", "topic", "1", "0", "", "", "", "3", ""]);
+    const { logs } = captureConsole();
+
+    const command = new PrSyncCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["reset to remote", "merged 3 commits"]);
+    expect(calls).toContain("git reset --hard origin/topic");
+    expect(calls).toContain("git merge origin/HEAD --quiet");
+    expect(calls).toContain("git push --quiet");
+  });
+
   it("trims the newline git branch prints", async () => {
     const { run, calls } = fakeRunner(["", "topic\n", "1", "0", "", "", ""]);
     const { logs } = captureConsole();
