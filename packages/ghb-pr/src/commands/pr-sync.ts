@@ -53,19 +53,21 @@ export class PrSyncCommand extends Command {
       }
       run("git", ["reset", "--hard", `origin/${branch}`]);
       console.log("reset to remote");
-    } else {
-      const behind = Number(run("git", ["rev-list", "--count", "HEAD..origin/HEAD"]));
-      if (behind > 0) {
-        try {
-          run("git", ["merge", "origin/HEAD", "--quiet"]);
-          console.log(`merged ${behind} commits`);
-        } catch {
-          console.log(run("git", ["status", "--porcelain"]));
-          return 1;
-        }
-      } else {
-        console.log("up to date");
+    }
+
+    // the base merge runs after a reset too: an ahead remote does not
+    // mean the base is current
+    const behind = Number(run("git", ["rev-list", "--count", "HEAD..origin/HEAD"]));
+    if (behind > 0) {
+      try {
+        run("git", ["merge", "origin/HEAD", "--quiet"]);
+        console.log(`merged ${behind} commits`);
+      } catch {
+        console.log(run("git", ["status", "--porcelain"]));
+        return 1;
       }
+    } else if (remoteAhead === 0) {
+      console.log("up to date");
     }
 
     run("git", ["push", "--quiet"]);
