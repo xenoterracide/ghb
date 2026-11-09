@@ -16,6 +16,10 @@ GitHub Bridge — a unified CLI for GitHub workflow automation.
 npm install -g @xenoterracide/ghb
 ```
 
+Until the first npm publish, the registry install does not work —
+install a local build instead; see
+[Local Build](../../CONTRIBUTING.md#local-build) in CONTRIBUTING.
+
 ## Usage
 
 ```bash
@@ -24,24 +28,28 @@ ghb --help
 
 # Sync the current branch with its remote and the default branch
 # Prints one line: merged N commits, reset to remote, or up to date
-# Exits 1 when local and remote diverged, or on a merge conflict
+# Exits 1 when local and remote diverged, on a merge conflict,
+# or when tracked files or colliding untracked files would be lost
 ghb pr sync
 
 # Verify the current PR is current, mergeable, and every check passes
 # Prints pass, or one line per failed dimension
 # Exits 0 on pass, 1 on failure, 2 when checks stay pending past the timeout
-ghb pr verify
+ghb pr verify [--interval SECONDS] [--timeout SECONDS] [PR NUMBER | URL | BRANCH]
 
 # Sync GitHub secrets
-ghb sync --env-file secrets.env
-ghb sync --secrets API_KEY --repo owner/target
+ghb secrets sync --env-file secrets.env
+ghb secrets sync --secrets API_KEY --repo owner/target
 
-# Update secrets in an env file
-ghb update --env-file secrets.env --key API_KEY --value env:PROD_API_KEY
+# Update a secret value in an env file
+ghb secrets update --file secrets.env --key API_KEY --value env:PROD_API_KEY
 
 # Get a secret value
-ghb get --name API_KEY
+ghb secrets get API_KEY
 ```
+
+The `pr` commands are quiet on success and loud on failure. Reads are
+structured (`--json`, `git rev-list --count`); no human table is ever parsed.
 
 ## License
 

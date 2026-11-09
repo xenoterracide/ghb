@@ -31,21 +31,27 @@ monorepo managed with pnpm workspaces.
 
 The registry install (`npm install -g @xenoterracide/ghb`) works only
 after the first publish. Until then — and whenever you want to run your
-own changes — install the packed tarballs. The unpacked workspace cannot
-run under plain node: workspace dependencies resolve `main` to TypeScript
-source, the tsx dev contract. Packing swaps `main` to `dist` and rewrites
-`workspace:^` to real versions:
+own changes — install the packed tarballs into one prefix. The unpacked
+workspace cannot run under plain node: workspace dependencies resolve
+`main` to TypeScript source, the tsx dev contract. Packing swaps `main`
+to `dist` and rewrites `workspace:^` to real versions:
 
 ```bash
 pnpm -r pack --pack-destination /tmp/packs
-npm install -g /tmp/packs/*.tgz
-asdf reshim nodejs
+npm install --prefix ~/.local/lib/ghb /tmp/packs/*.tgz
+ln -sf ~/.local/lib/ghb/node_modules/.bin/ghb ~/.local/bin/ghb
 ```
 
-`npm -g` installs into the active Node's global prefix, and asdf keeps
-one prefix per version. Run the install from a directory whose
-`.tool-versions` pins the target Node, and repeat per version — a Node
-without the install answers `command not found`.
+Never `npm install -g` the separate tarballs: `-g` installs each tarball
+as its own root, nesting one clipanion copy per package, and clipanion's
+option specs carry a module-scoped symbol — the parser only sees specs
+from its own copy, so every flag and positional of a subpackage's
+commands dies as a syntax error. One prefix is one root: npm hoists a
+single clipanion every package shares, and every command parses.
+
+The bin's shebang resolves `node` from `PATH`, so one install serves
+every asdf-managed Node version — no per-version `npm i -g`, no reshim.
+The registry install replaces this flow after the first publish.
 
 ## Build, Test, and Lint
 

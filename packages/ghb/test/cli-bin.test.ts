@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 // The root tsc project compiles test files as CommonJS, so import.meta is
 // unavailable here; walk up from the cwd to the workspace root instead.
@@ -29,12 +29,20 @@ const installDir = join(workDir, "install");
 const run = (command: string, args: string[], cwd: string): string =>
   execFileSync(command, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
-describe("the published bin", () => {
-  afterAll(() => {
-    rmSync(workDir, { recursive: true, force: true });
-  });
+// clipanion writes usage errors to stdout; runtime errors to stderr
+const runExpectingFailure = (bin: string, args: string[]): string => {
+  try {
+    run("node", [bin, ...args], workDir);
+  } catch (e) {
+    return `${(e as { stdout?: string }).stdout ?? ""}${(e as { stderr?: string }).stderr ?? ""}`;
+  }
+  throw new Error(`expected a nonzero exit: ghb ${args.join(" ")}`);
+};
 
-  it("answers help when installed from tarballs and invoked through its bin link", () => {
+let bin = "";
+
+describe("the installed bin", () => {
+  beforeAll(() => {
     // pack applies publishConfig (main -> dist) and rewrites workspace:^,
     // so only the packed form can run under plain node; prepack builds
     for (const pkg of ["ghb", "ghb-pr", "ghb-secrets-sync"]) {
@@ -45,13 +53,42 @@ describe("the published bin", () => {
       .split("\n")
       .filter((line) => line.endsWith(".tgz"))
       .map((name) => join(packsDir, name));
-    run("npm", ["install", "--global", "--prefix", installDir, ...tarballs], workDir);
 
-    // npm links the bin as install/bin/ghb -> .../dist/cli.js; argv[1]
-    // carries the link's name, never the module's
-    const bin = join(installDir, "bin", "ghb");
+    // one prefix, never three globals: npm -g installs each tarball as
+    // its own root and nests a clipanion copy per package; option specs
+    // carry a module-scoped symbol, so the parser only saw specs from
+    // its own copy and every flag and positional of a subpackage's
+    // commands died as a syntax error. One root hoists one clipanion
+    // every package shares
+    run("npm", ["install", "--prefix", installDir, ...tarballs], workDir);
+    bin = join(installDir, "node_modules", ".bin", "ghb");
+  }, 60000);
+
+  afterAll(() => {
+    rmSync(workDir, { recursive: true, force: true });
+  });
+
+  it("answers help when installed from tarballs and invoked through its bin link", () => {
     const stdout = run("node", [bin, "--help"], workDir);
 
     expect(stdout).toContain("ghb <command>");
-  }, 60000);
+  });
+
+  it("binds pr verify's flags and PR selector instead of rejecting them", () => {
+    // outside a git repository the command must fail at its first git
+    // call, never at the parser
+    const output = runExpectingFailure(bin, ["pr", "verify", "--interval", "5", "--timeout", "10", "585"]);
+
+    expect(output).toContain("not a git repository");
+    expect(output).not.toContain("Unknown Syntax Error");
+  });
+
+  it("binds the secrets commands' positionals instead of rejecting them", () => {
+    // an unbound positional dies as a syntax error; a bound one reaches
+    // the resolver, which fails on an unknown name without touching gh
+    const output = runExpectingFailure(bin, ["secrets", "get", "NO_SUCH_SECRET"]);
+
+    expect(output).toContain('Could not resolve secret "NO_SUCH_SECRET"');
+    expect(output).not.toContain("Unknown Syntax Error");
+  });
 });
