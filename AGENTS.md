@@ -8,9 +8,10 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 GitHub Bridge: a TypeScript CLI devtools monorepo.
 
-- **`@xenoterracide/ghb`** — the aggregated `ghb` CLI. Owns `pr sync` and
-  `pr verify`: keep a PR branch current and prove it is mergeable and green.
-  Composes the `secrets` subcommands from ghb-secrets-sync.
+- **`@xenoterracide/ghb`** — aggregated `ghb` CLI. Composes subcommands from
+  the other packages.
+- **`@xenoterracide/ghb-pr`** — `pr sync` and `pr verify`: keep a PR branch
+  current and prove it is mergeable and green.
 - **`@xenoterracide/ghb-secrets-sync`** — GitHub repository secret sync from
   environment variables or local env files.
 

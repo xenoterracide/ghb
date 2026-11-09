@@ -11,8 +11,8 @@ monorepo managed with pnpm workspaces.
 
 ## Repository Overview
 
-- **`packages/ghb/`** — the `ghb` CLI: the `pr` commands and the command
-  aggregation.
+- **`packages/ghb/`** — the `ghb` CLI aggregator.
+- **`packages/ghb-pr/`** — `pr sync` and `pr verify`.
 - **`packages/ghb-secrets-sync/`** — GitHub secrets sync utilities.
 - **`.config/git/hooks/`** — git hooks; they heal the toolchain and gate
   commits.
