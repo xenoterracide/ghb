@@ -190,9 +190,6 @@ importers:
       globals:
         specifier: ^17.0.0
         version: 17.14.0
-      jiti:
-        specifier: ^2.0.0
-        version: 2.7.0
       lint-staged:
         specifier: ^17.0.0
         version: 17.6.0
@@ -2562,7 +2559,8 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  jiti@2.7.0: {}
+  jiti@2.7.0:
+    optional: true
 
   js-tokens@10.0.0: {}
 

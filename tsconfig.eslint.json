@@ -11,5 +11,5 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["eslint.config.cts", "vitest.config.ts", "packages/**/*.ts"]
+  "include": ["eslint.config.cjs", "vitest.config.ts", "packages/**/*.ts"]
 }

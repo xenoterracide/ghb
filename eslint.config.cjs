@@ -2,16 +2,17 @@
 //
 // SPDX-License-Identifier: MIT
 
-import eslint from "@eslint/js";
-import globals from "globals";
-import tseslint from "typescript-eslint";
-import jsonPluginImport from "@eslint/json";
-import markdown from "@eslint/markdown";
-import { defineConfig, globalIgnores } from "eslint/config";
+const { defineConfig, globalIgnores } = require("eslint/config");
+const eslint = require("@eslint/js");
+const globals = require("globals");
+const tseslint = require("typescript-eslint");
+const jsonPluginImport = require("@eslint/json");
+const markdownImport = require("@eslint/markdown");
 
-const jsonPlugin = (jsonPluginImport as { default?: typeof jsonPluginImport }).default ?? jsonPluginImport;
+const jsonPlugin = jsonPluginImport.default ?? jsonPluginImport;
+const markdown = markdownImport.default ?? markdownImport;
 
-export default defineConfig([
+module.exports = defineConfig([
   globalIgnores(["**/dist/", "**/build/", "node_modules/", ".agents/", ".superpowers/", ".venv/", "coverage/"]),
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],

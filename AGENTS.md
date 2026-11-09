@@ -40,7 +40,7 @@ and rules drift; these do not.
 | Scripts and root Node dependencies              | [`package.json`](./package.json)                                                                                               |
 | Per-package scripts and dependencies            | `packages/*/package.json`                                                                                                      |
 | Python dependencies                             | [`pyproject.toml`](./pyproject.toml), [`uv.lock`](./uv.lock)                                                                   |
-| Lint, format, and staged-file config            | [`eslint.config.cts`](./eslint.config.cts), [`.prettierrc.cjs`](./.prettierrc.cjs), [`.lintstagedrc.cjs`](./.lintstagedrc.cjs) |
+| Lint, format, and staged-file config            | [`eslint.config.cjs`](./eslint.config.cjs), [`.prettierrc.cjs`](./.prettierrc.cjs), [`.lintstagedrc.cjs`](./.lintstagedrc.cjs) |
 | Conventional commit types                       | [`git-conventional-commits.yaml`](./git-conventional-commits.yaml)                                                             |
 | Vitest and coverage configuration               | [`vitest.config.ts`](./vitest.config.ts)                                                                                       |
 | Template and answers                            | [xenoterracide/base-template](https://github.com/xenoterracide/base-template), [`.copier-answers.yml`](./.copier-answers.yml)  |
