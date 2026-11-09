@@ -17,13 +17,6 @@ export default defineConfig({
       },
       {
         test: {
-          name: "ghb-pr",
-          root: "./packages/ghb-pr",
-          include: ["test/**/*.test.ts"],
-        },
-      },
-      {
-        test: {
           name: "ghb-secrets-sync",
           root: "./packages/ghb-secrets-sync",
           include: ["test/**/*.test.ts"],

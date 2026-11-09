@@ -35,24 +35,23 @@ ghb pr sync
 # Verify the current PR is current, mergeable, and every check passes
 # Prints pass, or one line per failed dimension
 # Exits 0 on pass, 1 on failure, 2 when checks stay pending past the timeout
-ghb pr verify
+ghb pr verify [--interval SECONDS] [--timeout SECONDS] [PR NUMBER | URL | BRANCH]
 
 # Sync GitHub secrets from an env file
-ghb sync --env-file secrets.env
-ghb sync --env-file secrets.env --repo owner/target
-ghb sync --secrets API_KEY,SECRET --repo owner/target
+ghb secrets sync --env-file secrets.env
+ghb secrets sync --env-file secrets.env --repo owner/target
+ghb secrets sync --secrets API_KEY,SECRET --repo owner/target
 
 # Update a secret value in an env file
-ghb update --env-file secrets.env --key API_KEY --value env:PROD_API_KEY
+ghb secrets update --file secrets.env --key API_KEY --value env:PROD_API_KEY
 
 # Get a secret value
-ghb get --name API_KEY
+ghb secrets get API_KEY
 ```
 
 See the package READMEs for more detail:
 
-- [`packages/ghb`](./packages/ghb/README.md) — the `ghb` CLI
-- [`packages/ghb-pr`](./packages/ghb-pr/README.md) — `pr sync` and `pr verify`
+- [`packages/ghb`](./packages/ghb/README.md) — the `ghb` CLI: `pr sync`, `pr verify`, and the `secrets` commands
 - [`packages/ghb-secrets-sync`](./packages/ghb-secrets-sync/README.md) — secrets sync
 
 ## Development

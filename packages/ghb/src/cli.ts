@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { Cli, Builtins } from "clipanion";
-import { PrSyncCommand, PrVerifyCommand } from "@xenoterracide/ghb-pr";
+import { PrSyncCommand } from "./commands/pr-sync.js";
+import { PrVerifyCommand } from "./commands/pr-verify.js";
 import { GetCommand, SyncCommand, UpdateCommand } from "@xenoterracide/ghb-secrets-sync";
 
 export function createCli(): Cli {
