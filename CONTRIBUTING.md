@@ -9,13 +9,7 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 Thank you for your interest in improving `ghb`. This repository is a TypeScript
 monorepo managed with pnpm workspaces.
 
-<<<<<<< before updating
 ## Repository Overview
-=======
-    git clone <repo-url>
-    cd <project>
-    npm run contribute
->>>>>>> after updating
 
 - **`packages/ghb/`** — the `ghb` CLI aggregator.
 - **`packages/ghb-pr/`** — `pr sync` and `pr verify`.
@@ -27,7 +21,7 @@ monorepo managed with pnpm workspaces.
 ## Setup
 
 1. Ensure `asdf` and `direnv` are installed and allowed.
-2. Run `pnpm contribute` — it installs tools, syncs Node and Python
+2. Run `npm run contribute` — it installs tools, syncs Node and Python
    dependencies, and points `core.hooksPath` at `.config/git/hooks`.
 
 `contribute` and the post-checkout/post-merge hooks all call
