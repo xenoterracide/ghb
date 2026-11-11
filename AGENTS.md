@@ -56,8 +56,10 @@ checkout.
 - **Conventional commits.** See
   [`git-conventional-commits.yaml`](./git-conventional-commits.yaml).
 - **Squash merge.** Do not force push.
-- **SPDX headers on every file.** `lint-staged` adds them. CI checks
-  compliance. Do not remove them.
+- **SPDX headers on every file.** `lint-staged` adds them; CI checks
+  compliance. Do not remove them. For markdown, add the SPDX HTML comment
+  yourself — `reuse annotate` breaks YAML frontmatter, so lint-staged
+  skips it there.
 - **Shell safety.** Use `execFileSync` with argv arrays, not shell strings.
 - **Secret handling.** Pass secret values via `stdin` (`input` option), never
   via argv.
