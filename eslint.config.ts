@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: Copyright © 2020-2026 Caleb Cushing
 //
+// SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-License-Identifier: MIT
 
 import eslint from "@eslint/js";

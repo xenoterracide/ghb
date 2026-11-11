@@ -32,19 +32,19 @@ contributor workflow.
 Read these files instead of trusting a copy of their contents here. Versions
 and rules drift; these do not.
 
-| For                                             | See                                                                                                                            |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Install, update, usage, contribution            | [`README.md`](./README.md), [`CONTRIBUTING.md`](./CONTRIBUTING.md)                                                             |
-| Tool versions (Node, Python, shfmt, shellcheck) | [`.tool-versions`](./.tool-versions)                                                                                           |
-| pnpm version and workspace layout               | `packageManager` in [`package.json`](./package.json), [`pnpm-workspace.yaml`](./pnpm-workspace.yaml)                           |
-| Scripts and root Node dependencies              | [`package.json`](./package.json)                                                                                               |
-| Per-package scripts and dependencies            | `packages/*/package.json`                                                                                                      |
-| Python dependencies                             | [`pyproject.toml`](./pyproject.toml), [`uv.lock`](./uv.lock)                                                                   |
-| Lint, format, and staged-file config            | [`eslint.config.cts`](./eslint.config.cts), [`.prettierrc.cjs`](./.prettierrc.cjs), [`.lintstagedrc.cjs`](./.lintstagedrc.cjs) |
-| Conventional commit types                       | [`git-conventional-commits.yaml`](./git-conventional-commits.yaml)                                                             |
-| Vitest and coverage configuration               | [`vitest.config.ts`](./vitest.config.ts)                                                                                       |
-| Template and answers                            | [xenoterracide/base-template](https://github.com/xenoterracide/base-template), [`.copier-answers.yml`](./.copier-answers.yml)  |
-| Renovate configuration                          | [`.github/renovate.json5`](./.github/renovate.json5)                                                                           |
+| For                                             | See                                                                                                                           |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Install, update, usage, contribution            | [`README.md`](./README.md), [`CONTRIBUTING.md`](./CONTRIBUTING.md)                                                            |
+| Tool versions (Node, Python, shfmt, shellcheck) | [`.tool-versions`](./.tool-versions)                                                                                          |
+| pnpm version and workspace layout               | `packageManager` in [`package.json`](./package.json), [`pnpm-workspace.yaml`](./pnpm-workspace.yaml)                          |
+| Scripts and root Node dependencies              | [`package.json`](./package.json)                                                                                              |
+| Per-package scripts and dependencies            | `packages/*/package.json`                                                                                                     |
+| Python dependencies                             | [`pyproject.toml`](./pyproject.toml), [`uv.lock`](./uv.lock)                                                                  |
+| Lint, format, and staged-file config            | [`eslint.config.ts`](./eslint.config.ts), [`.prettierrc.cjs`](./.prettierrc.cjs), [`.lintstagedrc.cjs`](./.lintstagedrc.cjs)  |
+| Conventional commit types                       | [`git-conventional-commits.yaml`](./git-conventional-commits.yaml)                                                            |
+| Vitest and coverage configuration               | [`vitest.config.ts`](./vitest.config.ts)                                                                                      |
+| Template and answers                            | [xenoterracide/base-template](https://github.com/xenoterracide/base-template), [`.copier-answers.yml`](./.copier-answers.yml) |
+| Renovate configuration                          | [`.github/renovate.json5`](./.github/renovate.json5)                                                                          |
 
 Template updates land with `copier update --trust`; conflicts appear as `.rej`
 files. Hooks heal the toolchain: `.envrc`, `contribute`, and the post hooks
