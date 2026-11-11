@@ -8,7 +8,14 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 GitHub Bridge — TypeScript CLI devtools and utilities for GitHub workflow automation.
 
+<<<<<<< before updating
 ## Installation
+=======
+- `npm run contribute` installs tools and dependencies, and heals the
+  toolchain through `.config/git/hooks/heal.sh`. Node 25+ drops corepack,
+  so the bootstrap starts from npm.
+- `direnv allow` (if you use direnv) loads the environment.
+>>>>>>> after updating
 
 ```bash
 npm install -g @xenoterracide/ghb
@@ -27,10 +34,14 @@ install a local build instead; see
 # Show help
 ghb --help
 
+<<<<<<< before updating
 # Sync the current branch with its remote and the default branch
 # Prints one line: merged N commits, reset to remote, or up to date
 # Exits 1 when local and remote diverged, or on a merge conflict
 ghb pr sync
+=======
+    uv run --group dev copier update --trust
+>>>>>>> after updating
 
 # Verify the current PR is current, mergeable, and every check passes
 # Prints pass, or one line per failed dimension

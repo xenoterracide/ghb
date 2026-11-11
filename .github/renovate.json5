@@ -79,7 +79,7 @@
       automerge: true,
     },
     {
-      matchManagers: ["asdf", "maven", "npm", "pyenv", "pep621", "github-actions"],
+      matchManagers: ["asdf", "maven", "maven-wrapper", "npm", "pyenv", "pep621", "github-actions"],
       branchTopic: "{{{depNameSanitized}}}-{{{newVersion}}}",
       automerge: true,
     },

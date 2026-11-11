@@ -8,6 +8,7 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 GitHub Bridge: a TypeScript CLI devtools monorepo.
 
+<<<<<<< before updating
 - **`@xenoterracide/ghb`** — aggregated `ghb` CLI. Composes subcommands from
   the other packages.
 - **`@xenoterracide/ghb-pr`** — `pr sync` and `pr verify`: keep a PR branch
@@ -49,6 +50,22 @@ and rules drift; these do not.
 Template updates land with `copier update --trust`; conflicts appear as `.rej`
 files. Hooks heal the toolchain: `.envrc`, `contribute`, and the post hooks
 call `.config/git/hooks/heal.sh`. A failed heal never breaks a checkout.
+=======
+- `npm run contribute` — bootstrap tooling (run once after clone)
+- `pnpm check` — run all checks
+- `pnpm lint:prettier` — prettier check
+- `pnpm lint:reuse` — REUSE compliance check
+- `pnpm typecheck` — TypeScript type check
+- `pnpm test` — vitest with coverage
+
+## Source of Truth
+
+- Template: `copier.yml` in [xenoterracide/base-template](https://github.com/xenoterracide/base-template)
+- Answers: `.copier-answers.yml` in this repo
+- Updates: `uv run --group dev copier update --trust` refreshes from template
+- Hooks heal the toolchain: `.envrc`, `contribute`, and the post hooks call
+  `.config/git/hooks/heal.sh`. A failed heal never breaks a checkout.
+>>>>>>> after updating
 
 ## Conventions
 

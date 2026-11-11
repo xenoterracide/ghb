@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Managed by copier; do not edit. Run `copier update` to refresh.
-_commit: v26.11.2
+# Managed by copier; do not edit. `uv run --group dev copier update` refreshes.
+_commit: v26.11.5
 _src_path: https://github.com/xenoterracide/base-template
 first_package: ghb
 include_skeleton: false

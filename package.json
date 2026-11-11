@@ -29,6 +29,7 @@
     "ghb": "pnpm --filter @xenoterracide/ghb run ghb",
     "lint:prettier": "prettier --ignore-unknown --cache --check '**'",
     "lint:reuse": "pnpm reuse download --all && pnpm reuse lint",
+<<<<<<< before updating
     "lint:eslint": "eslint .",
     "lint": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:reuse",
     "precontribute": "pnpm setup:corepack",
@@ -36,6 +37,14 @@
     "secrets": "pnpm --filter @xenoterracide/ghb run ghb secrets",
     "setup:corepack": "npm install --global corepack && corepack enable --install-directory ~/.local/bin",
     "typecheck": "tsc --noEmit -p tsconfig.eslint.json && pnpm -r run typecheck",
+=======
+    "precontribute": "npm run setup:corepack",
+    "reuse": "uv run --frozen --group dev reuse",
+    "setup:corepack": "npm install --global corepack && mkdir -p ~/.local/bin && corepack enable --install-directory ~/.local/bin",
+    "lint:eslint": "eslint .",
+    "lint": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:reuse",
+    "typecheck": "tsc --noEmit -p tsconfig.eslint.json",
+>>>>>>> after updating
     "test": "vitest run --coverage"
   }
 }
