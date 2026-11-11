@@ -177,7 +177,7 @@ importers:
         version: 8.0.3
       '@prettier/plugin-xml':
         specifier: ^3.4.2
-        version: 3.4.2(prettier@3.9.10)
+        version: 3.4.2(prettier@3.10.0)
       '@vitest/coverage-v8':
         specifier: ^5.0.0
         version: 5.1.0(vitest@5.1.0)
@@ -198,16 +198,16 @@ importers:
         version: 17.6.0
       prettier:
         specifier: ^3.6.2
-        version: 3.9.10
+        version: 3.10.0
       prettier-plugin-java:
         specifier: ^2.7.5
-        version: 2.11.0(prettier@3.9.10)
+        version: 2.11.0(prettier@3.10.0)
       prettier-plugin-properties:
         specifier: ^0.3.0
-        version: 0.3.1(prettier@3.9.10)
+        version: 0.3.1(prettier@3.10.0)
       prettier-plugin-toml:
         specifier: ^4.0.0
-        version: 4.1.0(prettier@3.9.10)
+        version: 4.1.0(prettier@3.10.0)
       typescript:
         specifier: ^6.0.0
         version: 6.0.3
@@ -1543,8 +1543,8 @@ packages:
     peerDependencies:
       prettier: ^3.0.3
 
-  prettier@3.9.10:
-    resolution: {integrity: sha512-skGHTH1Yb9QvaTC4hWnRTzEYtCpApF0UMBPz+t/0ZPzP8ihefo/btKd+QA7pUE0fEwA1SbS/NmhyEcstdXOIdA==}
+  prettier@3.10.0:
+    resolution: {integrity: sha512-mBi4765LgjO1PFjlEs7pUeK0nb1bw71c+N4/ItfeUWNdY5cV2pRKaFpbbFRYmDJMO+5ZwzGxHRqHxFZna7iv5w==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -2001,10 +2001,10 @@ snapshots:
 
   '@oxc-project/types@0.156.0': {}
 
-  '@prettier/plugin-xml@3.4.2(prettier@3.9.10)':
+  '@prettier/plugin-xml@3.4.2(prettier@3.10.0)':
     dependencies:
       '@xml-tools/parser': 1.0.12
-      prettier: 3.9.10
+      prettier: 3.10.0
 
   '@rolldown/binding-android-arm-eabi@1.2.18':
     optional: true
@@ -3048,22 +3048,22 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-java@2.11.0(prettier@3.9.10):
+  prettier-plugin-java@2.11.0(prettier@3.10.0):
     dependencies:
-      prettier: 3.9.10
+      prettier: 3.10.0
       web-tree-sitter: 0.27.0
 
-  prettier-plugin-properties@0.3.1(prettier@3.9.10):
+  prettier-plugin-properties@0.3.1(prettier@3.10.0):
     dependencies:
       dot-properties: 1.1.2
-      prettier: 3.9.10
+      prettier: 3.10.0
 
-  prettier-plugin-toml@4.1.0(prettier@3.9.10):
+  prettier-plugin-toml@4.1.0(prettier@3.10.0):
     dependencies:
-      prettier: 3.9.10
+      prettier: 3.10.0
       tombit: 0.1.7
 
-  prettier@3.9.10: {}
+  prettier@3.10.0: {}
 
   punycode@2.3.1: {}
 
