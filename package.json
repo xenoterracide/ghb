@@ -31,10 +31,10 @@
     "lint:reuse": "pnpm reuse download --all && pnpm reuse lint",
     "lint:eslint": "eslint .",
     "lint": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:reuse",
-    "precontribute": "pnpm setup:corepack",
+    "precontribute": "npm run setup:corepack",
     "reuse": "uv run --frozen --group dev reuse",
     "secrets": "pnpm --filter @xenoterracide/ghb run ghb secrets",
-    "setup:corepack": "npm install --global corepack && corepack enable --install-directory ~/.local/bin",
+    "setup:corepack": "npm install --global corepack && mkdir -p ~/.local/bin && corepack enable --install-directory ~/.local/bin",
     "typecheck": "tsc --noEmit -p tsconfig.eslint.json && pnpm -r run typecheck",
     "test": "vitest run --coverage"
   }

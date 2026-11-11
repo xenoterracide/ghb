@@ -21,7 +21,7 @@ monorepo managed with pnpm workspaces.
 ## Setup
 
 1. Ensure `asdf` and `direnv` are installed and allowed.
-2. Run `pnpm contribute` — it installs tools, syncs Node and Python
+2. Run `npm run contribute` — it installs tools, syncs Node and Python
    dependencies, and points `core.hooksPath` at `.config/git/hooks`.
 
 `contribute` and the post-checkout/post-merge hooks all call
@@ -76,7 +76,7 @@ This repository is managed with
 holds the answers. Refresh from
 [xenoterracide/base-template](https://github.com/xenoterracide/base-template):
 
-    copier update --trust
+    uv run --group dev copier update --trust
 
 Conflicts appear as `.rej` files or inline markers; resolve and commit.
 Renovate opens an update PR on each template release and automerges clean

@@ -11,4 +11,4 @@ requires-python = ">=3.12"
 dependencies = []
 
 [dependency-groups]
-dev = ["reuse>=6.2.0"]
+dev = ["copier>=9.0.0", "reuse>=6.2.0"]

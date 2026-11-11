@@ -37,7 +37,11 @@ if [ -f package.json ]; then
     npm install --global corepack || echo "heal: corepack install failed" >&2
     asdf reshim nodejs
   }
+  # corepack enable exits ENOENT when the directory is missing
+  mkdir -p "$HOME/.local/bin"
   corepack enable --install-directory ~/.local/bin || echo "heal: corepack enable failed" >&2
+  # the shims land outside the default PATH on a clean machine
+  export PATH="$HOME/.local/bin:$PATH"
 fi
 
 if [ -f package.json ]; then

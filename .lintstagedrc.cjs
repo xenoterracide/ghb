@@ -41,9 +41,11 @@ const run = (commands) => (files) => {
 };
 
 module.exports = {
-  "!(package).json": run([`${reuse} ${copyright} ${symbol} ${licenseConfiguration}`, prettier]),
+  // JSON cannot carry headers; its licensing lives in REUSE.toml. Companion
+  // files confused agents and regenerate even when REUSE.toml covers the file.
+  "!(package).json": run(prettier),
   // package.json can contain logic via the scripts segment
-  "package.json": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
+  "package.json": run(prettier),
   "{.config/git/hooks/**,**/*.*sh,.envrc}": run([
     `${reuse} ${copyright} ${symbol} ${licenseScripts} --style python`,
     shfmt,
@@ -57,7 +59,10 @@ module.exports = {
   ]),
   // yml is different from yaml extension as the only known yaml required file is for git-conventional-commits, but yml
   // contains files like GitHub workflows which can have significant logic
-  "*.{js,cjs,cts,yml}": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
+  "*.{js,cjs,yml}": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
+  // reuse 6.3.0 does not recognise .cts, so annotate --fallback-dot-license
+  // would write a sidecar the inline header already covers; prettier only
+  "*.cts": run(prettier),
   ".{*ignore,editorconfig,gitattributes,mailmap}": run([
     `${reuse} ${copyright} ${symbol} ${licenseConfiguration}`,
     prettier,
