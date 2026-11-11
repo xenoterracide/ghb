@@ -29,10 +29,12 @@ const installDir = join(workDir, "install");
 const run = (command: string, args: string[], cwd: string): string =>
   execFileSync(command, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
-// clipanion writes usage errors to stdout; runtime errors to stderr
+// clipanion writes usage errors to stdout; runtime errors to stderr. The
+// bin is executed directly, never through an explicit `node <script>`:
+// production always goes through the kernel and the script's shebang
 const runExpectingFailure = (bin: string, args: string[]): string => {
   try {
-    run("node", [bin, ...args], workDir);
+    run(bin, args, workDir);
   } catch (e) {
     return `${(e as { stdout?: string }).stdout ?? ""}${(e as { stderr?: string }).stderr ?? ""}`;
   }
@@ -69,7 +71,7 @@ describe("the installed bin", () => {
   });
 
   it("answers help when installed from tarballs and invoked through its bin link", () => {
-    const stdout = run("node", [bin, "--help"], workDir);
+    const stdout = run(bin, ["--help"], workDir);
 
     expect(stdout).toContain("ghb <command>");
   });
@@ -90,5 +92,16 @@ describe("the installed bin", () => {
 
     expect(output).toContain('Could not resolve secret "NO_SUCH_SECRET"');
     expect(output).not.toContain("Unknown Syntax Error");
+  });
+
+  it("delivers --env-file to the command instead of node", () => {
+    // node recognizes --env-file after the entry script, eats it, and
+    // dies on the missing file with its own error before the command
+    // runs; the command's own error must reach the user instead
+    const output = runExpectingFailure(bin, ["secrets", "sync", "--env-file", join(workDir, "no-such.env")]);
+
+    expect(output).toContain("Env file not found");
+    // node's eaten-flag error shape: "<path>: not found"
+    expect(output).not.toContain(".env: not found");
   });
 });
