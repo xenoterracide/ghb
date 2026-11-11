@@ -1,11 +1,15 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --
 
 // SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+// The -- in the shebang ends node's own option parsing. node recognizes
+// flags after the entry script — --env-file among them — and swallows
+// them before the CLI ever sees them.
+
 import { Cli, Builtins } from "clipanion";
-import { MergeCommand, PrMessageCommand } from "@xenoterracide/ghb-merge";
+import { PrSyncCommand, PrVerifyCommand } from "@xenoterracide/ghb-pr";
 import { GetCommand, SyncCommand, UpdateCommand } from "@xenoterracide/ghb-secrets-sync";
 
 export function createCli(): Cli {
@@ -15,8 +19,8 @@ export function createCli(): Cli {
   });
 
   cli.register(Builtins.HelpCommand);
-  cli.register(MergeCommand);
-  cli.register(PrMessageCommand);
+  cli.register(PrSyncCommand);
+  cli.register(PrVerifyCommand);
   cli.register(SyncCommand);
   cli.register(UpdateCommand);
   cli.register(GetCommand);
@@ -24,9 +28,14 @@ export function createCli(): Cli {
   return cli;
 }
 
+// The tsx dev entry (`pnpm ghb`) runs the source as argv[1]; every built
+// invocation — direct node or a bin symlink whose name is not cli.js — is
+// covered by the CommonJS entry identity, which node resolves through
+// symlinks. The typeof guards keep vitest's ESM import of this module inert.
 const cliPath = process.argv[1] ?? "";
-// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-const isMainModule = cliPath.endsWith("cli.ts") || cliPath.endsWith("cli.js");
+const isMainModule =
+  cliPath.endsWith("cli.ts") ||
+  (typeof require === "function" && typeof module === "object" && module !== null && require.main === module);
 
 if (isMainModule) {
   const cli = createCli();

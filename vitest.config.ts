@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    exclude: ["**/node_modules/**", "**/.share/**", "**/.agents/**", "**/.pnp.*"],
+    exclude: ["**/node_modules/**", "**/.agents/**"],
     projects: [
       {
         test: {
@@ -17,9 +17,9 @@ export default defineConfig({
       },
       {
         test: {
-          name: "ghb-merge",
-          root: "./packages/ghb-merge",
-          include: ["**/*.test.ts"],
+          name: "ghb-pr",
+          root: "./packages/ghb-pr",
+          include: ["test/**/*.test.ts"],
         },
       },
       {
@@ -31,12 +31,12 @@ export default defineConfig({
       },
     ],
     coverage: {
-      exclude: ["**/.share/**", "**/.pnp.*", "**/node_modules/**", "**/*.test.ts", "**/coverage/**"],
+      exclude: ["**/node_modules/**", "**/*.test.ts", "**/coverage/**"],
       thresholds: {
-        statements: 70,
-        branches: 58,
-        functions: 72,
-        lines: 70,
+        statements: 90,
+        branches: 85,
+        functions: 90,
+        lines: 90,
       },
     },
   },

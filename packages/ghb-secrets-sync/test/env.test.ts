@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -229,5 +229,40 @@ describe("resolveSecretValue", () => {
     expect(result).toBe("from-env-file");
 
     delete process.env.API_KEY;
+  });
+});
+
+describe("env edge cases", () => {
+  let tmpDir = "";
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), "secrets-sync-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+    vi.restoreAllMocks();
+  });
+
+  it("skips lines with an empty key", () => {
+    const envPath = join(tmpDir, ".env");
+    writeFileSync(envPath, "=value\nKEY=val:kept\n", "utf8");
+
+    const entries = parseEnvFile(envPath);
+
+    expect(Object.keys(entries)).toEqual(["KEY"]);
+  });
+
+  it("warns on an overly permissive referenced secret file", () => {
+    const secretPath = join(tmpDir, "secret.txt");
+    writeFileSync(secretPath, "s3cret", { mode: 0o644 });
+    const envPath = join(tmpDir, ".env");
+    writeFileSync(envPath, `KEY=file:${secretPath}\n`, "utf8");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const value = resolveSecretValue("KEY", parseEnvFile(envPath));
+
+    expect(value).toBe("s3cret");
+    expect(warn.mock.calls.map((call) => call.join(" ")).join(" ")).toContain("overly permissive");
   });
 });

@@ -67,4 +67,20 @@ describe("UpdateCommand", () => {
     const content = readFileSync(envPath, "utf8");
     expect(content).toContain("API_KEY=new-value");
   });
+
+  it("should add a blank line before an appended key when the file has no trailing newline", async () => {
+    const envPath = join(tmpDir, "secrets.env");
+    writeFileSync(envPath, "EXISTING=val:1", "utf8");
+
+    const cmd = new UpdateCommand();
+    cmd.file = envPath;
+    cmd.key = "NEW_KEY";
+    cmd.value = "new-value";
+
+    const exitCode = await cmd.execute();
+    expect(exitCode).toBe(0);
+
+    const content = readFileSync(envPath, "utf8");
+    expect(content).toContain("EXISTING=val:1\n\nNEW_KEY=new-value\n");
+  });
 });

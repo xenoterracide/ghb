@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
+SPDX-FileCopyrightText: Copyright © 2015-2026 Caleb Cushing
 
 SPDX-License-Identifier: CC-BY-NC-SA-4.0
 -->
@@ -14,7 +14,12 @@ GitHub Bridge — TypeScript CLI devtools and utilities for GitHub workflow auto
 npm install -g @xenoterracide/ghb
 ```
 
-Requires Node.js 24+ and the GitHub CLI (`gh`) authenticated.
+Requires Node.js 24+ and the [GitHub CLI](https://cli.github.com/) (`gh`)
+authenticated.
+
+Until the first npm publish, the registry install above does not work —
+install a local build instead; see
+[Local Build](CONTRIBUTING.md#local-build) in CONTRIBUTING.
 
 ## Usage
 
@@ -22,31 +27,32 @@ Requires Node.js 24+ and the GitHub CLI (`gh`) authenticated.
 # Show help
 ghb --help
 
-# AI-assisted PR merge workflow
-ghb merge
-ghb merge --dry-run
-ghb merge --kimi
-ghb merge --junie
-ghb merge --copilot
+# Sync the current branch with its remote and the default branch
+# Prints one line: merged N commits, reset to remote, or up to date
+# Exits 1 when local and remote diverged, or on a merge conflict
+ghb pr sync
 
-# Generate PR title/body files
-ghb pr-message --title-file title.txt --body-file body.txt
+# Verify the current PR is current, mergeable, and every check passes
+# Prints pass, or one line per failed dimension
+# Exits 0 on pass, 1 on failure, 2 when checks stay pending past the timeout
+ghb pr verify [--interval SECONDS] [--timeout SECONDS] [PR NUMBER | URL | BRANCH]
 
 # Sync GitHub secrets from an env file
-ghb sync --env-file secrets.env
-ghb sync --env-file secrets.env --repo owner/target
-ghb sync --secrets API_KEY,SECRET --repo owner/target
+ghb secrets sync --env-file secrets.env
+ghb secrets sync --env-file secrets.env --repo owner/target
+ghb secrets sync --secrets API_KEY,SECRET --repo owner/target
 
 # Update a secret value in an env file
-ghb update --env-file secrets.env --key API_KEY --value env:PROD_API_KEY
+ghb secrets update --file secrets.env --key API_KEY --value env:PROD_API_KEY
 
 # Get a secret value
-ghb get --name API_KEY
+ghb secrets get API_KEY
 ```
 
 See the package READMEs for more detail:
 
-- [`packages/ghb-merge`](./packages/ghb-merge/README.md) — PR merge workflow
+- [`packages/ghb`](./packages/ghb/README.md) — the `ghb` CLI
+- [`packages/ghb-pr`](./packages/ghb-pr/README.md) — `pr sync` and `pr verify`
 - [`packages/ghb-secrets-sync`](./packages/ghb-secrets-sync/README.md) — secrets sync
 
 ## Development

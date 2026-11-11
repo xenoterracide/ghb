@@ -2,7 +2,6 @@
   "name": "@xenoterracide/ghb",
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
-  "packageManager": "yarn@4.18.0",
   "bin": "dist/cli.js",
   "main": "dist/cli.js",
   "types": "dist/cli.d.ts",
@@ -19,15 +18,15 @@
     "access": "public"
   },
   "dependencies": {
-    "@xenoterracide/ghb-merge": "workspace:^",
+    "@xenoterracide/ghb-pr": "workspace:^",
     "@xenoterracide/ghb-secrets-sync": "workspace:^",
     "clipanion": "^4.0.0-rc.4"
   },
   "devDependencies": {
-    "@types/node": "^24.12.0",
+    "@types/node": "^26.0.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.0",
-    "vitest": "^4.1.2"
+    "vitest": "^5.0.0"
   },
   "repository": {
     "type": "git",
@@ -39,9 +38,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepack": "yarn build",
+    "prepack": "pnpm build",
     "ghb": "tsx src/cli.ts",
-    "test": "vitest run && yarn typecheck",
+    "test": "vitest run && pnpm typecheck",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   }

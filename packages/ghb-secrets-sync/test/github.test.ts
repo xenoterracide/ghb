@@ -148,3 +148,25 @@ describe("setSecret", () => {
     }).toThrow("Failed to set secret");
   });
 });
+
+describe("non-Error failures", () => {
+  const throwing = (thrown: unknown): CommandRunner => ({
+    runArgv: (): never => {
+      throw thrown;
+    },
+  });
+
+  it("stringifies a non-Error from gh secret list", () => {
+    expect(() => listSecretNames("owner/repo", throwing("gh exploded"))).toThrow("gh exploded");
+  });
+
+  it("stringifies a non-Error from gh secret set", () => {
+    expect(() => {
+      setSecret({ repo: "owner/repo", name: "KEY", value: "val", runner: throwing("denied") });
+    }).toThrow("denied");
+  });
+
+  it("stringifies a non-Error from gh repo list", () => {
+    expect(() => findReposByLabel("topic", "owner", throwing("nope"))).toThrow("nope");
+  });
+});

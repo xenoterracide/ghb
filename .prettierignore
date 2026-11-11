@@ -1,15 +1,16 @@
-# SPDX-FileCopyrightText: Copyright © 2024, 2026 Caleb Cushing
+# SPDX-FileCopyrightText: Copyright © 2021-2026 Caleb Cushing
 #
 # SPDX-License-Identifier: CC0-1.0
 
+# Copier owns this generated answers file; its YAML style is not ours.
+.copier-answers.yml
+.superpowers/
+pnpm-lock.yaml
 uv.lock
 .venv/
-.yarn/
-.gradle/
 node_modules/
 build/
 .idea/
-gradlew*
-gradle/wrapper/*
-.agents/
+mvnw*
+.mvn/wrapper/*
 coverage/

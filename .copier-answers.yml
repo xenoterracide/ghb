@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
+#
+# SPDX-License-Identifier: MIT
+
+# Managed by copier; do not edit. Run `copier update` to refresh.
+_commit: v26.11.2
+_src_path: https://github.com/xenoterracide/base-template
+first_package: ghb
+include_skeleton: false
+license: GPL-3.0-or-later
+npm_scope: ''
+project_name: ghb
+project_title: ghb
+template_type: typescript
+ts_scope: '@xenoterracide'
+

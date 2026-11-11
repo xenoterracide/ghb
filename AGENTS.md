@@ -4,94 +4,67 @@ SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
 SPDX-License-Identifier: CC-BY-NC-SA-4.0
 -->
 
-# Project Overview
+# ghb
 
-**ghb** (GitHub Bridge) is a TypeScript CLI devtools monorepo with three
-packages:
+GitHub Bridge: a TypeScript CLI devtools monorepo.
 
-1. **`@xenoterracide/ghb`** — aggregated `ghb` CLI that composes subcommands from
-   the other packages.
-2. **`@xenoterracide/ghb-merge`** — AI-assisted PR creation/merge workflow
-   (Kimi, Junie, Copilot).
-3. **`@xenoterracide/ghb-secrets-sync`** — sync GitHub repository secrets from
-   environment variables or local env files.
+- **`@xenoterracide/ghb`** — aggregated `ghb` CLI. Composes subcommands from
+  the other packages.
+- **`@xenoterracide/ghb-pr`** — `pr sync` and `pr verify`: keep a PR branch
+  current and prove it is mergeable and green.
+- **`@xenoterracide/ghb-secrets-sync`** — GitHub repository secret sync from
+  environment variables or local env files.
 
-The repository is REUSE-compliant: every file must carry an SPDX license header.
-`lint-staged` adds headers automatically; compliance is checked in CI.
-
-## Project Layout
-
-```text
-.
-├── packages/
-│   ├── ghb/                    # Aggregated CLI
-│   ├── ghb-merge/              # AI-assisted merge workflow
-│   └── ghb-secrets-sync/       # GitHub secrets sync CLI
-├── .share/git/hooks/           # Custom git hooks
-├── .github/workflows/          # GitHub Actions
-└── root config files           # eslint, vitest, prettier, reuse, etc.
-```
-
-## Technology Stack
-
-- **Node.js** `>=24`, **Yarn** 4 PnP workspaces, **TypeScript** 6 — see
-  `package.json` and `.tool-versions` for exact versions.
-- **Python** `>=3.12` is used only for the `reuse` compliance tool.
-- **Testing:** vitest with coverage (see `vitest.config.ts`).
-- **Linting/formatting:** eslint, prettier, shfmt — see their config files.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the repository layout, setup, and
+contributor workflow.
 
 ## Key Commands
 
-```bash
-# One-time setup
-yarn contribute
-
-# Run all checks: eslint, typecheck, tests
-yarn check
-
-# Individual commands
-yarn test              # tests with coverage
-yarn build             # build packages topologically
-yarn typecheck         # build, then typecheck all workspaces
-yarn lint              # eslint + prettier + reuse
-yarn lint:eslint
-yarn lint:prettier
-yarn lint:reuse
-```
-
-## Conventions Agents Should Know
-
-- **Conventional commits** are required; see `git-conventional-commits.yaml`.
-- **Squash merge** is used. Do not force push.
-- **SPDX headers** are required on every file. Do not remove them.
-- **Shell safety:** use `execFileSync` with argv arrays, not shell strings.
-- **Secret handling:** pass secret values via `stdin` (`input` option), never via
-  argv.
-- **File permissions:** env files and referenced secret files must be `0o600`.
-- **Yarn PnP isolation:** strip PnP loader flags from `NODE_OPTIONS` before
-  spawning external Node.js tools (e.g., AI engine binaries).
-- **Submodule awareness:** `findMainRepoRoot()` walks up past submodules so git
-  operations run in the true repo root.
-
-## Development Setup
-
-1. Ensure `asdf` and `direnv` are installed and allowed.
-2. Run `asdf install` (or let `.envrc` run it).
-3. Run `yarn contribute` to create `.venv`, sync Python deps, install Node
-   dependencies, and configure git hooks.
-4. Run `yarn check` to confirm the repo builds, lints, and tests cleanly.
+- `pnpm contribute` — bootstrap tooling (run once after clone); heals the
+  toolchain through `.config/git/hooks/heal.sh`
+- `pnpm check` — prettier, eslint, typecheck, and tests
+- `pnpm lint` — eslint, prettier, and reuse
+- `pnpm build` — build every package topologically
+- `pnpm test` — vitest with coverage across the workspace
 
 ## Source of Truth
 
-- Tool versions → `.tool-versions`
-- Scripts and Node dependencies → `package.json`
-- Python dependencies → `pyproject.toml`, `uv.lock`
-- Conventional commit types → `git-conventional-commits.yaml`
-- Vitest/coverage configuration → `vitest.config.ts`
-- Renovate configuration → `.github/renovate.json5`
+Read these files instead of trusting a copy of their contents here. Versions
+and rules drift; these do not.
+
+| For                                             | See                                                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Install, update, usage, contribution            | [`README.md`](./README.md), [`CONTRIBUTING.md`](./CONTRIBUTING.md)                                                             |
+| Tool versions (Node, Python, shfmt, shellcheck) | [`.tool-versions`](./.tool-versions)                                                                                           |
+| pnpm version and workspace layout               | `packageManager` in [`package.json`](./package.json), [`pnpm-workspace.yaml`](./pnpm-workspace.yaml)                           |
+| Scripts and root Node dependencies              | [`package.json`](./package.json)                                                                                               |
+| Per-package scripts and dependencies            | `packages/*/package.json`                                                                                                      |
+| Python dependencies                             | [`pyproject.toml`](./pyproject.toml), [`uv.lock`](./uv.lock)                                                                   |
+| Lint, format, and staged-file config            | [`eslint.config.cts`](./eslint.config.cts), [`.prettierrc.cjs`](./.prettierrc.cjs), [`.lintstagedrc.cjs`](./.lintstagedrc.cjs) |
+| Conventional commit types                       | [`git-conventional-commits.yaml`](./git-conventional-commits.yaml)                                                             |
+| Vitest and coverage configuration               | [`vitest.config.ts`](./vitest.config.ts)                                                                                       |
+| Template and answers                            | [xenoterracide/base-template](https://github.com/xenoterracide/base-template), [`.copier-answers.yml`](./.copier-answers.yml)  |
+| Renovate configuration                          | [`.github/renovate.json5`](./.github/renovate.json5)                                                                           |
+
+Template updates land with `copier update --trust`; conflicts appear as `.rej`
+files. Hooks heal the toolchain: `.envrc`, `contribute`, and the post hooks
+call `.config/git/hooks/heal.sh`. A failed heal never breaks a checkout.
+
+## Conventions
+
+- **Conventional commits.** See
+  [`git-conventional-commits.yaml`](./git-conventional-commits.yaml).
+- **Squash merge.** Do not force push.
+- **SPDX headers on every file.** `lint-staged` adds them. CI checks
+  compliance. Do not remove them.
+- **Shell safety.** Use `execFileSync` with argv arrays, not shell strings.
+- **Secret handling.** Pass secret values via `stdin` (`input` option), never
+  via argv.
+- **File permissions.** Env files use `0o600`. Referenced secret files accept
+  `0o400` or `0o600`.
 
 ## Maintenance
 
-Update this file when you change workflows, tools, or conventions it describes.
-Update `README.md` for user-facing behavior changes and `CONTRIBUTING.md` for
-contributor-facing workflow changes.
+Update this file when you change the workflows, tools, or conventions it
+describes. Update `README.md` for user-facing changes and `CONTRIBUTING.md` for
+contributor workflow changes.
