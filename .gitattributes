@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
+# the catch-all leads; later patterns override it per attribute
+*                    text=auto eol=lf
+*.sh                 text eol=lf
+
 *.jar                binary linguist-vendored
 *.bat                text eol=crlf linguist-vendored
 *.cmd                text eol=crlf linguist-vendored
@@ -9,7 +13,3 @@
 /mvnw                text eol=lf   linguist-vendored
 **/*lockfile         text linguist-generated
 pnpm-lock.yaml       text linguist-generated
-
-# ours
-*.sh                 text eol=lf
-*                    text=auto eol=lf

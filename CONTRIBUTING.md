@@ -9,7 +9,13 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 Thank you for your interest in improving `ghb`. This repository is a TypeScript
 monorepo managed with pnpm workspaces.
 
+<<<<<<< before updating
 ## Repository Overview
+=======
+    git clone <repo-url>
+    cd <project>
+    npm run contribute
+>>>>>>> after updating
 
 - **`packages/ghb/`** — the `ghb` CLI aggregator.
 - **`packages/ghb-pr/`** — `pr sync` and `pr verify`.
@@ -76,7 +82,7 @@ This repository is managed with
 holds the answers. Refresh from
 [xenoterracide/base-template](https://github.com/xenoterracide/base-template):
 
-    copier update --trust
+    uv run --group dev copier update --trust
 
 Conflicts appear as `.rej` files or inline markers; resolve and commit.
 Renovate opens an update PR on each template release and automerges clean
