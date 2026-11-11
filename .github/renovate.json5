@@ -72,7 +72,8 @@
     },
     {
       // A conflicted copier update leaves `.rej` files, which fail
-      // `lint:reuse`; green checks mean the update landed cleanly, so it
+      // `lint:reuse`, or inline conflict markers, which fail prettier
+      // and pnpm; green checks mean the update landed cleanly, so it
       // can automerge. No enable flag is needed: `copier.yml` carries no
       // `_tasks`, so the hosted app can update without `--trust`.
       matchManagers: ["copier"],
