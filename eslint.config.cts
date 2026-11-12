@@ -67,6 +67,7 @@ export default defineConfig([
     },
   },
   {
+<<<<<<< before updating
     // CLI entrypoints legitimately use console for user interaction
     files: ["**/cli.ts", "**/commands/*.ts", "**/merge.ts"],
     rules: {
@@ -99,6 +100,8 @@ export default defineConfig([
     },
   },
   {
+=======
+>>>>>>> after updating
     files: ["**/*.json"],
     ignores: ["**/tsconfig.json", "**/tsconfig.*.json"],
     ...jsonPlugin.configs.recommended,
