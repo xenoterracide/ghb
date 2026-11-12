@@ -52,6 +52,8 @@ const rerunRollup = [
 const runningRollup = [
   { name: "build", status: "IN_PROGRESS", startedAt: "2026-11-11T19:00:00Z", workflowName: "test" },
 ];
+// the common real timeout: some checks on runners, others still queued
+const mixedRollup = [...runningRollup, { name: "lint", status: "QUEUED", startedAt: null, workflowName: "test" }];
 const failingRollup = [
   {
     name: "build",
@@ -468,15 +470,21 @@ describe("PrVerifyCommand", () => {
   });
 
   it("resets the grace when checks appear", async () => {
-    const { run } = fakeRunner([
+    // a queued check interrupts two CLEAN+empty reads; the grace restarts
+    // from zero, so the head owes three more reads before its gate: seven
+    // view reads in all, where a sticky counter would pass after five
+    const { run, calls } = fakeRunner([
       "",
       view({ rollup: emptyRollup }),
       "0\t1",
       "0\t0",
+      view({ rollup: emptyRollup }),
       view({ mergeStateStatus: "BLOCKED", rollup: queuedRollup }),
-      view({ rollup: passingRollup }),
+      view({ rollup: emptyRollup }),
+      view({ rollup: emptyRollup }),
+      view({ rollup: emptyRollup }),
       "",
-      view({ rollup: passingRollup }),
+      view({ rollup: emptyRollup }),
       "0\t1",
       "0\t0",
     ]);
@@ -489,6 +497,7 @@ describe("PrVerifyCommand", () => {
 
     expect(exit).toBe(0);
     expect(logs).toEqual(["pass"]);
+    expect(calls.filter((call) => call.startsWith("gh pr view"))).toHaveLength(7);
   });
 
   it("pends a runless head while the view is BLOCKED", async () => {
@@ -752,8 +761,41 @@ describe("PrVerifyCommand", () => {
     expect(errors.join("\n")).toContain("pending after 0m: queued: build");
   });
 
+  it("times out naming started checks before queued ones", async () => {
+    const { run } = fakeRunner(["", view({ rollup: mixedRollup }), "0\t1", "0\t0", view({ rollup: mixedRollup })]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    command.timeout = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(2);
+    expect(errors.join("\n")).toContain("pending after 0m: build; queued: lint");
+  });
+
   it("fails when the PR closes during the poll", async () => {
     const { run } = fakeRunner(["", view({ rollup: passingRollup }), "0\t1", "0\t0", "", view({ state: "CLOSED" })]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain("state: CLOSED");
+  });
+
+  it("fails when the PR closes on a poll read", async () => {
+    const { run } = fakeRunner([
+      "",
+      view({ mergeStateStatus: "BLOCKED", rollup: runningRollup }),
+      "0\t1",
+      "0\t0",
+      view({ state: "CLOSED" }),
+    ]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
