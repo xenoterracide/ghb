@@ -156,7 +156,7 @@ export class SyncCommand extends Command {
     }
 
     // Use console for interactive output to avoid async log ordering issues
-    console.log(`Will sync ${String(secretsToSync.length)} secret(s) to ${String(targetRepos.length)} repo(s):`);
+    console.log(`Will sync ${secretsToSync.length} secret(s) to ${targetRepos.length} repo(s):`);
     console.log(`  Repos: ${targetRepos.join(", ")}`);
     console.log(`  Secrets: ${secretsToSync.map((s) => s.name).join(", ")}`);
 
