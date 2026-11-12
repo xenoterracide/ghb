@@ -19,9 +19,9 @@ export class GetCommand extends Command {
     description: "Env file with secret names and values",
   });
 
-  // clipanion's contract is a Promise; the lookup underneath is sync
+  // eslint-disable-next-line @typescript-eslint/require-await -- clipanion requires a Promise even for synchronous commands.
   public async execute(): Promise<number> {
-    return await Promise.resolve(this.get());
+    return this.get();
   }
 
   private get(): number {
