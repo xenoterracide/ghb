@@ -40,7 +40,7 @@ export class PrSyncCommand extends Command {
     const localAhead = Number(run("git", ["rev-list", "--count", `origin/${branch}..HEAD`]));
 
     if (remoteAhead > 0 && localAhead > 0) {
-      console.error(`diverged: local ${String(localAhead)} ahead, remote ${String(remoteAhead)} ahead`);
+      console.error(`diverged: local ${localAhead} ahead, remote ${remoteAhead} ahead`);
       return 1;
     }
 
@@ -77,7 +77,7 @@ export class PrSyncCommand extends Command {
     if (behind > 0) {
       try {
         run("git", ["merge", base, "--quiet"]);
-        console.log(`merged ${String(behind)} commits`);
+        console.log(`merged ${behind} commits`);
       } catch {
         console.log(run("git", ["status", "--porcelain"]));
         return 1;
