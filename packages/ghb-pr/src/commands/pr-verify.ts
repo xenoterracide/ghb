@@ -20,7 +20,7 @@ export interface RollupContext {
 export interface Check {
   name: string; // CheckRun name, StatusContext context
   bucket: Bucket;
-  started: boolean; // at least one run of this name started on a runner
+  started: boolean; // every in-flight run of this name started on a runner
 }
 
 // gh's own bucketing: statuses carry their state, runs collapse either their
@@ -60,7 +60,7 @@ const startOf = (context: RollupContext): number => {
 interface Group {
   name: string;
   pending: boolean; // a run in flight may still pass, so it outranks finished runs
-  pendingStarted: boolean; // an in-flight run reached a runner, not just the queue
+  pendingStarted: boolean; // every in-flight run reached a runner, not just the queue
   bucket: Bucket; // newest finished run's verdict, pending until one exists
   started: boolean; // whether the newest finished run reached a runner
   newestAt: number | undefined; // its startedAt, so a later finish supersedes it
@@ -86,7 +86,7 @@ export function summarize(rollup: RollupContext[] | null | undefined): Check[] {
       group = {
         name,
         pending: false,
-        pendingStarted: false,
+        pendingStarted: true,
         bucket: "pending",
         started: false,
         newestAt: undefined,
@@ -98,7 +98,7 @@ export function summarize(rollup: RollupContext[] | null | undefined): Check[] {
     const at = startOf(context);
     if (bucket === "pending") {
       group.pending = true;
-      group.pendingStarted ||= at !== Number.NEGATIVE_INFINITY;
+      group.pendingStarted &&= at !== Number.NEGATIVE_INFINITY;
     } else if (group.newestAt === undefined || at > group.newestAt) {
       group.newestAt = at;
       group.bucket = bucket;

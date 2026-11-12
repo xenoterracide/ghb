@@ -196,6 +196,15 @@ describe("summarize", () => {
     ];
     expect(summarize(rollup)).toEqual([{ name: "build", bucket: "pending", started: true }]);
   });
+
+  it("marks a pending group started only when every in-flight run started", () => {
+    const running = { name: "build", status: "IN_PROGRESS", startedAt: "2026-11-11T19:00:00Z", workflowName: "test" };
+    const queued = { name: "build", status: "QUEUED", startedAt: null, workflowName: "test" };
+    const unparseable = { name: "build", status: "IN_PROGRESS", startedAt: "not a timestamp", workflowName: "test" };
+    expect(summarize([running, queued])).toEqual([{ name: "build", bucket: "pending", started: false }]);
+    expect(summarize([queued, running])).toEqual([{ name: "build", bucket: "pending", started: false }]);
+    expect(summarize([running, unparseable])).toEqual([{ name: "build", bucket: "pending", started: false }]);
+  });
 });
 
 describe("PrVerifyCommand", () => {
