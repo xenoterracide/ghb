@@ -123,7 +123,24 @@ interface PrView {
   mergeStateStatus: string;
   baseRefName: string;
   headRefName: string;
+  statusCheckRollup?: RollupContext[] | null | undefined;
 }
+
+// the poll timeout names what held out: checks that reached a runner first,
+// then any that never left the queue; a runless head names nothing
+const pendingLine = (timeout: number, pending: Check[]): string => {
+  const started = pending.filter((check) => check.started).map((check) => check.name);
+  const queued = pending.filter((check) => !check.started).map((check) => check.name);
+  const segments: string[] = [];
+  if (started.length > 0) {
+    segments.push(started.join(", "));
+  }
+  if (queued.length > 0) {
+    segments.push(`queued: ${queued.join(", ")}`);
+  }
+  const listed = segments.length > 0 ? `: ${segments.join("; ")}` : "";
+  return `pending after ${Math.floor(timeout / 60)}m${listed}`;
+};
 
 const sleep = async (seconds: number): Promise<void> => {
   await new Promise<void>((resolve) => {
@@ -179,6 +196,12 @@ export class PrVerifyCommand extends Command {
       return 1;
     }
 
+    // the seconds after a push: GitHub creates check runs asynchronously, so
+    // the rollup can read empty while the view already reads CLEAN. a runless
+    // CLEAN view is only trusted once three straight reads see it; any poll
+    // that sees anything else restarts the count
+    let cleanRuns = 0;
+
     for (;;) {
       // mergeability is computed asynchronously after a push; let UNKNOWN settle
       while (view.mergeable === "UNKNOWN" || view.mergeStateStatus === "UNKNOWN") {
@@ -211,41 +234,37 @@ export class PrVerifyCommand extends Command {
         return 1;
       }
 
-      let checks: Check[] | undefined;
-      try {
-        checks = this.readChecks(run);
-      } catch {
-        // the runner already printed gh's stderr; not a runless head
+      // one read per poll: the rollup rides in the view
+      const checks = summarize(view.statusCheckRollup);
+      const failed = checks
+        .filter((check) => check.bucket === "fail" || check.bucket === "cancel")
+        .map((check) => check.name);
+      if (failed.length > 0) {
+        console.error(`fail: ${failed.join(", ")}`);
         return 1;
       }
 
-      if (checks === undefined) {
-        // runless head: nothing more can arrive once the view is CLEAN
-        if (view.mergeStateStatus !== "CLEAN") {
-          if (Date.now() >= deadline) {
-            console.error(`pending after ${Math.floor(timeout / 60)}m`);
-            return 2;
-          }
-          await sleep(interval);
-          continue;
+      const pending = checks.filter((check) => check.bucket === "pending");
+      const runless = checks.length === 0;
+      cleanRuns = runless && view.mergeStateStatus === "CLEAN" ? cleanRuns + 1 : 0;
+
+      // queued and running checks, a runless view that is not yet CLEAN, and
+      // a runless CLEAN view inside its grace are all waited out alike
+      if (pending.length > 0 || (runless && cleanRuns < 3)) {
+        if (Date.now() >= deadline) {
+          console.error(pendingLine(timeout, pending));
+          return 2;
         }
-      } else {
-        const failed = checks
-          .filter((check) => check.bucket === "fail" || check.bucket === "cancel")
-          .map((c) => c.name);
-        if (failed.length > 0) {
-          console.error(`fail: ${failed.join(", ")}`);
+        await sleep(interval);
+        view = this.readView(run);
+        if (view === undefined) {
           return 1;
         }
-        if (checks.some((check) => check.bucket === "pending")) {
-          if (Date.now() >= deadline) {
-            const pending = checks.filter((check) => check.bucket === "pending").map((c) => c.name);
-            console.error(`pending after ${Math.floor(timeout / 60)}m: ${pending.join(", ")}`);
-            return 2;
-          }
-          await sleep(interval);
-          continue;
+        if (view.state !== "OPEN") {
+          console.error(`state: ${view.state}`);
+          return 1;
         }
+        continue;
       }
 
       // candidate pass: the poll may have taken minutes, so re-read the PR
@@ -271,18 +290,14 @@ export class PrVerifyCommand extends Command {
         late.push(`mergeStateStatus: ${fresh.mergeStateStatus}`);
       }
       if (late.length > 0) {
-        // a check queued after our read explains a non-CLEAN view; poll it
-        // rather than fail, unless nothing is pending
-        let recheck: Check[] | undefined;
-        try {
-          recheck = this.readChecks(run);
-        } catch {
-          recheck = undefined;
-        }
-        const hasPending = recheck?.some((check) => check.bucket === "pending") ?? false;
-        if (hasPending) {
+        // a check queued after our read explains a non-CLEAN fresh view, and
+        // an empty rollup may only mean runs do not exist yet; poll both, and
+        // fail only once the fresh rollup is terminal
+        const freshChecks = summarize(fresh.statusCheckRollup);
+        const freshPending = freshChecks.filter((check) => check.bucket === "pending");
+        if (freshPending.length > 0 || freshChecks.length === 0) {
           if (Date.now() >= deadline) {
-            console.error(`pending after ${Math.floor(timeout / 60)}m`);
+            console.error(pendingLine(timeout, freshPending));
             return 2;
           }
           await sleep(interval);
@@ -347,25 +362,12 @@ export class PrVerifyCommand extends Command {
           "pr",
           "view",
           "--json",
-          "state,mergeable,mergeStateStatus,baseRefName,headRefName",
+          "state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup",
           ...this.forwarded(),
         ]),
       ) as PrView;
     } catch {
       return undefined;
-    }
-  }
-
-  private readChecks(run: Runner): Check[] | undefined {
-    try {
-      const checks = JSON.parse(run("gh", ["pr", "checks", "--json", "name,bucket", ...this.forwarded()])) as Check[];
-      return checks.length > 0 ? checks : undefined;
-    } catch (e) {
-      const message = `${e instanceof Error ? e.message : String(e)}\n${(e as { stderr?: string }).stderr ?? ""}`;
-      if (/no checks reported/i.test(message)) {
-        return undefined;
-      }
-      throw e;
     }
   }
 

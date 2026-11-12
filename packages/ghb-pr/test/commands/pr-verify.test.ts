@@ -9,28 +9,83 @@ import { execRunner, type Runner } from "../../src/exec.js";
 
 vi.mock("../../src/exec.js", () => ({ execRunner: vi.fn() }));
 
-const greenView = JSON.stringify({
-  state: "OPEN",
-  mergeable: "MERGEABLE",
-  mergeStateStatus: "CLEAN",
-  baseRefName: "develop",
-  headRefName: "topic",
-});
+const passingRollup = [
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "SUCCESS",
+    startedAt: "2026-11-11T19:00:00Z",
+    workflowName: "test",
+  },
+];
+const queuedRollup = [{ name: "build", status: "QUEUED", startedAt: null, workflowName: "test" }];
+const emptyRollup: RollupContext[] = [];
 
-// GitHub reports BLOCKED while a required check is pending, not CLEAN
-const blockedView = JSON.stringify({
-  state: "OPEN",
-  mergeable: "MERGEABLE",
-  mergeStateStatus: "BLOCKED",
-  baseRefName: "develop",
-  headRefName: "topic",
-});
-
-const passingChecks = JSON.stringify([{ name: "build", bucket: "pass" }]);
-const pendingChecks = JSON.stringify([{ name: "build", bucket: "pending" }]);
-const noChecks = new Error("no checks reported on the 'topic' branch");
+// real data keeps every run of a name: a completed failure plus the queue
+// waiting to replace it, then both completions once the re-run finishes
+const requeuedRollup = [
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "FAILURE",
+    startedAt: "2026-11-11T18:00:00Z",
+    workflowName: "test",
+  },
+  { name: "build", status: "QUEUED", startedAt: null, workflowName: "test" },
+];
+const rerunRollup = [
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "FAILURE",
+    startedAt: "2026-11-11T18:00:00Z",
+    workflowName: "test",
+  },
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "SUCCESS",
+    startedAt: "2026-11-11T19:00:00Z",
+    workflowName: "test",
+  },
+];
+const runningRollup = [
+  { name: "build", status: "IN_PROGRESS", startedAt: "2026-11-11T19:00:00Z", workflowName: "test" },
+];
+const failingRollup = [
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "FAILURE",
+    startedAt: "2026-11-11T19:00:00Z",
+    workflowName: "test",
+  },
+];
+const twoChecksRollup = [
+  ...passingRollup,
+  {
+    name: "lint",
+    status: "COMPLETED",
+    conclusion: "SUCCESS",
+    startedAt: "2026-11-11T19:00:00Z",
+    workflowName: "test",
+  },
+];
 
 const statusContext = (context: string, state: string): RollupContext => ({ context, state });
+
+// one poll's single gh pr view read: the PR state and its check rollup
+const view = (
+  spec: { state?: string; mergeable?: string; mergeStateStatus?: string; rollup?: RollupContext[] } = {},
+): string =>
+  JSON.stringify({
+    state: spec.state ?? "OPEN",
+    mergeable: spec.mergeable ?? "MERGEABLE",
+    mergeStateStatus: spec.mergeStateStatus ?? "CLEAN",
+    baseRefName: "develop",
+    headRefName: "topic",
+    statusCheckRollup: spec.rollup ?? emptyRollup,
+  });
 
 function fakeRunner(script: (string | Error)[]): { run: Runner; calls: string[] } {
   const calls: string[] = [];
@@ -215,15 +270,11 @@ describe("PrVerifyCommand", () => {
   it("prints pass when open, current, mergeable, and every check passes", async () => {
     const { run, calls } = fakeRunner([
       "",
-      greenView,
+      view({ rollup: twoChecksRollup }),
       "0\t1",
       "0\t0",
-      JSON.stringify([
-        { name: "build", bucket: "pass" },
-        { name: "lint", bucket: "pass" },
-      ]),
       "",
-      greenView,
+      view({ rollup: twoChecksRollup }),
       "0\t1",
       "0\t0",
     ]);
@@ -236,11 +287,13 @@ describe("PrVerifyCommand", () => {
     expect(exit).toBe(0);
     expect(logs).toEqual(["pass"]);
     expect(errors).toEqual([]);
-    expect(calls).toContain("gh pr checks --json name,bucket");
+    expect(calls).toContain(
+      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup",
+    );
   });
 
   it("fails behind base without polling checks", async () => {
-    const { run, calls } = fakeRunner(["", greenView, "3\t0", "0\t0"]);
+    const { run, calls } = fakeRunner(["", view({ rollup: passingRollup }), "3\t0", "0\t0"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -253,14 +306,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails on mergeStateStatus without polling", async () => {
-    const view = JSON.stringify({
-      state: "OPEN",
-      mergeable: "MERGEABLE",
-      mergeStateStatus: "DIRTY",
-      baseRefName: "develop",
-      headRefName: "topic",
-    });
-    const { run, calls } = fakeRunner(["", view, "0\t1", "0\t0"]);
+    const { run, calls } = fakeRunner(["", view({ mergeStateStatus: "DIRTY", rollup: passingRollup }), "0\t1", "0\t0"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -273,7 +319,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails on a fail bucket despite gh exiting 0", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", JSON.stringify([{ name: "build", bucket: "fail" }])]);
+    const { run } = fakeRunner(["", view({ rollup: failingRollup }), "0\t1", "0\t0"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -287,13 +333,35 @@ describe("PrVerifyCommand", () => {
   it("pends through pending checks while the view reports BLOCKED", async () => {
     const { run } = fakeRunner([
       "",
-      blockedView,
+      view({ mergeStateStatus: "BLOCKED", rollup: runningRollup }),
       "0\t1",
       "0\t0",
-      pendingChecks,
-      passingChecks,
+      view({ rollup: passingRollup }),
       "",
-      greenView,
+      view({ rollup: passingRollup }),
+      "0\t1",
+      "0\t0",
+    ]);
+    const { logs } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
+  });
+
+  it("sees a re-queued run as pending and passes after it completes", async () => {
+    const { run } = fakeRunner([
+      "",
+      view({ mergeStateStatus: "BLOCKED", rollup: requeuedRollup }),
+      "0\t1",
+      "0\t0",
+      view({ rollup: rerunRollup }),
+      "",
+      view({ rollup: rerunRollup }),
       "0\t1",
       "0\t0",
     ]);
@@ -309,7 +377,14 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails when the view is still BLOCKED after the checks pass", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", blockedView, passingChecks]);
+    const { run } = fakeRunner([
+      "",
+      view({ rollup: passingRollup }),
+      "0\t1",
+      "0\t0",
+      "",
+      view({ mergeStateStatus: "BLOCKED", rollup: passingRollup }),
+    ]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -322,7 +397,15 @@ describe("PrVerifyCommand", () => {
   });
 
   it("re-checks currency before passing", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", greenView, "1\t0"]);
+    const { run } = fakeRunner([
+      "",
+      view({ rollup: passingRollup }),
+      "0\t1",
+      "0\t0",
+      "",
+      view({ rollup: passingRollup }),
+      "1\t0",
+    ]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -335,7 +418,68 @@ describe("PrVerifyCommand", () => {
   });
 
   it("passes a runless head when the view is CLEAN", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", noChecks, "", greenView, "0\t1", "0\t0"]);
+    const { run } = fakeRunner([
+      "",
+      view({ rollup: emptyRollup }),
+      "0\t1",
+      "0\t0",
+      view({ rollup: emptyRollup }),
+      view({ rollup: emptyRollup }),
+      "",
+      view({ rollup: emptyRollup }),
+      "0\t1",
+      "0\t0",
+    ]);
+    const { logs } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
+  });
+
+  it("waits out an empty rollup before passing a CLEAN head", async () => {
+    // 4 consecutive CLEAN+empty view reads: initial, two grace polls, final gate
+    const { run } = fakeRunner([
+      "",
+      view({ rollup: emptyRollup }),
+      "0\t1",
+      "0\t0",
+      view({ rollup: emptyRollup }),
+      view({ rollup: emptyRollup }),
+      "",
+      view({ rollup: emptyRollup }),
+      "0\t1",
+      "0\t0",
+    ]);
+    const { logs } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    command.timeout = "1";
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
+  });
+
+  it("resets the grace when checks appear", async () => {
+    const { run } = fakeRunner([
+      "",
+      view({ rollup: emptyRollup }),
+      "0\t1",
+      "0\t0",
+      view({ mergeStateStatus: "BLOCKED", rollup: queuedRollup }),
+      view({ rollup: passingRollup }),
+      "",
+      view({ rollup: passingRollup }),
+      "0\t1",
+      "0\t0",
+    ]);
     const { logs } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -348,7 +492,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("pends a runless head while the view is BLOCKED", async () => {
-    const { run } = fakeRunner(["", blockedView, "0\t1", "0\t0", noChecks]);
+    const { run } = fakeRunner(["", view({ mergeStateStatus: "BLOCKED", rollup: emptyRollup }), "0\t1", "0\t0"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -364,16 +508,14 @@ describe("PrVerifyCommand", () => {
   it("polls a check that queues after the checks read", async () => {
     const { run } = fakeRunner([
       "",
-      greenView,
+      view({ rollup: passingRollup }),
       "0\t1",
       "0\t0",
-      passingChecks,
       "",
-      blockedView,
-      pendingChecks,
-      passingChecks,
+      view({ mergeStateStatus: "BLOCKED", rollup: queuedRollup }),
+      view({ rollup: passingRollup }),
       "",
-      greenView,
+      view({ rollup: passingRollup }),
       "0\t1",
       "0\t0",
     ]);
@@ -389,22 +531,14 @@ describe("PrVerifyCommand", () => {
   });
 
   it("pends through UNKNOWN mergeability to pass", async () => {
-    const unknownView = JSON.stringify({
-      state: "OPEN",
-      mergeable: "UNKNOWN",
-      mergeStateStatus: "UNKNOWN",
-      baseRefName: "develop",
-      headRefName: "topic",
-    });
     const { run } = fakeRunner([
       "",
-      unknownView,
+      view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN" }),
       "0\t1",
       "0\t0",
-      greenView,
-      passingChecks,
+      view({ rollup: passingRollup }),
       "",
-      greenView,
+      view({ rollup: passingRollup }),
       "0\t1",
       "0\t0",
     ]);
@@ -420,14 +554,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("times out on UNKNOWN mergeability", async () => {
-    const unknownView = JSON.stringify({
-      state: "OPEN",
-      mergeable: "UNKNOWN",
-      mergeStateStatus: "UNKNOWN",
-      baseRefName: "develop",
-      headRefName: "topic",
-    });
-    const { run } = fakeRunner(["", unknownView, "0\t1", "0\t0"]);
+    const { run } = fakeRunner(["", view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN" }), "0\t1", "0\t0"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -441,7 +568,14 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails fast on a gh error that is not a runless head", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", new Error("gh: Not logged in")]);
+    const { run } = fakeRunner([
+      "",
+      view({ rollup: passingRollup }),
+      "0\t1",
+      "0\t0",
+      "",
+      new Error("gh: Not logged in"),
+    ]);
     captureConsole();
 
     const command = new PrVerifyCommand();
@@ -453,8 +587,31 @@ describe("PrVerifyCommand", () => {
     expect(exit).toBe(1);
   });
 
+  it("fails fast when the runner errors on the view", async () => {
+    const { run } = fakeRunner(["", new Error("gh: Not logged in")]);
+    captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+  });
+
+  it("fails when the runner errors at the final gate", async () => {
+    const { run } = fakeRunner(["", view({ rollup: passingRollup }), "0\t1", "0\t0", "", new Error("gh died")]);
+    captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(1);
+  });
+
   it("fails when local is ahead of the remote head", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "1\t0"]);
+    const { run } = fakeRunner(["", view({ rollup: passingRollup }), "0\t1", "1\t0"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -466,7 +623,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails when local is behind the remote head", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t2"]);
+    const { run } = fakeRunner(["", view({ rollup: passingRollup }), "0\t1", "0\t2"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -478,7 +635,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails when local has diverged from the remote head", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "1\t2"]);
+    const { run } = fakeRunner(["", view({ rollup: passingRollup }), "0\t1", "1\t2"]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -490,7 +647,16 @@ describe("PrVerifyCommand", () => {
   });
 
   it("forwards the PR selector to both gh calls", async () => {
-    const { run, calls } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", greenView, "0\t1", "0\t0"]);
+    const { run, calls } = fakeRunner([
+      "",
+      view({ rollup: passingRollup }),
+      "0\t1",
+      "0\t0",
+      "",
+      view({ rollup: passingRollup }),
+      "0\t1",
+      "0\t0",
+    ]);
     captureConsole();
 
     const command = new PrVerifyCommand();
@@ -498,9 +664,10 @@ describe("PrVerifyCommand", () => {
     command.forward = ["585"];
     const exit = await command.execute();
 
+    const forwardedCall =
+      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup 585";
     expect(exit).toBe(0);
-    expect(calls).toContain("gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName 585");
-    expect(calls).toContain("gh pr checks --json name,bucket 585");
+    expect(calls.filter((call) => call === forwardedCall)).toHaveLength(2);
   });
 
   it("binds its own flags and forwards the rest through the parser", async () => {
@@ -558,7 +725,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("times out with the pending check names", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", pendingChecks, pendingChecks]);
+    const { run } = fakeRunner(["", view({ rollup: runningRollup }), "0\t1", "0\t0", view({ rollup: runningRollup })]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -571,15 +738,22 @@ describe("PrVerifyCommand", () => {
     expect(errors.join("\n")).toContain("pending after 0m: build");
   });
 
+  it("times out marking never-started checks as queued", async () => {
+    const { run } = fakeRunner(["", view({ rollup: queuedRollup }), "0\t1", "0\t0", view({ rollup: queuedRollup })]);
+    const { errors } = captureConsole();
+
+    const command = new PrVerifyCommand();
+    command.runner = run;
+    command.interval = "0";
+    command.timeout = "0";
+    const exit = await command.execute();
+
+    expect(exit).toBe(2);
+    expect(errors.join("\n")).toContain("pending after 0m: queued: build");
+  });
+
   it("fails when the PR closes during the poll", async () => {
-    const closedView = JSON.stringify({
-      state: "CLOSED",
-      mergeable: "MERGEABLE",
-      mergeStateStatus: "CLEAN",
-      baseRefName: "develop",
-      headRefName: "topic",
-    });
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", closedView]);
+    const { run } = fakeRunner(["", view({ rollup: passingRollup }), "0\t1", "0\t0", "", view({ state: "CLOSED" })]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -592,25 +766,16 @@ describe("PrVerifyCommand", () => {
   });
 
   it("re-settles when the final view is UNKNOWN", async () => {
-    const unknownView = JSON.stringify({
-      state: "OPEN",
-      mergeable: "UNKNOWN",
-      mergeStateStatus: "UNKNOWN",
-      baseRefName: "develop",
-      headRefName: "topic",
-    });
     const { run } = fakeRunner([
       "",
-      greenView,
+      view({ rollup: passingRollup }),
       "0\t1",
       "0\t0",
-      passingChecks,
       "",
-      unknownView,
-      greenView,
-      passingChecks,
+      view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN" }),
+      view({ rollup: passingRollup }),
       "",
-      greenView,
+      view({ rollup: passingRollup }),
       "0\t1",
       "0\t0",
     ]);
@@ -625,27 +790,15 @@ describe("PrVerifyCommand", () => {
     expect(logs).toEqual(["pass"]);
   });
 
-  it("fails when the runner errors at the final gate", async () => {
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", new Error("gh died")]);
-    captureConsole();
-
-    const command = new PrVerifyCommand();
-    command.runner = run;
-    command.interval = "0";
-    const exit = await command.execute();
-
-    expect(exit).toBe(1);
-  });
-
   it("fails at the final gate on a conflicting PR", async () => {
-    const conflictingView = JSON.stringify({
-      state: "OPEN",
-      mergeable: "CONFLICTING",
-      mergeStateStatus: "CLEAN",
-      baseRefName: "develop",
-      headRefName: "topic",
-    });
-    const { run } = fakeRunner(["", greenView, "0\t1", "0\t0", passingChecks, "", conflictingView, passingChecks]);
+    const { run } = fakeRunner([
+      "",
+      view({ rollup: passingRollup }),
+      "0\t1",
+      "0\t0",
+      "",
+      view({ mergeable: "CONFLICTING", rollup: passingRollup }),
+    ]);
     const { errors } = captureConsole();
 
     const command = new PrVerifyCommand();
@@ -658,7 +811,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("falls back to the default interval on a non-numeric value", async () => {
-    const { run } = fakeRunner(["", blockedView, "0\t1", "0\t0", noChecks]);
+    const { run } = fakeRunner(["", view({ mergeStateStatus: "BLOCKED", rollup: emptyRollup }), "0\t1", "0\t0"]);
     captureConsole();
 
     const command = new PrVerifyCommand();
@@ -671,7 +824,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("falls back to the default interval on an empty value", async () => {
-    const { run } = fakeRunner(["", blockedView, "0\t1", "0\t0", noChecks]);
+    const { run } = fakeRunner(["", view({ mergeStateStatus: "BLOCKED", rollup: emptyRollup }), "0\t1", "0\t0"]);
     captureConsole();
 
     const command = new PrVerifyCommand();
@@ -686,7 +839,7 @@ describe("PrVerifyCommand", () => {
   it("uses the real runner when none is injected", async () => {
     vi.mocked(execRunner).mockImplementation((cmd: "git" | "gh", args: string[]) => {
       if (cmd === "gh") {
-        return args[1] === "view" ? greenView : passingChecks;
+        return view({ rollup: passingRollup });
       }
       if (args[0] === "rev-list") {
         return args.includes("origin/develop...HEAD") ? "0\t1" : "0\t0";

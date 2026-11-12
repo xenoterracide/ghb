@@ -24,6 +24,9 @@ ghb pr sync
 ghb pr verify [--interval SECONDS] [--timeout SECONDS] [PR NUMBER | URL | BRANCH]
 ```
 
+Verify waits out every pre-terminal check phase: queued, running, and
+the seconds after a push before check runs exist.
+
 Both commands are quiet on success and loud on failure. Reads are structured
 (`--json`, `git rev-list --count`); no human table is ever parsed.
 
