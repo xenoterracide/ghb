@@ -19,7 +19,12 @@ export class GetCommand extends Command {
     description: "Env file with secret names and values",
   });
 
+  // clipanion's contract is a Promise; the lookup underneath is sync
   public async execute(): Promise<number> {
+    return await Promise.resolve(this.get());
+  }
+
+  private get(): number {
     const envFilePath = this.envFile;
     const hasEnvFile = typeof envFilePath === "string" && envFilePath !== "";
 

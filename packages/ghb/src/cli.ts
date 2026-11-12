@@ -35,7 +35,7 @@ export function createCli(): Cli {
 const cliPath = process.argv[1] ?? "";
 const isMainModule =
   cliPath.endsWith("cli.ts") ||
-  (typeof require === "function" && typeof module === "object" && module !== null && require.main === module);
+  (typeof require === "function" && typeof module === "object" && require.main === module);
 
 if (isMainModule) {
   const cli = createCli();

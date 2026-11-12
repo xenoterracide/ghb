@@ -76,7 +76,7 @@ export class PrVerifyCommand extends Command {
       // mergeability is computed asynchronously after a push; let UNKNOWN settle
       while (view.mergeable === "UNKNOWN" || view.mergeStateStatus === "UNKNOWN") {
         if (Date.now() >= deadline) {
-          console.error(`pending after ${Math.floor(timeout / 60)}m: mergeability`);
+          console.error(`pending after ${String(Math.floor(timeout / 60))}m: mergeability`);
           return 2;
         }
         await sleep(interval);
@@ -116,7 +116,7 @@ export class PrVerifyCommand extends Command {
         // runless head: nothing more can arrive once the view is CLEAN
         if (view.mergeStateStatus !== "CLEAN") {
           if (Date.now() >= deadline) {
-            console.error(`pending after ${Math.floor(timeout / 60)}m`);
+            console.error(`pending after ${String(Math.floor(timeout / 60))}m`);
             return 2;
           }
           await sleep(interval);
@@ -133,7 +133,7 @@ export class PrVerifyCommand extends Command {
         if (checks.some((check) => check.bucket === "pending")) {
           if (Date.now() >= deadline) {
             const pending = checks.filter((check) => check.bucket === "pending").map((c) => c.name);
-            console.error(`pending after ${Math.floor(timeout / 60)}m: ${pending.join(", ")}`);
+            console.error(`pending after ${String(Math.floor(timeout / 60))}m: ${pending.join(", ")}`);
             return 2;
           }
           await sleep(interval);
@@ -172,9 +172,10 @@ export class PrVerifyCommand extends Command {
         } catch {
           recheck = undefined;
         }
-        if (recheck?.some((check) => check.bucket === "pending")) {
+        const hasPending = recheck?.some((check) => check.bucket === "pending") ?? false;
+        if (hasPending) {
           if (Date.now() >= deadline) {
-            console.error(`pending after ${Math.floor(timeout / 60)}m`);
+            console.error(`pending after ${String(Math.floor(timeout / 60))}m`);
             return 2;
           }
           await sleep(interval);
@@ -218,9 +219,9 @@ export class PrVerifyCommand extends Command {
     if (ahead > 0 && behind > 0) {
       failures.push(`diverged from origin/${view.headRefName}`);
     } else if (ahead > 0) {
-      failures.push(`ahead of origin/${view.headRefName} by ${ahead} commits`);
+      failures.push(`ahead of origin/${view.headRefName} by ${String(ahead)} commits`);
     } else if (behind > 0) {
-      failures.push(`behind origin/${view.headRefName} by ${behind} commits`);
+      failures.push(`behind origin/${view.headRefName} by ${String(behind)} commits`);
     }
 
     return failures;

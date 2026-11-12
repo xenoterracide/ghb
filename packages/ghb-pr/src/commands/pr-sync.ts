@@ -15,7 +15,12 @@ export class PrSyncCommand extends Command {
   // Optional runner for testing - uses the real runner if not set
   public runner?: Runner;
 
+  // clipanion's contract is a Promise; the runner underneath is sync
   public async execute(): Promise<number> {
+    return await Promise.resolve(this.sync());
+  }
+
+  private sync(): number {
     const run = this.runner ?? execRunner;
 
     run("git", ["fetch", "--all", "--prune", "--quiet"]);
@@ -35,7 +40,7 @@ export class PrSyncCommand extends Command {
     const localAhead = Number(run("git", ["rev-list", "--count", `origin/${branch}..HEAD`]));
 
     if (remoteAhead > 0 && localAhead > 0) {
-      console.error(`diverged: local ${localAhead} ahead, remote ${remoteAhead} ahead`);
+      console.error(`diverged: local ${String(localAhead)} ahead, remote ${String(remoteAhead)} ahead`);
       return 1;
     }
 
@@ -72,7 +77,7 @@ export class PrSyncCommand extends Command {
     if (behind > 0) {
       try {
         run("git", ["merge", base, "--quiet"]);
-        console.log(`merged ${behind} commits`);
+        console.log(`merged ${String(behind)} commits`);
       } catch {
         console.log(run("git", ["status", "--porcelain"]));
         return 1;

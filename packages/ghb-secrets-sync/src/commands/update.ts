@@ -30,7 +30,12 @@ export class UpdateCommand extends Command {
     description: "Secret value",
   });
 
+  // clipanion's contract is a Promise; the file work underneath is sync
   public async execute(): Promise<number> {
+    return await Promise.resolve(this.update());
+  }
+
+  private update(): number {
     const resolvedPath = resolve(this.file);
 
     // Check/fix existing file permissions
