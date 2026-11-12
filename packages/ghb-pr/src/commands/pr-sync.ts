@@ -15,9 +15,9 @@ export class PrSyncCommand extends Command {
   // Optional runner for testing - uses the real runner if not set
   public runner?: Runner;
 
-  // clipanion's contract is a Promise; the runner underneath is sync
+  // eslint-disable-next-line @typescript-eslint/require-await -- clipanion requires a Promise even for synchronous commands.
   public async execute(): Promise<number> {
-    return await Promise.resolve(this.sync());
+    return this.sync();
   }
 
   private sync(): number {

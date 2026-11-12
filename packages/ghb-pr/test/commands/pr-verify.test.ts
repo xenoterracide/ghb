@@ -356,9 +356,10 @@ describe("PrVerifyCommand", () => {
   it("binds its own flags and forwards the rest through the parser", async () => {
     let bound: { interval: string; timeout: string; forward: unknown } | undefined;
     class ProbeVerify extends PrVerifyCommand {
+      // eslint-disable-next-line @typescript-eslint/require-await -- clipanion requires a Promise even for synchronous probes.
       public async execute(): Promise<number> {
         bound = { interval: this.interval, timeout: this.timeout, forward: this.forward };
-        return await Promise.resolve(0);
+        return 0;
       }
     }
     const cli = new Cli({ binaryName: "ghb" });
@@ -383,8 +384,9 @@ describe("PrVerifyCommand", () => {
 
   it("shows help instead of forwarding --help to gh", async () => {
     class ProbeVerify extends PrVerifyCommand {
+      // eslint-disable-next-line @typescript-eslint/require-await -- clipanion requires a Promise even for synchronous probes.
       public async execute(): Promise<number> {
-        return await Promise.resolve(0);
+        return 0;
       }
     }
     const cli = new Cli({ binaryName: "ghb" });

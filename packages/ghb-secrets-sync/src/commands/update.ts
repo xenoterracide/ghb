@@ -30,9 +30,9 @@ export class UpdateCommand extends Command {
     description: "Secret value",
   });
 
-  // clipanion's contract is a Promise; the file work underneath is sync
+  // eslint-disable-next-line @typescript-eslint/require-await -- clipanion requires a Promise even for synchronous commands.
   public async execute(): Promise<number> {
-    return await Promise.resolve(this.update());
+    return this.update();
   }
 
   private update(): number {
