@@ -8,7 +8,6 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 GitHub Bridge: a TypeScript CLI devtools monorepo.
 
-<<<<<<< before updating
 - **`@xenoterracide/ghb`** — aggregated `ghb` CLI. Composes subcommands from
   the other packages.
 - **`@xenoterracide/ghb-pr`** — `pr sync` and `pr verify`: keep a PR branch
@@ -25,17 +24,9 @@ contributor workflow.
   toolchain through `.config/git/hooks/heal.sh`
 - `pnpm check` — prettier, eslint, typecheck, and tests
 - `pnpm lint` — eslint, prettier, and reuse
+- `pnpm lint:eslint` — ESLint check
 - `pnpm build` — build every package topologically
 - `pnpm test` — vitest with coverage across the workspace
-=======
-- `npm run contribute` — bootstrap tooling (run once after clone)
-- `pnpm check` — run all checks
-- `pnpm lint:prettier` — prettier check
-- `pnpm lint:reuse` — REUSE compliance check
-- `pnpm lint:eslint` — ESLint check
-- `pnpm typecheck` — TypeScript type check
-- `pnpm test` — vitest with coverage
->>>>>>> after updating
 
 ## Source of Truth
 

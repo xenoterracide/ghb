@@ -358,7 +358,7 @@ describe("PrVerifyCommand", () => {
     class ProbeVerify extends PrVerifyCommand {
       public async execute(): Promise<number> {
         bound = { interval: this.interval, timeout: this.timeout, forward: this.forward };
-        return 0;
+        return await Promise.resolve(0);
       }
     }
     const cli = new Cli({ binaryName: "ghb" });
@@ -384,7 +384,7 @@ describe("PrVerifyCommand", () => {
   it("shows help instead of forwarding --help to gh", async () => {
     class ProbeVerify extends PrVerifyCommand {
       public async execute(): Promise<number> {
-        return 0;
+        return await Promise.resolve(0);
       }
     }
     const cli = new Cli({ binaryName: "ghb" });

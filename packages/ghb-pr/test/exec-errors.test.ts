@@ -2,11 +2,12 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
-
 import { execFileSync } from "node:child_process";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { execRunner } from "../src/exec.js";
+
+// vitest hoists vi.mock above the imports regardless of position
+vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
 
 describe("execRunner output fallbacks", () => {
   afterEach(() => {

@@ -90,7 +90,7 @@ export class SyncCommand extends Command {
     }
 
     // Determine secret names to sync
-    let secretNames: string[] = [];
+    let secretNames: string[];
     if (hasSecrets) {
       secretNames = (this.secrets ?? "")
         .split(",")
@@ -110,7 +110,7 @@ export class SyncCommand extends Command {
     }
 
     // Determine target repos
-    let targetRepos: string[] = [];
+    let targetRepos: string[];
     if (typeof this.repo === "string" && this.repo !== "") {
       targetRepos = this.repo
         .split(",")
