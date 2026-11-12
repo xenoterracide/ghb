@@ -4,7 +4,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Cli } from "clipanion";
-import { PrVerifyCommand } from "../../src/commands/pr-verify.js";
+import { PrVerifyCommand, bucketOf, summarize, type RollupContext } from "../../src/commands/pr-verify.js";
 import { execRunner, type Runner } from "../../src/exec.js";
 
 vi.mock("../../src/exec.js", () => ({ execRunner: vi.fn() }));
@@ -29,6 +29,8 @@ const blockedView = JSON.stringify({
 const passingChecks = JSON.stringify([{ name: "build", bucket: "pass" }]);
 const pendingChecks = JSON.stringify([{ name: "build", bucket: "pending" }]);
 const noChecks = new Error("no checks reported on the 'topic' branch");
+
+const statusContext = (context: string, state: string): RollupContext => ({ context, state });
 
 function fakeRunner(script: (string | Error)[]): { run: Runner; calls: string[] } {
   const calls: string[] = [];
@@ -56,6 +58,145 @@ function captureConsole(): { logs: string[]; errors: string[] } {
   });
   return { logs, errors };
 }
+
+describe("summarize", () => {
+  it("maps CheckRun states", () => {
+    expect(bucketOf({ status: "COMPLETED", conclusion: "SUCCESS" })).toBe("pass");
+    expect(bucketOf({ status: "COMPLETED", conclusion: "SKIPPED" })).toBe("skipping");
+    expect(bucketOf({ status: "COMPLETED", conclusion: "NEUTRAL" })).toBe("skipping");
+    expect(bucketOf({ status: "COMPLETED", conclusion: "FAILURE" })).toBe("fail");
+    expect(bucketOf({ status: "COMPLETED", conclusion: "ERROR" })).toBe("fail");
+    expect(bucketOf({ status: "COMPLETED", conclusion: "TIMED_OUT" })).toBe("fail");
+    expect(bucketOf({ status: "COMPLETED", conclusion: "ACTION_REQUIRED" })).toBe("fail");
+    expect(bucketOf({ status: "COMPLETED", conclusion: "CANCELLED" })).toBe("cancel");
+    expect(bucketOf({ status: "QUEUED" })).toBe("pending");
+    expect(bucketOf({ status: "IN_PROGRESS" })).toBe("pending");
+  });
+
+  it("maps StatusContext states", () => {
+    expect(bucketOf({ state: "SUCCESS" })).toBe("pass");
+    expect(bucketOf({ state: "PENDING" })).toBe("pending");
+    expect(bucketOf({ state: "EXPECTED" })).toBe("pending");
+    expect(bucketOf({ state: "FAILURE" })).toBe("fail");
+    expect(bucketOf({ state: "ERROR" })).toBe("fail");
+  });
+
+  it("returns no checks for an empty or null rollup", () => {
+    expect(summarize([])).toEqual([]);
+    expect(summarize(null)).toEqual([]);
+    expect(summarize(undefined)).toEqual([]);
+  });
+
+  it("names a status by its context and marks started runs", () => {
+    expect(summarize([statusContext("codespell", "PENDING")])).toEqual([
+      { name: "codespell", bucket: "pending", started: false },
+    ]);
+  });
+
+  it("prefers a pending run over the completed run it re-queues", () => {
+    const rollup = [
+      {
+        name: "build",
+        status: "COMPLETED",
+        conclusion: "FAILURE",
+        startedAt: "2026-11-11T19:00:00Z",
+        workflowName: "test",
+      },
+      { name: "build", status: "QUEUED", startedAt: null, workflowName: "test" },
+    ];
+    expect(summarize(rollup)).toEqual([{ name: "build", bucket: "pending", started: false }]);
+  });
+
+  it("keeps one entry per name and reports a lone completed failure", () => {
+    const rollup = [
+      {
+        name: "pnpm / check",
+        status: "COMPLETED",
+        conclusion: "SUCCESS",
+        startedAt: "2026-11-11T19:00:00Z",
+        workflowName: "test",
+      },
+    ];
+    expect(summarize(rollup)).toEqual([{ name: "pnpm / check", bucket: "pass", started: true }]);
+  });
+
+  it("fails a group whose newest verdict is failure with no run in flight", () => {
+    const rollup = [
+      {
+        name: "build",
+        status: "COMPLETED",
+        conclusion: "SUCCESS",
+        startedAt: "2026-11-11T18:00:00Z",
+        workflowName: "test",
+      },
+      {
+        name: "build",
+        status: "COMPLETED",
+        conclusion: "FAILURE",
+        startedAt: "2026-11-11T19:00:00Z",
+        workflowName: "test",
+      },
+    ];
+    expect(summarize(rollup)).toEqual([{ name: "build", bucket: "fail", started: true }]);
+  });
+
+  it("clears a failed group whose re-run passed", () => {
+    const rollup = [
+      {
+        name: "build",
+        status: "COMPLETED",
+        conclusion: "FAILURE",
+        startedAt: "2026-11-11T18:00:00Z",
+        workflowName: "test",
+      },
+      {
+        name: "build",
+        status: "COMPLETED",
+        conclusion: "SUCCESS",
+        startedAt: "2026-11-11T19:00:00Z",
+        workflowName: "test",
+      },
+    ];
+    expect(summarize(rollup)).toEqual([{ name: "build", bucket: "pass", started: true }]);
+  });
+
+  it("keeps runs of different workflows apart when they share a name", () => {
+    const rollup = [
+      {
+        name: "build",
+        status: "COMPLETED",
+        conclusion: "SUCCESS",
+        startedAt: "2026-11-11T18:00:00Z",
+        workflowName: "test",
+      },
+      {
+        name: "build",
+        status: "COMPLETED",
+        conclusion: "FAILURE",
+        startedAt: "2026-11-11T19:00:00Z",
+        workflowName: "release",
+      },
+    ];
+    expect(summarize(rollup)).toEqual([
+      { name: "build", bucket: "pass", started: true },
+      { name: "build", bucket: "fail", started: true },
+    ]);
+  });
+
+  it("marks a group in flight on a runner as started", () => {
+    const rollup = [
+      {
+        name: "build",
+        status: "COMPLETED",
+        conclusion: "SUCCESS",
+        startedAt: "2026-11-11T18:00:00Z",
+        workflowName: "test",
+      },
+      { name: "build", status: "IN_PROGRESS", startedAt: "2026-11-11T19:00:00Z", workflowName: "test" },
+    ];
+    expect(summarize(rollup)).toEqual([{ name: "build", bucket: "pending", started: true }]);
+  });
+});
 
 describe("PrVerifyCommand", () => {
   afterEach(() => {

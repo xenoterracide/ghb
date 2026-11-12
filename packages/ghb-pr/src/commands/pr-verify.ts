@@ -5,9 +5,116 @@
 import { Command, Option } from "clipanion";
 import { execRunner, type Runner } from "../exec.js";
 
-interface Check {
+export type Bucket = "pass" | "skipping" | "fail" | "cancel" | "pending";
+
+export interface RollupContext {
+  name?: string; // CheckRun
+  context?: string; // StatusContext name
+  state?: string; // StatusContext: EXPECTED ERROR FAILURE PENDING SUCCESS
+  status?: string; // CheckRun: QUEUED IN_PROGRESS COMPLETED
+  conclusion?: string; // CheckRun: SUCCESS FAILURE ERROR TIMED_OUT ACTION_REQUIRED CANCELLED SKIPPED NEUTRAL
+  startedAt?: string | null;
+  workflowName?: string;
+}
+
+export interface Check {
+  name: string; // CheckRun name, StatusContext context
+  bucket: Bucket;
+  started: boolean; // at least one run of this name started on a runner
+}
+
+// gh's own bucketing: statuses carry their state, runs collapse either their
+// conclusion (completed) or their status (queued, running) into one
+export function bucketOf(context: RollupContext): Bucket {
+  const state = context.state ?? (context.status === "COMPLETED" ? context.conclusion : context.status) ?? "";
+  switch (state) {
+    case "SUCCESS":
+      return "pass";
+    case "SKIPPED":
+    case "NEUTRAL":
+      return "skipping";
+    case "ERROR":
+    case "FAILURE":
+    case "TIMED_OUT":
+    case "ACTION_REQUIRED":
+      return "fail";
+    case "CANCELLED":
+      return "cancel";
+    default:
+      // EXPECTED, REQUESTED, WAITING, QUEUED, PENDING, IN_PROGRESS, STALE
+      return "pending";
+  }
+}
+
+// when a run reached its runner; a run that never did has no startedAt, and
+// an unparseable timestamp must not outrank a real one
+const startOf = (context: RollupContext): number => {
+  if (context.startedAt === undefined || context.startedAt === null) {
+    return Number.NEGATIVE_INFINITY;
+  }
+  const at = Date.parse(context.startedAt);
+  return Number.isNaN(at) ? Number.NEGATIVE_INFINITY : at;
+};
+
+// every run of one check name, folded as the rollup is read
+interface Group {
   name: string;
-  bucket: string;
+  pending: boolean; // a run in flight may still pass, so it outranks finished runs
+  pendingStarted: boolean; // an in-flight run reached a runner, not just the queue
+  bucket: Bucket; // newest finished run's verdict, pending until one exists
+  started: boolean; // whether the newest finished run reached a runner
+  newestAt: number | undefined; // its startedAt, so a later finish supersedes it
+}
+
+// one Check per named group: statuses group under their context, runs under
+// their name within their workflow, so two workflows naming a check the same
+// stay distinct. an in-flight run wins the name — the re-queue it represents
+// may still pass — otherwise the newest finished run decides, which is what
+// gh's eliminateDuplicates means to do under cli/cli#14371
+export function summarize(rollup: RollupContext[] | null | undefined): Check[] {
+  const groups = new Map<string, Group>();
+
+  for (const context of rollup ?? []) {
+    // nul can never appear in a GitHub name, so the nul-separated keys cannot
+    // collide across the status and check namespaces
+    const hasContext = context.context !== undefined && context.context !== "";
+    const name = context.name ?? context.context ?? "";
+    const key = hasContext ? `status\0${context.context}` : `check\0${name}\0${context.workflowName ?? ""}`;
+
+    let group = groups.get(key);
+    if (group === undefined) {
+      group = {
+        name,
+        pending: false,
+        pendingStarted: false,
+        bucket: "pending",
+        started: false,
+        newestAt: undefined,
+      };
+      groups.set(key, group);
+    }
+
+    const bucket = bucketOf(context);
+    const at = startOf(context);
+    if (bucket === "pending") {
+      group.pending = true;
+      group.pendingStarted ||= at !== Number.NEGATIVE_INFINITY;
+    } else if (group.newestAt === undefined || at > group.newestAt) {
+      group.newestAt = at;
+      group.bucket = bucket;
+      group.started = at !== Number.NEGATIVE_INFINITY;
+    }
+  }
+
+  const checks: Check[] = [];
+  for (const group of groups.values()) {
+    checks.push(
+      group.pending
+        ? { name: group.name, bucket: "pending", started: group.pendingStarted }
+        : { name: group.name, bucket: group.bucket, started: group.started },
+    );
+  }
+  return checks;
 }
 
 interface PrView {
