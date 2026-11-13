@@ -60,7 +60,9 @@ describe("findReposByLabel", () => {
 
     expect(result).toEqual(["myorg/repo1", "myorg/repo2"]);
   });
+});
 
+describe("findReposByLabel", () => {
   it("should use current user when owner not provided", () => {
     const runner = createFakeRunner(
       new Map([
@@ -76,7 +78,9 @@ describe("findReposByLabel", () => {
 
     expect(result).toEqual(["currentuser/repo1"]);
   });
+});
 
+describe("findReposByLabel", () => {
   it("should return empty array when no repos", () => {
     const runner = createFakeRunner(
       new Map([["gh repo list myorg --topic empty --no-archived --limit 1000 --json nameWithOwner", "[]"]]),
@@ -139,7 +143,9 @@ describe("setSecret", () => {
     expect(calls[0].args).toEqual(["secret", "set", "API_KEY", "--repo", "owner/repo"]);
     expect(calls[0].opts?.input).toBe("secret123");
   });
+});
 
+describe("setSecret", () => {
   it("should throw on error", () => {
     const runner = createFakeRunner(new Map());
 
