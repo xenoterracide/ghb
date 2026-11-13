@@ -14,6 +14,8 @@ GitHub Bridge: a TypeScript CLI devtools monorepo.
   current and prove it is mergeable and green.
 - **`@xenoterracide/ghb-secrets-sync`** — GitHub repository secret sync from
   environment variables or local env files.
+- **`@xenoterracide/ghb-signing`** — `signing check`, `renew`, and `export`:
+  OpenPGP signing key lifecycle for CI publishing.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the repository layout, setup, and
 contributor workflow.
@@ -24,6 +26,7 @@ contributor workflow.
   toolchain through `.config/git/hooks/heal.sh`
 - `pnpm check` — prettier, eslint, typecheck, and tests
 - `pnpm lint` — eslint, prettier, and reuse
+- `pnpm lint:eslint` — ESLint check
 - `pnpm build` — build every package topologically
 - `pnpm test` — vitest with coverage across the workspace
 
@@ -56,7 +59,9 @@ checkout.
 - **Conventional commits.** See
   [`git-conventional-commits.yaml`](./git-conventional-commits.yaml).
 - **Squash merge.** Do not force push.
-- **SPDX headers on every file.** `lint-staged` adds them; CI checks
+- **Plan tracking.** Tick a plan's checkboxes as its tasks complete; the
+  committed plan is the completion record.
+- **SPDX headers on every file.** `lint-staged` adds them. CI checks
   compliance. Do not remove them. For markdown, add the SPDX HTML comment
   yourself — `reuse annotate` breaks YAML frontmatter, so lint-staged
   skips it there.

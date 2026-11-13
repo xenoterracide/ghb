@@ -25,6 +25,16 @@
   recreateWhen: "always",
   // Remove the 'controls' section from PR body to avoid config noise in squash commits
   prBodyTemplate: "{{{header}}}{{{table}}}{{{notes}}}{{{changelogs}}}{{{footer}}}",
+  // supply-chain cooldown: a release must be 3 days old before Renovate
+  // proposes it — hijacked packages are pulled within hours, and the
+  // security:minimumReleaseAge* presets hold the same 3 days. Datasources
+  // without release timestamps cannot age and raise immediately, each
+  // bypass flagged on the dashboard
+  minimumReleaseAge: "3 days",
+  minimumReleaseAgeBehaviour: "timestamp-optional",
+  // strict keeps held updates branchless until they age; without it the
+  // young version lands in a branch with a pending yellow check
+  internalChecksFilter: "strict",
   hostRules: [
     {
       hostType: "maven",
@@ -39,7 +49,7 @@
       // extracted from the tag.
       customType: "regex",
       managerFilePatterns: [
-        "(\\.(cjs|cts|ts|java|xml|json5|jsonc|toml|ya?ml|md)|\\.editorconfig|\\.envrc|\\.gitignore|\\.gitattributes|\\.prettierignore|\\.config/git/hooks/[^/]+)(\\.jinja)?$",
+        "/(\\.(cjs|cts|ts|java|xml|json5|jsonc|toml|ya?ml|md)|\\.editorconfig|\\.envrc|\\.gitignore|\\.gitattributes|\\.prettierignore|\\.config/git/hooks/[^/]+)(\\.jinja)?$/",
       ],
       matchStrings: ["Copyright © (?<from>20\\d{2})-20(?<currentValue>\\d{2}) "],
       depNameTemplate: "copyright-year",
@@ -53,7 +63,7 @@
       // merges the start year with the comparable two-digit end
       customType: "regex",
       managerFilePatterns: [
-        "(\\.(cjs|cts|ts|java|xml|json5|jsonc|toml|ya?ml|md)|\\.editorconfig|\\.envrc|\\.gitignore|\\.gitattributes|\\.prettierignore|\\.config/git/hooks/[^/]+)(\\.jinja)?$",
+        "/(\\.(cjs|cts|ts|java|xml|json5|jsonc|toml|ya?ml|md)|\\.editorconfig|\\.envrc|\\.gitignore|\\.gitattributes|\\.prettierignore|\\.config/git/hooks/[^/]+)(\\.jinja)?$/",
       ],
       matchStrings: ["Copyright © (?<from>20\\d{2}) ", "Copyright © 20(?<currentValue>\\d{2}) "],
       matchStringsStrategy: "combination",
@@ -72,14 +82,18 @@
     },
     {
       // A conflicted copier update leaves `.rej` files, which fail
-      // `lint:reuse`; green checks mean the update landed cleanly, so it
+      // `lint:reuse`, or inline conflict markers, which fail prettier
+      // and pnpm; green checks mean the update landed cleanly, so it
       // can automerge. No enable flag is needed: `copier.yml` carries no
       // `_tasks`, so the hosted app can update without `--trust`.
       matchManagers: ["copier"],
       automerge: true,
+      // the template is first-party code, tagged behind the authoring
+      // suite; the hold exists for the registry-hijack window
+      minimumReleaseAge: null,
     },
     {
-      matchManagers: ["asdf", "maven", "maven-wrapper", "npm", "pyenv", "pep621", "github-actions"],
+      matchManagers: ["asdf", "maven", "maven-wrapper", "npm", "pyenv", "pep621", "github-actions", "custom.regex"],
       branchTopic: "{{{depNameSanitized}}}-{{{newVersion}}}",
       automerge: true,
     },
@@ -99,9 +113,20 @@
       // lockFileMaintenance object, so restore the default topic here,
       // after them; negative priority defers maintenance behind
       // dependency-update PRs within a run
+      //
+      // maintenance has no per-release timestamp to age, and pnpm
+      // already guards regeneration with its built-in 24h
+      // minimumReleaseAge, so the global hold cannot apply here
       matchUpdateTypes: ["lockFileMaintenance"],
+      minimumReleaseAge: null,
       branchTopic: "lock-file-maintenance",
       prPriority: -1,
+    },
+    {
+      // types Renovate cannot age carry no release timestamp; the
+      // security:minimumReleaseAge* presets drop them after the fact
+      matchUpdateTypes: ["bump", "lockfileUpdate", "pin", "replacement", "rollback"],
+      minimumReleaseAge: null,
     },
     {
       // the copyright-year manager's whole job is a green automerge

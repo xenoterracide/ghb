@@ -32,7 +32,7 @@ export function listSecretNames(repo: string, runner: CommandRunner = defaultRun
     return parsed.map((s) => s.name);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    throw new Error(`Failed to list secrets for ${repo}: ${msg}`);
+    throw new Error(`Failed to list secrets for ${repo}: ${msg}`, { cause: e });
   }
 }
 
@@ -44,7 +44,7 @@ export function setSecret(opts: SetSecretOptions): void {
     runner.runArgv("gh", ["secret", "set", name, "--repo", repo], { input: value });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    throw new Error(`Failed to set secret "${name}" on ${repo}: ${msg}`);
+    throw new Error(`Failed to set secret "${name}" on ${repo}: ${msg}`, { cause: e });
   }
 }
 
@@ -76,7 +76,7 @@ export function findReposByLabel(label: string, owner?: string, runner: CommandR
     return parsed.map((r) => r.nameWithOwner);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    throw new Error(`Failed to list repos for owner "${ownerToUse}" with label "${label}": ${msg}`);
+    throw new Error(`Failed to list repos for owner "${ownerToUse}" with label "${label}": ${msg}`, { cause: e });
   }
 }
 

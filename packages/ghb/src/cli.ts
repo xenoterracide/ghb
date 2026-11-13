@@ -11,6 +11,7 @@
 import { Cli, Builtins } from "clipanion";
 import { PrSyncCommand, PrVerifyCommand } from "@xenoterracide/ghb-pr";
 import { GetCommand, SyncCommand, UpdateCommand } from "@xenoterracide/ghb-secrets-sync";
+import { CheckCommand, ExportCommand, RenewCommand } from "@xenoterracide/ghb-signing";
 
 export function createCli(): Cli {
   const cli = new Cli({
@@ -24,6 +25,9 @@ export function createCli(): Cli {
   cli.register(SyncCommand);
   cli.register(UpdateCommand);
   cli.register(GetCommand);
+  cli.register(CheckCommand);
+  cli.register(RenewCommand);
+  cli.register(ExportCommand);
 
   return cli;
 }
@@ -35,7 +39,7 @@ export function createCli(): Cli {
 const cliPath = process.argv[1] ?? "";
 const isMainModule =
   cliPath.endsWith("cli.ts") ||
-  (typeof require === "function" && typeof module === "object" && module !== null && require.main === module);
+  (typeof require === "function" && typeof module === "object" && require.main === module);
 
 if (isMainModule) {
   const cli = createCli();

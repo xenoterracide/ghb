@@ -8,6 +8,14 @@ import { resolve } from "path";
 import { logger } from "../logger.js";
 import { checkFilePermissions } from "../fs-utils.js";
 
+function appendKey(lines: string[], key: string, value: string): void {
+  // Add a blank line if file doesn't end with one
+  if (lines.length > 0 && lines[lines.length - 1] !== "") {
+    lines.push("");
+  }
+  lines.push(`${key}=${value}`);
+}
+
 export class UpdateCommand extends Command {
   public static paths = [["secrets", "update"]];
 
@@ -30,52 +38,45 @@ export class UpdateCommand extends Command {
     description: "Secret value",
   });
 
+  // eslint-disable-next-line @typescript-eslint/require-await -- clipanion requires a Promise even for synchronous commands.
   public async execute(): Promise<number> {
+    return this.update();
+  }
+
+  private update(): number {
     const resolvedPath = resolve(this.file);
+    const { lines, found } = this.rewrite(this.readLines(resolvedPath));
 
-    // Check/fix existing file permissions
-    if (existsSync(resolvedPath)) {
-      checkFilePermissions(resolvedPath);
-    }
-
-    // Read existing content or start fresh
-    let content = "";
-    if (existsSync(resolvedPath)) {
-      content = readFileSync(resolvedPath, "utf8");
-    }
-
-    const lines = content.split("\n");
-    let found = false;
-    const newLines: string[] = [];
-
-    for (const line of lines) {
-      // Check if this is a key=value line
-      const eqIndex = line.indexOf("=");
-      if (eqIndex > 0 && !line.startsWith("#")) {
-        const lineKey = line.slice(0, eqIndex).trim();
-        if (lineKey === this.key) {
-          newLines.push(`${this.key}=${this.value}`);
-          found = true;
-          continue;
-        }
-      }
-      newLines.push(line);
-    }
-
-    // If key not found, append it
-    if (!found) {
-      // Add a blank line if file doesn't end with one
-      if (newLines.length > 0 && newLines[newLines.length - 1] !== "") {
-        newLines.push("");
-      }
-      newLines.push(`${this.key}=${this.value}`);
-      logger.info(`Added ${this.key} to ${this.file}`);
-    } else {
+    if (found) {
       logger.info(`Updated ${this.key} in ${this.file}`);
+    } else {
+      appendKey(lines, this.key, this.value);
+      logger.info(`Added ${this.key} to ${this.file}`);
     }
 
     // Write with mode 0600 from the start (or maintain existing)
-    writeFileSync(resolvedPath, newLines.join("\n") + "\n", { encoding: "utf8", mode: 0o600 });
+    writeFileSync(resolvedPath, lines.join("\n") + "\n", { encoding: "utf8", mode: 0o600 });
     return 0;
+  }
+
+  private readLines(resolvedPath: string): string[] {
+    if (!existsSync(resolvedPath)) {
+      return [""];
+    }
+    checkFilePermissions(resolvedPath);
+    return readFileSync(resolvedPath, "utf8").split("\n");
+  }
+
+  private rewrite(lines: string[]): { lines: string[]; found: boolean } {
+    const found = lines.some((line) => this.isMatch(line));
+    return { lines: lines.map((line) => (this.isMatch(line) ? `${this.key}=${this.value}` : line)), found };
+  }
+
+  private isMatch(line: string): boolean {
+    const eqIndex = line.indexOf("=");
+    if (eqIndex <= 0 || line.startsWith("#")) {
+      return false;
+    }
+    return line.slice(0, eqIndex).trim() === this.key;
   }
 }

@@ -6,3 +6,9 @@ packages:
   - "packages/*"
 allowBuilds:
   esbuild: true
+
+# pnpm's release-age gate, written down so it cannot be softened
+# silently: a day-0 pin fails loudly here instead of pnpm appending a
+# minimumReleaseAgeExclude bypass to this file
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true

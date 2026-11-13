@@ -35,9 +35,21 @@ ghb pr sync
 # Verify the current PR is current, mergeable, and every check passes
 # Prints pass, or one line per failed dimension
 # Exits 0 on pass, 1 on failure, 2 when checks stay pending past the timeout
+# Waits out queued and not-yet-created checks before passing
 ghb pr verify [--interval SECONDS] [--timeout SECONDS] [PR NUMBER | URL | BRANCH]
 
+# Check the signing subkey expiry
+# Exits 0 healthy, 1 expired or inside the renewal window, 2 when the key is missing
+ghb signing check [--key FINGERPRINT] [--days 30]
+
+# Extend the primary key and the signing subkey expiry, then print before/after dates
+ghb signing renew [--key FINGERPRINT] [--duration 1y]
+
+# Export the armored secret key to stdout
+printf '%s' "$PASSPHRASE" | ghb signing export > key.asc
+
 # Sync GitHub secrets from an env file
+# Env values use a prefix: env:VAR, gpg:FINGERPRINT; val: and file: are deprecated for secret values
 ghb secrets sync --env-file secrets.env
 ghb secrets sync --env-file secrets.env --repo owner/target
 ghb secrets sync --secrets API_KEY,SECRET --repo owner/target
@@ -54,6 +66,7 @@ See the package READMEs for more detail:
 - [`packages/ghb`](./packages/ghb/README.md) — the `ghb` CLI
 - [`packages/ghb-pr`](./packages/ghb-pr/README.md) — `pr sync` and `pr verify`
 - [`packages/ghb-secrets-sync`](./packages/ghb-secrets-sync/README.md) — secrets sync
+- [`packages/ghb-signing`](./packages/ghb-signing/README.md) — signing key lifecycle
 
 ## Development
 
