@@ -37,6 +37,7 @@
   "scripts": {
     "build": "tsc",
     "prepack": "pnpm build",
+    "signing": "tsx src/cli.ts",
     "test": "vitest run && pnpm typecheck",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

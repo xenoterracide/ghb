@@ -14,3 +14,6 @@ export { exportSecretKey, listKeys, setExpiry } from "./gpg.js";
 
 // Stdin passphrase reading
 export { readAll, readPassphrase } from "./passphrase.js";
+
+// Commands
+export { CheckCommand } from "./commands/check.js";
