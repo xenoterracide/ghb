@@ -88,6 +88,9 @@
       // `_tasks`, so the hosted app can update without `--trust`.
       matchManagers: ["copier"],
       automerge: true,
+      // the template is first-party code, tagged behind the authoring
+      // suite; the hold exists for the registry-hijack window
+      minimumReleaseAge: null,
     },
     {
       matchManagers: ["asdf", "maven", "maven-wrapper", "npm", "pyenv", "pep621", "github-actions", "custom.regex"],

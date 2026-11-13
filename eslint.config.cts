@@ -7,9 +7,11 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import jsonPluginImport from "@eslint/json";
 import markdown from "@eslint/markdown";
+import sonarImport from "eslint-plugin-sonarjs";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 const jsonPlugin = (jsonPluginImport as { default?: typeof jsonPluginImport }).default ?? jsonPluginImport;
+const sonarjs = (sonarImport as { default?: typeof sonarImport }).default ?? sonarImport;
 
 export default defineConfig([
   globalIgnores(["**/dist/", "**/build/", "node_modules/", ".agents/", ".superpowers/", ".venv/", "coverage/"]),
@@ -27,6 +29,7 @@ export default defineConfig([
         project: "./tsconfig.eslint.json",
       },
     },
+    plugins: { sonarjs },
     rules: {
       // Strict rules from mira
 
@@ -42,7 +45,18 @@ export default defineConfig([
       "@typescript-eslint/init-declarations": "error",
       "prefer-destructuring": "off",
       "@typescript-eslint/prefer-destructuring": "error",
+<<<<<<< before updating
 
+=======
+      "complexity": ["error", 10],
+      "max-classes-per-file": "error",
+      "max-depth": ["error", 3],
+      "max-lines": "error",
+      "max-lines-per-function": ["error", { max: 25 }],
+      "max-statements": ["error", 20, { ignoreTopLevelFunctions: false }],
+      "sonarjs/cognitive-complexity": "error",
+      "sonarjs/expression-complexity": ["error", { max: 3 }],
+>>>>>>> after updating
       "@typescript-eslint/consistent-type-exports": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/explicit-member-accessibility": "error",
