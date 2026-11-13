@@ -4,10 +4,17 @@
 
 import { existsSync, readFileSync, statSync } from "fs";
 import { resolve, dirname } from "path";
+import { exportSecretKey, isValidFingerprint } from "@xenoterracide/ghb-signing";
 import type { EnvEntry } from "./types.js";
+import type { CommandRunner } from "./types.js";
 import { checkFilePermissions } from "./fs-utils.js";
 import { logger } from "./logger.js";
 import { UserError } from "./errors.js";
+
+export interface ResolveOpts {
+  runner?: CommandRunner;
+  passphrase?: string;
+}
 
 function parseValue(value: string, key: string, baseDir: string): EnvEntry {
   const colonIndex = value.indexOf(":");
@@ -32,8 +39,14 @@ function parseValue(value: string, key: string, baseDir: string): EnvEntry {
     case "val": {
       return { type: "value", value: rest };
     }
+    case "gpg": {
+      if (!isValidFingerprint(rest)) {
+        throw new UserError(`gpg: value must be a full fingerprint; got "${rest}" for key "${key}"`);
+      }
+      return { type: "gpg", value: rest };
+    }
     default: {
-      throw new UserError(`Unknown protocol "${protocol}:". Use env:, file:, or val: for key "${key}"`);
+      throw new UserError(`Unknown protocol "${protocol}:". Use env:, file:, val:, or gpg: for key "${key}"`);
     }
   }
 }
@@ -69,10 +82,12 @@ export function parseEnvFile(filePath: string): Record<string, EnvEntry> {
   return entries;
 }
 
+// eslint-disable-next-line @typescript-eslint/max-params -- brief-mandated signature
 export function resolveSecretValue(
   name: string,
   envFileEntries?: Record<string, EnvEntry>,
   explicitValue?: string,
+  opts?: ResolveOpts,
 ): string | undefined {
   // Priority 1: Explicit value
   if (explicitValue !== undefined) {
@@ -118,6 +133,15 @@ export function resolveSecretValue(
         }
         const content = readFileSync(entry.value, "utf8");
         return content;
+      }
+      case "gpg": {
+        try {
+          return exportSecretKey(entry.value, { runner: opts?.runner, passphrase: opts?.passphrase });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          logger.warn(`Warning: Could not export GPG key for secret "${name}": ${msg}`);
+          return undefined;
+        }
       }
     }
   }

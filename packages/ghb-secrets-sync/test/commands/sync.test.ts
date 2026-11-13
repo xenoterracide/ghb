@@ -266,4 +266,79 @@ describe("SyncCommand", () => {
 
     expect(result).toBe(1);
   });
+
+  it("should sync gpg: entries by exporting the secret key", async () => {
+    const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
+    const armor = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nabc\n-----END PGP PRIVATE KEY BLOCK-----\n";
+    const envPath = join(tmpDir, "secrets.env");
+    writeFileSync(envPath, `GPG_SIGNING_KEY=gpg:${fpr}\nPLAIN_SECRET=val:plain\n`, "utf8");
+
+    const gpgKey = `gpg --batch --pinentry-mode loopback --passphrase-fd 0 --armor --export-secret-keys ${fpr}`;
+    const responses = new Map([
+      [gpgKey, armor],
+      ["gh secret set GPG_SIGNING_KEY --repo owner/target", ""],
+      ["gh secret set PLAIN_SECRET --repo owner/target", ""],
+    ]);
+    const calls: { cmd: string; args: string[]; input?: string }[] = [];
+    const runner = {
+      runArgv: (cmd: string, args: string[], opts?: { input?: string }): string => {
+        calls.push({ cmd, args, input: opts?.input });
+        const key = `${cmd} ${args.join(" ")}`;
+        const response = responses.get(key);
+        if (response === undefined) {
+          throw new Error(`Unexpected command: ${key}`);
+        }
+        return response;
+      },
+    };
+
+    const cmd = new SyncCommand();
+    cmd.runner = runner;
+    cmd.envFile = envPath;
+    cmd.repo = "owner/target";
+    cmd.passphrase = "pass";
+    cmd.dryRun = false;
+
+    const result = await cmd.execute();
+
+    expect(result).toBe(0);
+    expect(calls.some((c) => c.cmd === "gpg" && c.input === "pass")).toBe(true);
+  });
+
+  it("should skip a gpg: entry when export fails and still sync other secrets", async () => {
+    const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
+    const envPath = join(tmpDir, "secrets.env");
+    writeFileSync(envPath, `GPG_SIGNING_KEY=gpg:${fpr}\nPLAIN_SECRET=val:plain\n`, "utf8");
+
+    const responses = new Map([["gh secret set PLAIN_SECRET --repo owner/target", ""]]);
+    const calls: { cmd: string; args: string[]; input?: string }[] = [];
+    const runner = {
+      runArgv: (cmd: string, args: string[], opts?: { input?: string }): string => {
+        calls.push({ cmd, args, input: opts?.input });
+        const key = `${cmd} ${args.join(" ")}`;
+        if (cmd === "gpg" && args.includes("--export-secret-keys")) {
+          throw new Error("no secret key");
+        }
+        const response = responses.get(key);
+        if (response === undefined) {
+          throw new Error(`Unexpected command: ${key}`);
+        }
+        return response;
+      },
+    };
+
+    const cmd = new SyncCommand();
+    cmd.runner = runner;
+    cmd.envFile = envPath;
+    cmd.repo = "owner/target";
+    cmd.passphrase = "pass";
+    cmd.dryRun = false;
+
+    const result = await cmd.execute();
+
+    expect(result).toBe(0);
+    expect(calls.some((c) => c.cmd === "gpg")).toBe(true);
+    expect(calls.some((c) => c.cmd === "gh" && c.args.includes("GPG_SIGNING_KEY"))).toBe(false);
+    expect(calls.some((c) => c.cmd === "gh" && c.args.includes("PLAIN_SECRET"))).toBe(true);
+  });
 });

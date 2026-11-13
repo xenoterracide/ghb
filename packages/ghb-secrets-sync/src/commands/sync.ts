@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { Command, Option } from "clipanion";
+import { readPassphrase } from "@xenoterracide/ghb-signing";
 import { logger, setLogLevel } from "../logger.js";
 import { parseEnvFile, resolveSecretValue } from "../env.js";
 import { setSecret, getCurrentRepo, findReposByLabel } from "../github.js";
@@ -47,6 +48,9 @@ export class SyncCommand extends Command {
 
   // Optional runner for testing - uses default gh runner if not set
   public runner?: CommandRunner;
+
+  // Optional passphrase for gpg: entries - read from stdin if not set
+  public passphrase?: string;
 
   public async execute(): Promise<number> {
     try {
@@ -137,10 +141,13 @@ export class SyncCommand extends Command {
 
     // Resolve all secret values
     const secretsToSync: { name: string; value: string }[] = [];
+    const needsPassphrase =
+      envFileEntries !== undefined && Object.values(envFileEntries).some((entry) => entry.type === "gpg");
+    const passphrase = this.passphrase ?? (needsPassphrase ? await readPassphrase(process.stdin) : undefined);
 
     for (const name of secretNames) {
       logger.debug({ name }, "Resolving secret");
-      const value = resolveSecretValue(name, envFileEntries);
+      const value = resolveSecretValue(name, envFileEntries, undefined, { runner: this.runner, passphrase });
       if (value === undefined) {
         logger.warn(`Warning: Could not resolve value for secret "${name}", skipping`);
         continue;

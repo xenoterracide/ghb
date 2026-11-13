@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { Command, Option } from "clipanion";
+import { readPassphrase } from "@xenoterracide/ghb-signing";
 import { parseEnvFile, resolveSecretValue } from "../env.js";
+import type { CommandRunner, EnvEntry } from "../types.js";
 
 export class GetCommand extends Command {
   public static paths = [["secrets", "get"]];
@@ -19,12 +21,17 @@ export class GetCommand extends Command {
     description: "Env file with secret names and values",
   });
 
-  // eslint-disable-next-line @typescript-eslint/require-await -- clipanion requires a Promise even for synchronous commands.
+  // Optional runner for testing - uses default gpg/gh runner if not set
+  public runner?: CommandRunner;
+
+  // Optional passphrase for gpg: entries - read from stdin if not set
+  public passphrase?: string;
+
   public async execute(): Promise<number> {
-    return this.get();
+    return await this.get();
   }
 
-  private get(): number {
+  private async get(): Promise<number> {
     const envFilePath = this.envFile;
     const hasEnvFile = typeof envFilePath === "string" && envFilePath !== "";
 
@@ -32,7 +39,10 @@ export class GetCommand extends Command {
 
     if (hasEnvFile) {
       const envFileEntries = parseEnvFile(envFilePath);
-      value = resolveSecretValue(this.name, envFileEntries);
+      const entry = envFileEntries[this.name] as EnvEntry | undefined;
+      const needsPassphrase = entry?.type === "gpg";
+      const passphrase = this.passphrase ?? (needsPassphrase ? await readPassphrase(process.stdin) : undefined);
+      value = resolveSecretValue(this.name, envFileEntries, undefined, { runner: this.runner, passphrase });
     } else {
       // Fall back to environment variable
       value = process.env[this.name];

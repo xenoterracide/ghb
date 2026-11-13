@@ -103,4 +103,30 @@ describe("GetCommand", () => {
     expect(exit).toBe(1);
     expect(err.join("")).toContain("Could not resolve secret");
   });
+
+  it("resolves a gpg: entry by exporting the secret key", async () => {
+    const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
+    const armor = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nabc\n-----END PGP PRIVATE KEY BLOCK-----\n";
+    const envPath = join(tmpDir, ".env");
+    writeFileSync(envPath, `GPG_SIGNING_KEY=gpg:${fpr}\n`, "utf8");
+    const { out } = captureStreams();
+
+    const command = new GetCommand();
+    command.name = "GPG_SIGNING_KEY";
+    command.envFile = envPath;
+    command.passphrase = "pass";
+    command.runner = {
+      runArgv: (cmd: string, args: string[]): string => {
+        if (cmd === "gpg" && args.includes("--export-secret-keys")) {
+          return armor;
+        }
+        throw new Error(`Unexpected command: ${cmd} ${args.join(" ")}`);
+      },
+    };
+
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(out.join("")).toBe(armor);
+  });
 });

@@ -115,6 +115,32 @@ describe("parseEnvFile", () => {
     expect(() => parseEnvFile(envPath)).toThrow('Unknown protocol "unknown:"');
   });
 
+  it("should parse gpg: references with a full fingerprint", () => {
+    const envPath = join(tmpDir, ".env");
+    writeFileSync(envPath, "GPG_SIGNING_KEY=gpg:E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853\n", "utf8");
+
+    const result = parseEnvFile(envPath);
+
+    expect(result.GPG_SIGNING_KEY).toEqual({
+      type: "gpg",
+      value: "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853",
+    });
+  });
+
+  it("should throw for gpg: values that are not full fingerprints", () => {
+    const envPath = join(tmpDir, ".env");
+    writeFileSync(envPath, "GPG_SIGNING_KEY=gpg:8042ED9A\n", "utf8");
+
+    expect(() => parseEnvFile(envPath)).toThrow("gpg: value must be a full fingerprint");
+  });
+
+  it("should mention gpg: in the unknown protocol message", () => {
+    const envPath = join(tmpDir, ".env");
+    writeFileSync(envPath, "API_KEY=unknown:value\n", "utf8");
+
+    expect(() => parseEnvFile(envPath)).toThrow(/Use env:, file:, val:, or gpg:/);
+  });
+
   it("should handle values with colons in them", () => {
     const envPath = join(tmpDir, ".env");
     writeFileSync(envPath, "PASSWORD=val:pass:word\nAPI_KEY=val:abc:123:xyz\n", "utf8");
@@ -229,6 +255,61 @@ describe("resolveSecretValue", () => {
     expect(result).toBe("from-env-file");
 
     delete process.env.API_KEY;
+  });
+
+  it("should resolve a gpg: entry by exporting the secret key", () => {
+    const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
+    const armor = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nabc\n-----END PGP PRIVATE KEY BLOCK-----\n";
+    const calls: { cmd: string; args: string[]; input?: string }[] = [];
+    const runner = {
+      runArgv: (cmd: string, args: string[], opts?: { input?: string }): string => {
+        calls.push({ cmd, args, input: opts?.input });
+        return armor;
+      },
+    };
+    const envFileEntries = {
+      GPG_SIGNING_KEY: { type: "gpg" as const, value: fpr },
+    };
+
+    const result = resolveSecretValue("GPG_SIGNING_KEY", envFileEntries, undefined, {
+      runner,
+      passphrase: "pass",
+    });
+
+    expect(result).toBe(armor);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].cmd).toBe("gpg");
+    expect(calls[0].args).toEqual([
+      "--batch",
+      "--pinentry-mode",
+      "loopback",
+      "--passphrase-fd",
+      "0",
+      "--armor",
+      "--export-secret-keys",
+      fpr,
+    ]);
+    expect(calls[0].input).toBe("pass");
+  });
+
+  it("should warn and return undefined when gpg export fails", () => {
+    const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
+    const runner = {
+      runArgv: (): string => {
+        throw new Error("no secret key");
+      },
+    };
+    const envFileEntries = {
+      GPG_SIGNING_KEY: { type: "gpg" as const, value: fpr },
+    };
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const result = resolveSecretValue("GPG_SIGNING_KEY", envFileEntries, undefined, { runner });
+
+    expect(result).toBeUndefined();
+    expect(warn.mock.calls.map((call) => call.join(" ")).join(" ")).toContain(
+      'Warning: Could not export GPG key for secret "GPG_SIGNING_KEY"',
+    );
   });
 });
 

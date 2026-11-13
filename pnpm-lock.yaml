@@ -264,6 +264,9 @@ importers:
 
   packages/ghb-secrets-sync:
     dependencies:
+      '@xenoterracide/ghb-signing':
+        specifier: workspace:^
+        version: link:../ghb-signing
       clipanion:
         specifier: ^4.0.0-rc.4
         version: 4.0.0-rc.4(typanion@3.14.0)
