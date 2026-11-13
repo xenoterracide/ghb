@@ -29,6 +29,13 @@ export default defineConfig({
           include: ["test/**/*.test.ts"],
         },
       },
+      {
+        test: {
+          name: "ghb-signing",
+          root: "./packages/ghb-signing",
+          include: ["test/**/*.test.ts"],
+        },
+      },
     ],
     coverage: {
       exclude: ["**/node_modules/**", "**/*.test.ts", "**/coverage/**"],

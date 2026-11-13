@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { Command, Option } from "clipanion";
+import { readPassphrase } from "@xenoterracide/ghb-signing";
 import { logger, setLogLevel } from "../logger.js";
 import { parseEnvFile, resolveSecretValue } from "../env.js";
 import { setSecret, getCurrentRepo, findReposByLabel } from "../github.js";
@@ -77,6 +78,9 @@ export class SyncCommand extends Command {
   // Optional runner for testing - uses default gh runner if not set
   public runner?: CommandRunner;
 
+  // Optional passphrase for gpg: entries - read from stdin if not set
+  public passphrase?: string;
+
   public async execute(): Promise<number> {
     try {
       return await this.doExecute();
@@ -117,7 +121,7 @@ export class SyncCommand extends Command {
     names: string[],
     entries: Record<string, EnvEntry> | undefined,
   ): Promise<number> {
-    const secretsToSync = this.collectSecretValues(names, entries);
+    const secretsToSync = await this.collectSecretValues(names, entries);
     if (secretsToSync.length === 0) return this.reportUnresolvedSecrets();
 
     this.printPlan(targetRepos, secretsToSync);
@@ -182,15 +186,22 @@ export class SyncCommand extends Command {
     }
   }
 
-  private collectSecretValues(
+  private needsPassphrase(entries: Record<string, EnvEntry> | undefined): boolean {
+    return entries !== undefined && Object.values(entries).some((entry) => entry.type === "gpg");
+  }
+
+  private async collectSecretValues(
     secretNames: string[],
     entries: Record<string, EnvEntry> | undefined,
-  ): { name: string; value: string }[] {
-    const secretsToSync: { name: string; value: string }[] = [];
+  ): Promise<{ name: string; value: string }[]> {
+    const passphrase =
+      this.passphrase ?? (this.needsPassphrase(entries) ? await readPassphrase(process.stdin) : undefined);
+    const opts = { runner: this.runner, passphrase };
 
+    const secretsToSync: { name: string; value: string }[] = [];
     for (const name of secretNames) {
       logger.debug({ name }, "Resolving secret");
-      const value = resolveSecretValue(name, entries);
+      const value = resolveSecretValue(name, entries, undefined, opts);
       if (value === undefined) {
         logger.warn(`Warning: Could not resolve value for secret "${name}", skipping`);
         continue;

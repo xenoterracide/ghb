@@ -36,12 +36,15 @@ describe("ghb CLI", () => {
     expect(paths).toContain("ghb secrets sync");
     expect(paths).toContain("ghb secrets update");
     expect(paths).toContain("ghb secrets get");
+    expect(paths).toContain("ghb signing check");
+    expect(paths).toContain("ghb signing renew");
+    expect(paths).toContain("ghb signing export");
   });
 
-  it("should register 5 commands", () => {
+  it("should register 8 commands", () => {
     const cli = createCli();
     const definitions = Array.from(cli.definitions());
-    expect(definitions.length).toBe(5);
+    expect(definitions.length).toBe(8);
   });
 });
 
@@ -57,6 +60,9 @@ describe("ghb CLI", () => {
     expect(output).toContain("ghb secrets sync");
     expect(output).toContain("ghb secrets update");
     expect(output).toContain("ghb secrets get");
+    expect(output).toContain("ghb signing check");
+    expect(output).toContain("ghb signing renew");
+    expect(output).toContain("ghb signing export");
   });
 });
 
