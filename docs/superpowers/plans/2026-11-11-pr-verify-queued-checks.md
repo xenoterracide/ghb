@@ -16,7 +16,20 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 **Spec:** `docs/superpowers/specs/2026-11-11-pr-verify-queued-checks.md`
 
-**Status:** implemented — every task complete (2026-11-11).
+**Status:** implemented — every task complete (2026-11-11); ported onto the
+base-template 26.11.10 refactor and hardened from review (2026-11-13).
+
+Post-implementation notes:
+
+- The template refactor split `pr-verify.ts`; `bucketOf`, `summarize`, and
+  the `Check`/`PrView` types live in `src/pr-gates.ts`, and the tests split
+  into `pr-verify-summarize`, `pr-verify-poll`, `pr-verify-poll-grace`, and
+  `pr-verify-flags` over a shared `pr-verify-support.ts`.
+- Review added two behaviors the plan did not foresee: a superseded
+  `COMPLETED/STALE` run is skipped (the rollup carries every run, so a stale
+  run folded as pending would poll a green PR to its timeout) and
+  `STARTUP_FAILURE` maps to fail; an `UNKNOWN` mergeability read resets the
+  runless-CLEAN grace.
 
 ## Global Constraints
 
