@@ -50,7 +50,10 @@ module.exports = {
     `${reuse} ${copyright} ${symbol} ${licenseScripts} --style python`,
     shfmt,
   ]),
-  "*.{md,adoc}": run([`${reuse} ${copyright} ${symbol} ${licenseDocumentation}`, prettier]),
+  "*.adoc": run([`${reuse} ${copyright} ${symbol} ${licenseDocumentation}`, prettier]),
+  // don't run reuse for markdown in this repo: it breaks frontmatter files,
+  // and the glob cannot tell them apart from plain markdown
+  "*.md": run([prettier]),
   "*.{xml,yaml,properties,toml,json5,jsonc}": run([
     `${reuse} ${copyright} ${licenseConfiguration} ${symbol}`,
     prettier,

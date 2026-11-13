@@ -62,7 +62,9 @@ checkout.
 - **Plan tracking.** Tick a plan's checkboxes as its tasks complete; the
   committed plan is the completion record.
 - **SPDX headers on every file.** `lint-staged` adds them. CI checks
-  compliance. Do not remove them.
+  compliance. Do not remove them. For markdown, add the SPDX HTML comment
+  yourself — `reuse annotate` breaks YAML frontmatter, so lint-staged
+  skips it there.
 - **Shell safety.** Use `execFileSync` with argv arrays, not shell strings.
 - **Secret handling.** Pass secret values via `stdin` (`input` option), never
   via argv.
