@@ -7,6 +7,7 @@
 import { Cli } from "clipanion";
 
 import { CheckCommand } from "./commands/check.js";
+import { RenewCommand } from "./commands/renew.js";
 
 const cli = new Cli({
   binaryLabel: "signing",
@@ -14,6 +15,7 @@ const cli = new Cli({
 });
 
 cli.register(CheckCommand);
+cli.register(RenewCommand);
 
 void cli
   .run(process.argv.slice(2), Cli.defaultContext)

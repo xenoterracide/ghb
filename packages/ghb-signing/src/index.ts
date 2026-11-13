@@ -17,3 +17,4 @@ export { readAll, readPassphrase } from "./passphrase.js";
 
 // Commands
 export { CheckCommand } from "./commands/check.js";
+export { RenewCommand } from "./commands/renew.js";
