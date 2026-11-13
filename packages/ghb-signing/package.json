@@ -1,0 +1,44 @@
+{
+  "name": "@xenoterracide/ghb-signing",
+  "version": "0.1.0",
+  "license": "GPL-3.0-or-later",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "clipanion": "^4.0.0-rc.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.0",
+    "vitest": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xenoterracide/ghb.git",
+    "directory": "packages/ghb-signing"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepack": "pnpm build",
+    "test": "vitest run && pnpm typecheck",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  }
+}
