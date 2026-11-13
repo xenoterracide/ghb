@@ -78,6 +78,13 @@ export function selectSigning(rawKey: string | undefined, runner?: CommandRunner
     return primary;
   }
 
+  // gpg disables a key with D in the primary's capabilities (field 12)
+  // while the subkeys keep their own validity; the whole key cannot sign
+  if (primary.key.capabilities.toUpperCase().includes("D")) {
+    writeError(`key ${primary.key.fingerprint} is disabled`);
+    return fail(2);
+  }
+
   const subkey = findSigningSubkey(primary.key);
   if (subkey === undefined) {
     writeError(`key ${primary.key.fingerprint} has no signing subkey`);

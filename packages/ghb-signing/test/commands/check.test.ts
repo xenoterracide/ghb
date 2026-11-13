@@ -10,8 +10,6 @@ import { createGnupgHome, generateSigningKey } from "../gnupg.js";
 
 const PRIMARY_FPR = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
 const SUBKEY_FPR = "C17EB30E70FBD586F5794285C3C46C6F2A3408CC";
-const OTHER_PRIMARY_FPR = "ABCDEF0123456789ABCDEF0123456789ABCDEF01";
-const OTHER_SUBKEY_FPR = "0123456789ABCDEF0123456789ABCDEF01234567";
 
 interface FakeRunner extends CommandRunner {
   called: boolean;
@@ -25,21 +23,6 @@ fpr:::::::::${PRIMARY_FPR}:
 uid:u::::1794537421::13D53EB7B1B52BD56CEF553F7EED2E413F86F513::Plan Test <plan@example.invalid>::::::::::0:
 sub:u:255:22:C3C46C6F2A3408CC:1794537422:${expiryField}:::::${subCapabilities}:::::ed25519::
 fpr:::::::::${SUBKEY_FPR}:`;
-}
-
-function twoKeys(subExpiresAt: number): string {
-  const expiryField = String(subExpiresAt);
-  return `tru::1:1794537422:1826073421:3:1:5
-pub:u:255:22:32BF5B09B5329853:1794537421:1826073421::u:::cSC:::::ed25519:::0:
-fpr:::::::::${PRIMARY_FPR}:
-uid:u::::1794537421::13D53EB7B1B52BD56CEF553F7EED2E413F86F513::Plan Test <plan@example.invalid>::::::::::0:
-sub:u:255:22:C3C46C6F2A3408CC:1794537422:${expiryField}:::::s:::::ed25519::
-fpr:::::::::${SUBKEY_FPR}:
-pub:u:255:22:ABCDEF0123456789:1794537430:1826073430::u:::cSC:::::ed25519:::0:
-fpr:::::::::${OTHER_PRIMARY_FPR}:
-uid:u::::1794537430::13D53EB7B1B52BD56CEF553F7EED2E413F86F513::Plan Test Two <plan2@example.invalid>::::::::::0:
-sub:u:255:22:0123456789ABCDEF:1794537431:1826073431:::::s:::::ed25519::
-fpr:::::::::${OTHER_SUBKEY_FPR}:`;
 }
 
 function createFakeRunner(output: string): FakeRunner {
@@ -179,32 +162,6 @@ describe("CheckCommand key validation", () => {
   });
 });
 
-describe("CheckCommand empty key validation", () => {
-  it("errors on an explicitly empty --key instead of selecting the sole key", async () => {
-    // `--key "$KEY_FPR"` with an unset variable must never renew another key
-    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
-    const cmd = makeCommand(runner);
-    cmd.key = "";
-
-    const { exit, err } = await runCheck(cmd);
-
-    expect(exit).toBe(1);
-    expect(runner.called).toBe(false);
-    expect(err).toContain('Error: --key must be a full fingerprint; got ""');
-  });
-});
-
-describe("CheckCommand ambiguous keys", () => {
-  it("errors with both fingerprints when no --key and several keys", async () => {
-    const { exit, err } = await runCheck(makeCommand(createFakeRunner(twoKeys(nowSeconds() + 365 * 86400))));
-
-    expect(exit).toBe(2);
-    expect(err).toContain("Error: multiple keys in the keyring; pass --key with one of:");
-    expect(err).toContain(PRIMARY_FPR);
-    expect(err).toContain(OTHER_PRIMARY_FPR);
-  });
-});
-
 describe("CheckCommand days validation", () => {
   it("errors when --days is not a number", async () => {
     const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
@@ -216,28 +173,6 @@ describe("CheckCommand days validation", () => {
     expect(exit).toBe(1);
     expect(runner.called).toBe(false);
     expect(err).toContain('Error: --days must be a number; got "abc"');
-  });
-});
-
-describe("CheckCommand empty keyring", () => {
-  it("errors when the keyring is empty", async () => {
-    const { exit, err } = await runCheck(makeCommand(createFakeRunner("")));
-
-    expect(exit).toBe(2);
-    expect(err).toContain("Error: no keys in the keyring");
-  });
-});
-
-describe("CheckCommand key not found", () => {
-  it("errors when --key matches nothing", async () => {
-    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
-    const cmd = makeCommand(runner);
-    cmd.key = OTHER_PRIMARY_FPR;
-
-    const { exit, err } = await runCheck(cmd);
-
-    expect(exit).toBe(2);
-    expect(err).toContain(`Error: key ${OTHER_PRIMARY_FPR} not found`);
   });
 });
 

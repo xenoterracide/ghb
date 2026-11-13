@@ -45,6 +45,12 @@ export function colonKey(primaryExpiresAt: number | null, subkeyExpiresAt: numbe
   );
 }
 
+// gpg disables a key with D in the primary's capabilities while the
+// subkeys keep their own validity: pub:cSCD beside sub:u...s
+export function colonDisabledPrimary(primaryExpiresAt: number, subkeyExpiresAt: number): string {
+  return colonLines(String(primaryExpiresAt), String(subkeyExpiresAt), "s").replace(":::cSC:::::", ":::cSCD:::::");
+}
+
 export function twoKeys(subExpiresAt: number): string {
   const expiryField = String(subExpiresAt);
   return `${colonLines("1826073421", expiryField, "s")}

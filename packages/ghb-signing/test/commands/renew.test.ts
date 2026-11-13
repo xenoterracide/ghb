@@ -9,6 +9,7 @@ import {
   PRIMARY_FPR,
   SUBKEY_FPR,
   assertRenewalCalls,
+  colonDisabledPrimary,
   colonKey,
   createFailingRunner,
   createSequenceRunner,
@@ -180,6 +181,18 @@ describe("RenewCommand missing signing subkey", () => {
 
     expect(exit).toBe(2);
     expect(err).toContain(`Error: key ${PRIMARY_FPR} has no signing subkey`);
+  });
+});
+
+describe("RenewCommand disabled primary", () => {
+  it("errors instead of renewing when the primary is disabled", async () => {
+    // the subkey's own validity stays u; only the primary carries D
+    const runner = createSequenceRunner([colonDisabledPrimary(1826073421, 1826073422)]);
+
+    const { exit, err } = await runRenew(makeCommand(runner));
+
+    expect(exit).toBe(2);
+    expect(err).toContain(`Error: key ${PRIMARY_FPR} is disabled`);
   });
 });
 
