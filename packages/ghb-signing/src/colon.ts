@@ -6,6 +6,7 @@ import type { KeySelection, PublicKey, SubKey } from "./types.js";
 
 // Field indices within a `pub`/`sub` record of `gpg --list-keys --with-colons`
 // output; the fields are documented 1-based, arrays are 0-based.
+const VALIDITY = 1;
 const KEY_ID = 4;
 const CREATED_AT = 5;
 const EXPIRES_AT = 6;
@@ -20,6 +21,7 @@ function toUnixSeconds(field: string | undefined): number | null {
 
 function parseKeyRecord(fields: readonly string[]): Omit<SubKey, "fingerprint"> {
   return {
+    validity: fields[VALIDITY] ?? "",
     keyId: fields[KEY_ID] ?? "",
     capabilities: fields[CAPABILITIES] ?? "",
     createdAt: toUnixSeconds(fields[CREATED_AT]) ?? 0,
@@ -101,14 +103,19 @@ export function isValidFingerprint(value: string): boolean {
   return /^[0-9a-f]{40}$|^[0-9a-f]{64}$/i.test(value);
 }
 
+// a revoked or disabled subkey can never sign again; gpg keeps `s` in its
+// capabilities, so capability alone would select it. expired stays usable
+// here: expiry is the condition check reports and renew extends
+const unusable = (subkey: SubKey): boolean => subkey.validity === "r" || subkey.validity === "d";
+
 /**
- * The key's signing-capable subkey; among candidates, the one created
- * most recently. `s` matches case-insensitively.
+ * The key's signing-capable, usable subkey; among candidates, the one
+ * created most recently. `s` matches case-insensitively.
  */
 export function findSigningSubkey(key: PublicKey): SubKey | undefined {
   let best: SubKey | undefined;
   for (const subkey of key.subkeys) {
-    if (!subkey.capabilities.toLowerCase().includes("s")) continue;
+    if (unusable(subkey) || !subkey.capabilities.toLowerCase().includes("s")) continue;
     if (!best || subkey.createdAt > best.createdAt) best = subkey;
   }
   return best;

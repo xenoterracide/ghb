@@ -189,6 +189,18 @@ describe("ExportCommand key validation", () => {
     expect(runner.calls).toHaveLength(0);
     expect(err).toContain('Error: --key must be a full fingerprint; got "8042ED9A"');
   });
+
+  it("errors on an explicitly empty --key instead of exporting the sole key", async () => {
+    const runner = createSequenceRunner([]);
+    const cmd = makeCommand(runner);
+    cmd.key = "";
+
+    const { exit, err } = await runExport(cmd);
+
+    expect(exit).toBe(1);
+    expect(runner.calls).toHaveLength(0);
+    expect(err).toContain('Error: --key must be a full fingerprint; got ""');
+  });
 });
 
 describe("ExportCommand empty keyring", () => {

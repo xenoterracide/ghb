@@ -18,6 +18,8 @@ export interface CommandRunner {
  * A subkey parsed from `gpg --list-keys --with-colons` output.
  */
 export interface SubKey {
+  /** colon field 2: u n m f r e d i (- for unknown) */
+  validity: string;
   /** colon field 5 */
   keyId: string;
   /** fpr record, field 10 */
@@ -35,6 +37,7 @@ export interface SubKey {
  * with its subkeys.
  */
 export interface PublicKey {
+  validity: string;
   keyId: string;
   fingerprint: string;
   capabilities: string;

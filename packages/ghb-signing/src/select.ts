@@ -17,12 +17,6 @@ function fail(exit: number): { status: "fail"; exit: number } {
   return { status: "fail", exit };
 }
 
-// An empty --key reads as absent, matching the empty-flag convention of
-// the secrets commands.
-function normalize(key: string | undefined): string | undefined {
-  return key === "" ? undefined : key;
-}
-
 function writeAmbiguous(keys: PublicKey[]): void {
   writeError("multiple keys in the keyring; pass --key with one of:");
   for (const key of keys) {
@@ -55,9 +49,11 @@ function primaryFromKeys(keys: PublicKey[], key: string | undefined): PrimarySel
  * `fail` result has already written its error to stderr.
  */
 export function selectPrimary(rawKey: string | undefined, runner?: CommandRunner): PrimarySelection {
-  const key = normalize(rawKey);
-  if (key !== undefined && !isValidFingerprint(key)) {
-    writeError(`--key must be a full fingerprint; got "${key}"`);
+  // only an omitted --key reads as absent; an explicit empty string is an
+  // invalid fingerprint, so `--key "$UNSET_VAR"` can never silently select
+  // the sole key in the keyring
+  if (rawKey !== undefined && !isValidFingerprint(rawKey)) {
+    writeError(`--key must be a full fingerprint; got "${rawKey}"`);
     return fail(1);
   }
 
@@ -68,7 +64,7 @@ export function selectPrimary(rawKey: string | undefined, runner?: CommandRunner
     writeError(e instanceof Error ? e.message : String(e));
     return fail(1);
   }
-  return primaryFromKeys(keys, key);
+  return primaryFromKeys(keys, rawKey);
 }
 
 /**

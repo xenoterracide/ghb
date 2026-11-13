@@ -179,6 +179,21 @@ describe("CheckCommand key validation", () => {
   });
 });
 
+describe("CheckCommand empty key validation", () => {
+  it("errors on an explicitly empty --key instead of selecting the sole key", async () => {
+    // `--key "$KEY_FPR"` with an unset variable must never renew another key
+    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
+    const cmd = makeCommand(runner);
+    cmd.key = "";
+
+    const { exit, err } = await runCheck(cmd);
+
+    expect(exit).toBe(1);
+    expect(runner.called).toBe(false);
+    expect(err).toContain('Error: --key must be a full fingerprint; got ""');
+  });
+});
+
 describe("CheckCommand ambiguous keys", () => {
   it("errors with both fingerprints when no --key and several keys", async () => {
     const { exit, err } = await runCheck(makeCommand(createFakeRunner(twoKeys(nowSeconds() + 365 * 86400))));

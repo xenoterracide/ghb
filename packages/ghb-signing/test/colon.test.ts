@@ -28,11 +28,19 @@ fpr:::::::::ABCDEF0123456789ABCDEF0123456789ABCDEF01:
 sub:u:255:22:0123456789ABCDEF:1794537431:1826073431:::::s:::::ed25519::
 fpr:::::::::0123456789ABCDEF0123456789ABCDEF01234567:`;
 
-function makeSubkey(keyId: string, fingerprint: string, capabilities: string): SubKey {
+interface SubkeySpec {
+  keyId: string;
+  fingerprint: string;
+  capabilities: string;
+  validity?: string;
+}
+
+function makeSubkey(spec: SubkeySpec): SubKey {
   return {
-    keyId,
-    fingerprint,
-    capabilities,
+    validity: spec.validity ?? "u",
+    keyId: spec.keyId,
+    fingerprint: spec.fingerprint,
+    capabilities: spec.capabilities,
     createdAt: 1794537422,
     expiresAt: 1826073422,
   };
@@ -40,6 +48,7 @@ function makeSubkey(keyId: string, fingerprint: string, capabilities: string): S
 
 function makePublicKey(subkey: SubKey): PublicKey {
   return {
+    validity: "u",
     keyId: "32BF5B09B5329853",
     fingerprint: "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853",
     capabilities: "cSC",
@@ -53,6 +62,7 @@ describe("parseColonKeys one key", () => {
   it("parses one key with its signing subkey", () => {
     expect(parseColonKeys(FIXTURE)).toEqual([
       {
+        validity: "u",
         keyId: "32BF5B09B5329853",
         fingerprint: "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853",
         capabilities: "cSC",
@@ -60,6 +70,7 @@ describe("parseColonKeys one key", () => {
         expiresAt: 1826073421,
         subkeys: [
           {
+            validity: "u",
             keyId: "C3C46C6F2A3408CC",
             fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
             capabilities: "s",
@@ -98,6 +109,7 @@ describe("findSigningSubkey fixture", () => {
     const [key] = parseColonKeys(FIXTURE);
 
     expect(findSigningSubkey(key)).toEqual({
+      validity: "u",
       keyId: "C3C46C6F2A3408CC",
       fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
       capabilities: "s",
@@ -109,7 +121,13 @@ describe("findSigningSubkey fixture", () => {
 
 describe("findSigningSubkey missing sign", () => {
   it("returns undefined when no subkey can sign", () => {
-    const key = makePublicKey(makeSubkey("C3C46C6F2A3408CC", "C17EB30E70FBD586F5794285C3C46C6F2A3408CC", "e"));
+    const key = makePublicKey(
+      makeSubkey({
+        keyId: "C3C46C6F2A3408CC",
+        fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
+        capabilities: "e",
+      }),
+    );
 
     expect(findSigningSubkey(key)).toBeUndefined();
   });
@@ -117,8 +135,13 @@ describe("findSigningSubkey missing sign", () => {
 
 describe("findSigningSubkey newest", () => {
   it("picks the newest signing subkey", () => {
-    const older = makeSubkey("C3C46C6F2A3408CC", "C17EB30E70FBD586F5794285C3C46C6F2A3408CC", "s");
+    const older = makeSubkey({
+      keyId: "C3C46C6F2A3408CC",
+      fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
+      capabilities: "s",
+    });
     const newer: SubKey = {
+      validity: "u",
       keyId: "0123456789ABCDEF",
       fingerprint: "0123456789ABCDEF0123456789ABCDEF01234567",
       capabilities: "s",
@@ -134,10 +157,64 @@ describe("findSigningSubkey newest", () => {
 
 describe("findSigningSubkey uppercase S", () => {
   it("matches uppercase S as sign", () => {
-    const subkey = makeSubkey("C3C46C6F2A3408CC", "C17EB30E70FBD586F5794285C3C46C6F2A3408CC", "S");
+    const subkey = makeSubkey({
+      keyId: "C3C46C6F2A3408CC",
+      fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
+      capabilities: "S",
+    });
     const key = makePublicKey(subkey);
 
     expect(findSigningSubkey(key)).toBe(subkey);
+  });
+});
+
+describe("findSigningSubkey revoked", () => {
+  it("skips a newer revoked signing subkey for the older usable one", () => {
+    const usable = makeSubkey({
+      keyId: "C3C46C6F2A3408CC",
+      fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
+      capabilities: "s",
+    });
+    const revoked: SubKey = {
+      validity: "r",
+      keyId: "0123456789ABCDEF",
+      fingerprint: "0123456789ABCDEF0123456789ABCDEF01234567",
+      capabilities: "s",
+      createdAt: 1794537431,
+      expiresAt: 1826073431,
+    };
+    const key = makePublicKey(usable);
+    key.subkeys.push(revoked);
+
+    expect(findSigningSubkey(key)).toBe(usable);
+  });
+});
+
+describe("findSigningSubkey disabled", () => {
+  it("skips a disabled signing subkey", () => {
+    const subkey = makeSubkey({
+      keyId: "C3C46C6F2A3408CC",
+      fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
+      capabilities: "s",
+      validity: "d",
+    });
+    const key = makePublicKey(subkey);
+
+    expect(findSigningSubkey(key)).toBeUndefined();
+  });
+});
+
+describe("findSigningSubkey expired", () => {
+  it("keeps an expired signing subkey selectable; expiry is what check reports and renew extends", () => {
+    const expired = makeSubkey({
+      keyId: "C3C46C6F2A3408CC",
+      fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
+      capabilities: "s",
+      validity: "e",
+    });
+    const key = makePublicKey(expired);
+
+    expect(findSigningSubkey(key)).toBe(expired);
   });
 });
 

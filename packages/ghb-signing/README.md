@@ -37,7 +37,7 @@ ghb signing export [--key FINGERPRINT]
 
 ## Rules
 
-- `--key` takes a full 40-character fingerprint. Key IDs are rejected.
+- `--key` takes a full 40- or 64-character fingerprint. Key IDs are rejected.
 - The passphrase is read from stdin when piped. On a terminal, `gpg` falls
   back to pinentry.
 - `GNUPGHOME` is respected; commands inherit your environment.
