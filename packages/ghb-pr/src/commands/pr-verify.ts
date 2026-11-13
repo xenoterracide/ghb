@@ -9,10 +9,9 @@ import {
   lateFailures,
   pendingNames,
   permanentFailures,
-  readChecks,
   readView,
-  somePending,
   stateFailure,
+  summarize,
 } from "../pr-gates.js";
 import type { Check, PrView } from "../pr-gates.js";
 import { execRunner, type Runner } from "../exec.js";
@@ -26,9 +25,15 @@ interface Polling {
   deadline: number;
 }
 
-// a poll step returns an exit code, or the view to continue polling with;
-// undefined means the step passed and the next stage should run
-type Outcome = PrView | number | undefined;
+// a poll step returns an exit code, or the view (and grace count) to
+// continue polling with; undefined means the step passed and the next
+// stage should run
+interface ContinuePoll {
+  view: PrView;
+  grace: number;
+}
+
+type Outcome = ContinuePoll | number | undefined;
 
 const sleep = async (seconds: number): Promise<void> => {
   await new Promise<void>((resolve) => {
@@ -39,6 +44,22 @@ const sleep = async (seconds: number): Promise<void> => {
 function expired(polling: Polling): boolean {
   return Date.now() >= polling.deadline;
 }
+
+// the timeout names what held out: checks that reached a runner first,
+// then any that never left the queue; a runless head names nothing
+const pendingDetail = (checks: Check[]): string => {
+  const pending = checks.filter((check) => check.bucket === "pending");
+  const started = pending.filter((check) => check.started).map((check) => check.name);
+  const queued = pending.filter((check) => !check.started).map((check) => check.name);
+  const segments: string[] = [];
+  if (started.length > 0) {
+    segments.push(started.join(", "));
+  }
+  if (queued.length > 0) {
+    segments.push(`queued: ${queued.join(", ")}`);
+  }
+  return segments.join("; ");
+};
 
 function pendingExit(polling: Polling, detail = ""): number {
   const suffix = detail === "" ? "" : `: ${detail}`;
@@ -106,17 +127,19 @@ export class PrVerifyCommand extends Command {
 
   private async poll(polling: Polling, view: PrView): Promise<number> {
     let current = view;
+    let grace = 0;
     for (;;) {
-      const settled = await this.settleMergeability(polling, current);
+      const settled = await this.settleMergeability(polling, current, grace);
       if (typeof settled === "number") {
         return settled;
       }
-      const outcome = await this.settleChecks(polling, settled);
+      ({ view: current, grace } = settled);
+      const outcome = await this.settleChecks(polling, current, grace);
       if (typeof outcome === "number") {
         return outcome;
       }
       if (outcome !== undefined) {
-        current = outcome;
+        ({ view: current, grace } = outcome);
         continue;
       }
       const confirmed = await this.confirmPass(polling);
@@ -127,10 +150,14 @@ export class PrVerifyCommand extends Command {
     }
   }
 
-  // mergeability is computed asynchronously after a push; let UNKNOWN settle
-  private async settleMergeability(polling: Polling, view: PrView): Promise<PrView | number> {
+  // mergeability is computed asynchronously after a push; let UNKNOWN
+  // settle. an UNKNOWN read mid-poll also breaks the runless-CLEAN
+  // streak: only consecutive CLEAN reads count toward the grace
+  private async settleMergeability(polling: Polling, view: PrView, grace: number): Promise<ContinuePoll | number> {
     let current = view;
+    let sawUnknown = false;
     while (current.mergeable === "UNKNOWN" || current.mergeStateStatus === "UNKNOWN") {
+      sawUnknown = true;
       if (expired(polling)) {
         return pendingExit(polling, "mergeability");
       }
@@ -145,55 +172,51 @@ export class PrVerifyCommand extends Command {
       }
       current = next;
     }
-    return current;
+    return { view: current, grace: sawUnknown ? 0 : grace };
   }
 
-  private async settleChecks(polling: Polling, view: PrView): Promise<Outcome> {
+  private async settleChecks(polling: Polling, view: PrView, grace: number): Promise<Outcome> {
     const permanent = permanentFailures(view);
     if (permanent.length > 0) {
       this.report(permanent);
       return 1;
     }
-    let checks: Check[] | undefined;
-    try {
-      checks = readChecks(polling.run, this.forwarded());
-    } catch {
-      // the runner already printed gh's stderr; not a runless head
-      return 1;
-    }
-    if (checks === undefined) {
-      return this.settleRunless(polling, view);
-    }
-    const failed = failedNames(checks);
+    const failed = failedNames(summarize(view.statusCheckRollup));
     if (failed.length > 0) {
       console.error(`fail: ${failed.join(", ")}`);
       return 1;
     }
-    return this.settlePending(polling, checks, view);
+    return this.settleUnsettled(polling, view, grace);
   }
 
-  // runless head: nothing more can arrive once the view is CLEAN
-  private async settleRunless(polling: Polling, view: PrView): Promise<Outcome> {
-    if (view.mergeStateStatus === "CLEAN") {
+  // queued and running checks, a runless view that is not yet CLEAN, and a
+  // runless CLEAN view inside its grace are all waited out alike. the grace
+  // exists because GitHub creates check runs asynchronously after a push,
+  // so the rollup can read empty while the view already reads CLEAN
+  private async settleUnsettled(polling: Polling, view: PrView, grace: number): Promise<Outcome> {
+    const checks = summarize(view.statusCheckRollup);
+    const runless = checks.length === 0;
+    const nextGrace = runless && view.mergeStateStatus === "CLEAN" ? grace + 1 : 0;
+    if (pendingNames(checks).length === 0 && !(runless && nextGrace < 3)) {
       return undefined;
     }
     if (expired(polling)) {
-      return pendingExit(polling);
+      return pendingExit(polling, pendingDetail(checks));
     }
     await sleep(polling.interval);
-    return view;
+    return this.reread(polling, nextGrace);
   }
 
-  private async settlePending(polling: Polling, checks: Check[], view: PrView): Promise<Outcome> {
-    const pending = pendingNames(checks);
-    if (pending.length === 0) {
-      return undefined;
+  private reread(polling: Polling, grace: number): Outcome {
+    const next = readView(polling.run, this.forwarded());
+    if (next === undefined) {
+      return 1;
     }
-    if (expired(polling)) {
-      return pendingExit(polling, pending.join(", "));
+    if (next.state !== "OPEN") {
+      console.error(stateFailure(next));
+      return 1;
     }
-    await sleep(polling.interval);
-    return view;
+    return { view: next, grace };
   }
 
   // candidate pass: the poll may have taken minutes, so re-read the PR and
@@ -218,24 +241,20 @@ export class PrVerifyCommand extends Command {
     return this.currencyExit(polling.run, fresh);
   }
 
-  // a check queued after our read explains a non-CLEAN view; poll it
-  // rather than fail, unless nothing is pending
+  // a check queued after our read explains a non-CLEAN view, and an empty
+  // rollup may only mean runs do not exist yet; poll both, and fail only
+  // once the fresh rollup is terminal
   private async handleLate(polling: Polling, late: string[], fresh: PrView): Promise<PrView | number> {
-    let recheck: Check[] | undefined;
-    try {
-      recheck = readChecks(polling.run, this.forwarded());
-    } catch {
-      recheck = undefined;
+    const freshChecks = summarize(fresh.statusCheckRollup);
+    if (pendingNames(freshChecks).length === 0 && freshChecks.length > 0) {
+      this.report(late);
+      return 1;
     }
-    if (somePending(recheck)) {
-      if (expired(polling)) {
-        return pendingExit(polling);
-      }
-      await sleep(polling.interval);
-      return fresh;
+    if (expired(polling)) {
+      return pendingExit(polling, pendingDetail(freshChecks));
     }
-    this.report(late);
-    return 1;
+    await sleep(polling.interval);
+    return fresh;
   }
 
   private currencyExit(run: Runner, fresh: PrView): number {
