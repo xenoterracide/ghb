@@ -35,6 +35,7 @@
     "precontribute": "npm run setup:corepack",
     "reuse": "uv run --frozen --group dev reuse",
     "secrets": "pnpm --filter @xenoterracide/ghb run ghb secrets",
+    "signing": "pnpm --filter @xenoterracide/ghb run ghb signing",
     "setup:corepack": "npm install --global corepack && mkdir -p ~/.local/bin && corepack enable --install-directory ~/.local/bin",
     "typecheck": "tsc --noEmit -p tsconfig.eslint.json && pnpm -r run typecheck",
     "test": "vitest run --coverage"

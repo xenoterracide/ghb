@@ -4,15 +4,21 @@
 
 import { existsSync, readFileSync, statSync } from "fs";
 import { resolve, dirname } from "path";
-import type { EnvEntry } from "./types.js";
+import { exportSecretKey, isValidFingerprint } from "@xenoterracide/ghb-signing";
+import type { CommandRunner, EnvEntry } from "./types.js";
 import { checkFilePermissions } from "./fs-utils.js";
 import { logger } from "./logger.js";
 import { UserError } from "./errors.js";
 
+export interface ResolveOpts {
+  runner?: CommandRunner;
+  passphrase?: string;
+}
+
 function splitProtocol(value: string): { protocol: string; rest: string } {
   const colonIndex = value.indexOf(":");
   if (colonIndex === -1) {
-    throw new Error(`Value must have a protocol prefix (env:, file:, val:). Got: "${value}"`);
+    throw new Error(`Value must have a protocol prefix (env:, file:, val:, gpg:). Got: "${value}"`);
   }
   return { protocol: value.slice(0, colonIndex), rest: value.slice(colonIndex + 1) };
 }
@@ -37,8 +43,14 @@ function parseValue(value: string, key: string, baseDir: string): EnvEntry {
     case "val": {
       return { type: "value", value: rest };
     }
+    case "gpg": {
+      if (!isValidFingerprint(rest)) {
+        throw new UserError(`gpg: value must be a full fingerprint; got "${rest}" for key "${key}"`);
+      }
+      return { type: "gpg", value: rest };
+    }
     default: {
-      throw new UserError(`Unknown protocol "${protocol}:". Use env:, file:, or val: for key "${key}"`);
+      throw new UserError(`Unknown protocol "${protocol}:". Use env:, file:, val:, or gpg: for key "${key}"`);
     }
   }
 }
@@ -108,7 +120,17 @@ function resolveEnvironmentValue(variable: string, name: string): string | undef
   return envValue;
 }
 
-function resolveEntry(entry: EnvEntry, name: string): string | undefined {
+function resolveGpgKey(fingerprint: string, name: string, opts?: ResolveOpts): string | undefined {
+  try {
+    return exportSecretKey(fingerprint, { runner: opts?.runner, passphrase: opts?.passphrase });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    logger.warn(`Warning: Could not export GPG key for secret "${name}": ${msg}`);
+    return undefined;
+  }
+}
+
+function resolveEntry(entry: EnvEntry, name: string, opts?: ResolveOpts): string | undefined {
   switch (entry.type) {
     case "value": {
       return entry.value;
@@ -119,13 +141,18 @@ function resolveEntry(entry: EnvEntry, name: string): string | undefined {
     case "file": {
       return readSecretFile(entry.value, name);
     }
+    case "gpg": {
+      return resolveGpgKey(entry.value, name, opts);
+    }
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/max-params -- public API: name, entries, explicit override, resolution opts
 export function resolveSecretValue(
   name: string,
   envFileEntries?: Record<string, EnvEntry>,
   explicitValue?: string,
+  opts?: ResolveOpts,
 ): string | undefined {
   // Priority 1: Explicit value
   if (explicitValue !== undefined) {
@@ -135,7 +162,7 @@ export function resolveSecretValue(
   // Priority 2: From env file entry
   const entry = envFileEntries?.[name];
   if (entry !== undefined) {
-    return resolveEntry(entry, name);
+    return resolveEntry(entry, name, opts);
   }
 
   // Priority 3: Environment variable matching secret name

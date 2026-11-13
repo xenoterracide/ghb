@@ -20,6 +20,7 @@
   "dependencies": {
     "@xenoterracide/ghb-pr": "workspace:^",
     "@xenoterracide/ghb-secrets-sync": "workspace:^",
+    "@xenoterracide/ghb-signing": "workspace:^",
     "clipanion": "^4.0.0-rc.4"
   },
   "devDependencies": {

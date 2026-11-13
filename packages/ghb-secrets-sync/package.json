@@ -18,6 +18,7 @@
     "dist"
   ],
   "dependencies": {
+    "@xenoterracide/ghb-signing": "workspace:^",
     "clipanion": "^4.0.0-rc.4"
   },
   "devDependencies": {

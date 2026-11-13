@@ -18,7 +18,7 @@ export interface CommandRunner {
  * Represents a secret value entry parsed from an env file.
  */
 export interface EnvEntry {
-  type: "value" | "env" | "file";
+  type: "value" | "env" | "file" | "gpg";
   value: string;
 }
 
