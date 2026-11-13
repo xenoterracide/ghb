@@ -41,12 +41,13 @@ const BUCKETS: Readonly<Record<string, Bucket>> = {
   FAILURE: "fail",
   TIMED_OUT: "fail",
   ACTION_REQUIRED: "fail",
+  STARTUP_FAILURE: "fail",
   CANCELLED: "cancel",
 };
 
 export function bucketOf(context: RollupContext): Bucket {
   const state = context.state ?? (context.status === "COMPLETED" ? context.conclusion : context.status) ?? "";
-  // EXPECTED, REQUESTED, WAITING, QUEUED, PENDING, IN_PROGRESS, STALE
+  // EXPECTED, REQUESTED, WAITING, QUEUED, PENDING, IN_PROGRESS
   return BUCKETS[state] ?? "pending";
 }
 
@@ -96,6 +97,13 @@ const toCheck = (group: Group): Check =>
     ? { name: group.name, bucket: "pending", started: group.pendingStarted }
     : { name: group.name, bucket: group.bucket, started: group.started };
 
+// a stale run was superseded by a newer run of the same check; the rollup
+// carries both, so the stale one contributes nothing — were it folded, its
+// pending flag would outrank the newer run's verdict and a green PR would
+// poll to its timeout
+const superseded = (context: RollupContext): boolean =>
+  context.status === "COMPLETED" && context.conclusion === "STALE";
+
 // one Check per named group. an in-flight run wins the name — the re-queue
 // it represents may still pass — otherwise the newest finished run decides,
 // which is what gh's eliminateDuplicates means to do under cli/cli#14371
@@ -103,6 +111,7 @@ export function summarize(rollup: RollupContext[] | null | undefined): Check[] {
   const groups = new Map<string, Group>();
 
   for (const context of rollup ?? []) {
+    if (superseded(context)) continue;
     const key = groupKey(context);
     let group = groups.get(key);
     if (group === undefined) {

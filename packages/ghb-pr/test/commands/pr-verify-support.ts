@@ -81,6 +81,45 @@ export const rerunRollup: RollupContext[] = [
   },
 ];
 
+// after a re-requested check passes, the rollup holds the superseded run
+// beside the newer one; the stale run must contribute nothing
+export const staleBesideSuccessRollup: RollupContext[] = [
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "STALE",
+    startedAt: "2026-11-11T18:00:00Z",
+    workflowName: "test",
+  },
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "SUCCESS",
+    startedAt: "2026-11-11T19:00:00Z",
+    workflowName: "test",
+  },
+];
+
+export const staleAloneRollup: RollupContext[] = [
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "STALE",
+    startedAt: "2026-11-11T18:00:00Z",
+    workflowName: "test",
+  },
+];
+
+export const startupFailureRollup: RollupContext[] = [
+  {
+    name: "build",
+    status: "COMPLETED",
+    conclusion: "STARTUP_FAILURE",
+    startedAt: "2026-11-11T18:00:00Z",
+    workflowName: "test",
+  },
+];
+
 export const statusContext = (context: string, state: string): RollupContext => ({ context, state });
 
 export interface ViewSpec {

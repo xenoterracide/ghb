@@ -4,7 +4,14 @@
 
 import { describe, expect, it } from "vitest";
 import { bucketOf, summarize } from "../../src/pr-gates.js";
-import { requeuedRollup, rerunRollup, statusContext } from "./pr-verify-support.js";
+import {
+  requeuedRollup,
+  rerunRollup,
+  staleAloneRollup,
+  staleBesideSuccessRollup,
+  startupFailureRollup,
+  statusContext,
+} from "./pr-verify-support.js";
 
 const loneSuccessRollup = [
   {
@@ -161,5 +168,23 @@ describe("summarize", () => {
     expect(summarize([running, queued])).toEqual([{ name: "build", bucket: "pending", started: false }]);
     expect(summarize([queued, running])).toEqual([{ name: "build", bucket: "pending", started: false }]);
     expect(summarize([running, unparseable])).toEqual([{ name: "build", bucket: "pending", started: false }]);
+  });
+});
+
+describe("summarize stale runs", () => {
+  it("ignores a stale run superseded by a newer success", () => {
+    // gh pr view returns every run; gh pr checks dedupes them. a stale run
+    // folded as pending would poll a green PR to its timeout
+    expect(summarize(staleBesideSuccessRollup)).toEqual([{ name: "build", bucket: "pass", started: true }]);
+  });
+
+  it("ignores a lone stale run rather than reporting it pending", () => {
+    expect(summarize(staleAloneRollup)).toEqual([]);
+  });
+});
+
+describe("summarize startup failures", () => {
+  it("fails a completed STARTUP_FAILURE run", () => {
+    expect(summarize(startupFailureRollup)).toEqual([{ name: "build", bucket: "fail", started: true }]);
   });
 });

@@ -70,6 +70,25 @@ const closedOnPoll = [
   view({ state: "CLOSED" }),
 ];
 
+// two CLEAN+empty streak reads, an UNKNOWN read, then the rebuilt streak:
+// the UNKNOWN breaks the consecutive count, so the pass needs the full
+// second streak plus the final gate
+const unknownBreaksGrace = [
+  "",
+  view({ rollup: emptyRollup }),
+  "0\t1",
+  "0\t0",
+  view({ rollup: emptyRollup }),
+  view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN", rollup: emptyRollup }),
+  view({ rollup: emptyRollup }),
+  view({ rollup: emptyRollup }),
+  view({ rollup: emptyRollup }),
+  "",
+  view({ rollup: emptyRollup }),
+  "0\t1",
+  "0\t0",
+];
+
 describe("PrVerifyCommand", () => {
   it("waits out an empty rollup before passing a CLEAN head", async () => {
     const { exit, logs } = await runVerify(graceCycle, { interval: "0", timeout: "1" });
@@ -80,6 +99,18 @@ describe("PrVerifyCommand", () => {
 
   it("resets the grace when checks appear", async () => {
     const { exit, logs, calls } = await runVerify(resetGrace, polling);
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
+    expect(calls.filter((call) => call.startsWith("gh pr view"))).toHaveLength(7);
+  });
+});
+
+describe("PrVerifyCommand", () => {
+  it("resets the grace when mergeability reads UNKNOWN mid-streak", async () => {
+    // with the reset the post-UNKNOWN streak rebuilds from zero: three more
+    // CLEAN reads, then the final gate; without it, 5 view reads would pass
+    const { exit, logs, calls } = await runVerify(unknownBreaksGrace, polling);
 
     expect(exit).toBe(0);
     expect(logs).toEqual(["pass"]);

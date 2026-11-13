@@ -129,11 +129,12 @@ export class PrVerifyCommand extends Command {
     let current = view;
     let grace = 0;
     for (;;) {
-      const settled = await this.settleMergeability(polling, current);
+      const settled = await this.settleMergeability(polling, current, grace);
       if (typeof settled === "number") {
         return settled;
       }
-      const outcome = await this.settleChecks(polling, settled, grace);
+      ({ view: current, grace } = settled);
+      const outcome = await this.settleChecks(polling, current, grace);
       if (typeof outcome === "number") {
         return outcome;
       }
@@ -149,10 +150,14 @@ export class PrVerifyCommand extends Command {
     }
   }
 
-  // mergeability is computed asynchronously after a push; let UNKNOWN settle
-  private async settleMergeability(polling: Polling, view: PrView): Promise<PrView | number> {
+  // mergeability is computed asynchronously after a push; let UNKNOWN
+  // settle. an UNKNOWN read mid-poll also breaks the runless-CLEAN
+  // streak: only consecutive CLEAN reads count toward the grace
+  private async settleMergeability(polling: Polling, view: PrView, grace: number): Promise<ContinuePoll | number> {
     let current = view;
+    let sawUnknown = false;
     while (current.mergeable === "UNKNOWN" || current.mergeStateStatus === "UNKNOWN") {
+      sawUnknown = true;
       if (expired(polling)) {
         return pendingExit(polling, "mergeability");
       }
@@ -167,7 +172,7 @@ export class PrVerifyCommand extends Command {
       }
       current = next;
     }
-    return current;
+    return { view: current, grace: sawUnknown ? 0 : grace };
   }
 
   private async settleChecks(polling: Polling, view: PrView, grace: number): Promise<Outcome> {
