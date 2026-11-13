@@ -8,6 +8,13 @@ import { execRunner, type Runner } from "../../src/exec.js";
 
 vi.mock("../../src/exec.js", () => ({ execRunner: vi.fn() }));
 
+interface SyncResult {
+  exit: number;
+  logs: string[];
+  errors: string[];
+  calls: string[];
+}
+
 function fakeRunner(script: (string | Error)[]): { run: Runner; calls: string[] } {
   const calls: string[] = [];
   let next = 0;
@@ -35,18 +42,24 @@ function captureConsole(): { logs: string[]; errors: string[] } {
   return { logs, errors };
 }
 
+async function runSync(script: (string | Error)[]): Promise<SyncResult> {
+  const { run, calls } = fakeRunner(script);
+  const { logs, errors } = captureConsole();
+  const command = new PrSyncCommand();
+  command.runner = run;
+  const exit = await command.execute();
+  return { exit, logs, errors, calls };
+}
+
+const untrackedNoCollision = ["", "origin/develop", "topic", "1", "0", "", "scratch.txt", "src/new.txt"];
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("PrSyncCommand", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("merges when behind the base branch and pushes", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "0", "0", "2", ""]);
-    const { logs } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const { exit, logs, calls } = await runSync(["", "origin/develop", "topic", "0", "0", "2", ""]);
 
     expect(exit).toBe(0);
     expect(logs).toEqual(["merged 2 commits"]);
@@ -55,25 +68,17 @@ describe("PrSyncCommand", () => {
   });
 
   it("prints up to date when nothing to do and still pushes", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "0", "0", "0", ""]);
-    const { logs } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const { exit, logs, calls } = await runSync(["", "origin/develop", "topic", "0", "0", "0", ""]);
 
     expect(exit).toBe(0);
     expect(logs).toEqual(["up to date"]);
     expect(calls).toContain("git push --quiet");
   });
+});
 
+describe("PrSyncCommand", () => {
   it("resets to remote when the remote branch is ahead and local is clean", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "1", "0", "", "", ""]);
-    const { logs } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const { exit, logs, calls } = await runSync(["", "origin/develop", "topic", "1", "0", "", "", ""]);
 
     expect(exit).toBe(0);
     expect(logs).toEqual(["reset to remote"]);
@@ -82,12 +87,7 @@ describe("PrSyncCommand", () => {
   });
 
   it("merges the base after resetting to an ahead remote", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "1", "0", "", "", "", "3", ""]);
-    const { logs } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const { exit, logs, calls } = await runSync(["", "origin/develop", "topic", "1", "0", "", "", "", "3", ""]);
 
     expect(exit).toBe(0);
     expect(logs).toEqual(["reset to remote", "merged 3 commits"]);
@@ -95,14 +95,11 @@ describe("PrSyncCommand", () => {
     expect(calls).toContain("git merge origin/develop --quiet");
     expect(calls).toContain("git push --quiet");
   });
+});
 
+describe("PrSyncCommand", () => {
   it("trims the newline git branch prints", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic\n", "1", "0", "", "", ""]);
-    const { logs } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const { exit, logs, calls } = await runSync(["", "origin/develop", "topic\n", "1", "0", "", "", ""]);
 
     expect(exit).toBe(0);
     expect(logs).toEqual(["reset to remote"]);
@@ -110,13 +107,19 @@ describe("PrSyncCommand", () => {
     expect(calls.some((call) => call.includes("\n"))).toBe(false);
   });
 
-  it("refuses to reset over a dirty worktree", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "1", "0", " M src/file.ts"]);
-    const { errors } = captureConsole();
+  it("resets when untracked files do not collide with the target", async () => {
+    const { exit, logs, calls } = await runSync(untrackedNoCollision);
 
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["reset to remote"]);
+    expect(calls).toContain("git reset --hard origin/topic");
+    expect(calls).toContain("git push --quiet");
+  });
+});
+
+describe("PrSyncCommand", () => {
+  it("refuses to reset over a dirty worktree", async () => {
+    const { exit, errors, calls } = await runSync(["", "origin/develop", "topic", "1", "0", " M src/file.ts"]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("dirty worktree");
@@ -125,12 +128,7 @@ describe("PrSyncCommand", () => {
   });
 
   it("refuses to reset over an untracked file the target tracks", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "1", "0", "", "new.txt", "new.txt"]);
-    const { errors } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const { exit, errors, calls } = await runSync(["", "origin/develop", "topic", "1", "0", "", "new.txt", "new.txt"]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("untracked");
@@ -138,16 +136,14 @@ describe("PrSyncCommand", () => {
     expect(calls.some((call) => call.startsWith("git reset"))).toBe(false);
     expect(calls).not.toContain("git push --quiet");
   });
+});
 
+describe("PrSyncCommand", () => {
   it("includes ignored files in the collision check", async () => {
     // reset --hard replaces an ignored file the target tracks, so the
     // untracked set must not exclude them
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "1", "0", "", "ignored.txt", "ignored.txt"]);
-    const { errors } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const script = ["", "origin/develop", "topic", "1", "0", "", "ignored.txt", "ignored.txt"];
+    const { exit, errors, calls } = await runSync(script);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("ignored.txt");
@@ -155,27 +151,8 @@ describe("PrSyncCommand", () => {
     expect(calls).not.toContain("git ls-files --others --exclude-standard");
   });
 
-  it("resets when untracked files do not collide with the target", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "1", "0", "", "scratch.txt", "src/new.txt"]);
-    const { logs } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
-
-    expect(exit).toBe(0);
-    expect(logs).toEqual(["reset to remote"]);
-    expect(calls).toContain("git reset --hard origin/topic");
-    expect(calls).toContain("git push --quiet");
-  });
-
   it("refuses to reset when local and remote diverged", async () => {
-    const { run, calls } = fakeRunner(["", "origin/develop", "topic", "3", "1"]);
-    const { errors } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const { exit, errors, calls } = await runSync(["", "origin/develop", "topic", "3", "1"]);
 
     expect(exit).toBe(1);
     const printed = errors.join("\n");
@@ -184,14 +161,11 @@ describe("PrSyncCommand", () => {
     expect(calls.some((call) => call.startsWith("git reset"))).toBe(false);
     expect(calls).not.toContain("git push --quiet");
   });
+});
 
+describe("PrSyncCommand", () => {
   it("fails fast when origin/HEAD is detached or missing", async () => {
-    const { run, calls } = fakeRunner(["", new Error("fatal: not a symbolic ref")]);
-    const { errors } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const { exit, errors, calls } = await runSync(["", new Error("fatal: not a symbolic ref")]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("set-head");
@@ -200,26 +174,15 @@ describe("PrSyncCommand", () => {
   });
 
   it("prints porcelain status on merge conflict", async () => {
-    const { run } = fakeRunner([
-      "",
-      "origin/develop",
-      "topic",
-      "0",
-      "0",
-      "2",
-      new Error("merge failed"),
-      "UU src/file.ts",
-    ]);
-    const { logs } = captureConsole();
-
-    const command = new PrSyncCommand();
-    command.runner = run;
-    const exit = await command.execute();
+    const script = ["", "origin/develop", "topic", "0", "0", "2", new Error("merge failed"), "UU src/file.ts"];
+    const { exit, logs } = await runSync(script);
 
     expect(exit).toBe(1);
     expect(logs.join("\n")).toContain("UU src/file.ts");
   });
+});
 
+describe("PrSyncCommand", () => {
   it("uses the real runner when none is injected", async () => {
     vi.mocked(execRunner).mockImplementation((cmd: "git" | "gh", args: string[]) => {
       const [arg] = args;
@@ -236,8 +199,7 @@ describe("PrSyncCommand", () => {
     });
     const { logs } = captureConsole();
 
-    const command = new PrSyncCommand();
-    const exit = await command.execute();
+    const exit = await new PrSyncCommand().execute();
 
     expect(exit).toBe(0);
     expect(logs).toEqual(["up to date"]);

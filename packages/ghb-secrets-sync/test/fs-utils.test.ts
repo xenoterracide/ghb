@@ -9,19 +9,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { checkFilePermissions, setSecurePermissions } from "../src/fs-utils.js";
 import { setLogLevel } from "../src/logger.js";
 
+let tmpDir = "";
+
+beforeEach(() => {
+  tmpDir = mkdtempSync(join(tmpdir(), "fs-utils-test-"));
+});
+
+afterEach(() => {
+  rmSync(tmpDir, { recursive: true, force: true });
+  vi.restoreAllMocks();
+  setLogLevel("info");
+});
+
 describe("fs-utils", () => {
-  let tmpDir = "";
-
-  beforeEach(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "fs-utils-test-"));
-  });
-
-  afterEach(() => {
-    rmSync(tmpDir, { recursive: true, force: true });
-    vi.restoreAllMocks();
-    setLogLevel("info");
-  });
-
   it("warns when permissions cannot be set", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
@@ -44,7 +44,9 @@ describe("fs-utils", () => {
     expect(warn.mock.calls.map((call) => call.join(" ")).join(" ")).toContain("setting to 600");
     expect(statSync(loose).mode & 0o777).toBe(0o600);
   });
+});
 
+describe("fs-utils", () => {
   it("logs at debug level when the file cannot be stat'ed", () => {
     setLogLevel("debug");
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
