@@ -226,6 +226,9 @@ importers:
       '@xenoterracide/ghb-secrets-sync':
         specifier: workspace:^
         version: link:../ghb-secrets-sync
+      '@xenoterracide/ghb-signing':
+        specifier: workspace:^
+        version: link:../ghb-signing
       clipanion:
         specifier: ^4.0.0-rc.4
         version: 4.0.0-rc.4(typanion@3.14.0)

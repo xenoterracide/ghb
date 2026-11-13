@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { findSigningSubkey, parseColonKeys } from "@xenoterracide/ghb-signing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 // The root tsc project compiles test files as CommonJS, so import.meta is
@@ -41,13 +42,64 @@ const runExpectingFailure = (bin: string, args: string[]): string => {
   throw new Error(`expected a nonzero exit: ghb ${args.join(" ")}`);
 };
 
+const runWithInput = (
+  bin: string,
+  args: string[],
+  opts: { input: string; env: Record<string, string | undefined> },
+): string =>
+  execFileSync(bin, args, {
+    cwd: workDir,
+    encoding: "utf8",
+    env: opts.env,
+    input: opts.input,
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+
+const createGnupgHome = (): string => mkdtempSync(join(tmpdir(), "ghb-signing-"));
+
+const generateSigningKey = (
+  home: string,
+  passphrase: string,
+  expiry = "1y",
+): { primaryFpr: string; subkeyFpr: string } => {
+  const uid = `Ghb Signing Test <test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.invalid>`;
+  const loopbackArgs = ["--batch", "--pinentry-mode", "loopback", "--passphrase-fd", "0"];
+  const env = { ...process.env, GNUPGHOME: home };
+
+  execFileSync("gpg", [...loopbackArgs, "--quick-generate-key", uid, "ed25519", "cert", expiry], {
+    encoding: "utf8",
+    env,
+    input: passphrase,
+  });
+
+  const [primaryKey] = parseColonKeys(execFileSync("gpg", ["--list-keys", "--with-colons"], { encoding: "utf8", env }));
+  const primaryFpr = primaryKey.fingerprint;
+
+  execFileSync("gpg", [...loopbackArgs, "--quick-add-key", primaryFpr, "ed25519", "sign", expiry], {
+    encoding: "utf8",
+    env,
+    input: passphrase,
+  });
+
+  const keysAfterSubkey = parseColonKeys(
+    execFileSync("gpg", ["--list-keys", "--with-colons"], { encoding: "utf8", env }),
+  );
+  const subkey = findSigningSubkey(keysAfterSubkey[0]);
+  if (subkey === undefined) {
+    throw new Error("signing subkey missing after key generation");
+  }
+  const subkeyFpr = subkey.fingerprint;
+
+  return { primaryFpr, subkeyFpr };
+};
+
 let bin = "";
 
 describe("the installed bin", () => {
   beforeAll(() => {
     // pack applies publishConfig (main -> dist) and rewrites workspace:^,
     // so only the packed form can run under plain node; prepack builds
-    for (const pkg of ["ghb", "ghb-pr", "ghb-secrets-sync"]) {
+    for (const pkg of ["ghb", "ghb-pr", "ghb-secrets-sync", "ghb-signing"]) {
       run("pnpm", ["pack", "--pack-destination", packsDir], join(repoRoot, "packages", pkg));
     }
 
@@ -103,5 +155,29 @@ describe("the installed bin", () => {
     expect(output).toContain("Env file not found");
     // node's eaten-flag error shape: "<path>: not found"
     expect(output).not.toContain(".env: not found");
+  });
+
+  it("binds signing check's --key instead of rejecting it", () => {
+    const output = runExpectingFailure(bin, ["signing", "check", "--key", "8042ED9A"]);
+
+    expect(output).toContain("must be a full fingerprint");
+    expect(output).not.toContain("Unknown Syntax Error");
+  });
+
+  it("exports the armored key from a piped passphrase", () => {
+    const home = createGnupgHome();
+    const PASS = "correct horse battery staple";
+    generateSigningKey(home, PASS);
+
+    try {
+      const output = runWithInput(bin, ["signing", "export"], {
+        input: PASS,
+        env: { ...process.env, GNUPGHOME: home },
+      });
+
+      expect(output).toContain("BEGIN PGP PRIVATE KEY BLOCK");
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
   });
 });
