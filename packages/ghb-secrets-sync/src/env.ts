@@ -19,7 +19,7 @@ export interface ResolveOpts {
 function parseValue(value: string, key: string, baseDir: string): EnvEntry {
   const colonIndex = value.indexOf(":");
   if (colonIndex === -1) {
-    throw new Error(`Value must have a protocol prefix (env:, file:, val:). Got: "${value}"`);
+    throw new Error(`Value must have a protocol prefix (env:, file:, val:, gpg:). Got: "${value}"`);
   }
 
   const protocol = value.slice(0, colonIndex);

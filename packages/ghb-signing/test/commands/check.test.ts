@@ -217,6 +217,34 @@ describe("CheckCommand unit", () => {
     expect(result).toBe(2);
     expect(err.join("")).toContain("Error: no keys in the keyring");
   });
+
+  it("errors when listKeys fails", async () => {
+    function createThrowingRunner(errorMessage: string): FakeRunner {
+      let called = false;
+      return {
+        get called(): boolean {
+          return called;
+        },
+        runArgv(cmd: string, args: string[]): string {
+          called = true;
+          if (cmd === "gpg" && args.join(" ") === "--list-keys --with-colons") {
+            throw new Error(errorMessage);
+          }
+          throw new Error(`Unexpected command: ${cmd} ${args.join(" ")}`);
+        },
+      };
+    }
+
+    const runner = createThrowingRunner("gpg is not installed");
+    const { err } = captureStreams();
+
+    const result = await makeCommand(runner).execute();
+
+    expect(result).toBe(1);
+    const stderr = err.join("");
+    expect(stderr).toContain("Error: Failed to list keys: gpg is not installed");
+    expect(stderr).not.toContain("Internal Error");
+  });
 });
 
 describe("CheckCommand integration", () => {

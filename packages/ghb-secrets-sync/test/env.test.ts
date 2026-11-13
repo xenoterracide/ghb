@@ -327,9 +327,10 @@ describe("resolveSecretValue", () => {
     const result = resolveSecretValue("GPG_SIGNING_KEY", envFileEntries, undefined, { runner });
 
     expect(result).toBeUndefined();
-    expect(warn.mock.calls.map((call) => call.join(" ")).join(" ")).toContain(
-      'Warning: Could not export GPG key for secret "GPG_SIGNING_KEY"',
-    );
+    const warning = warn.mock.calls.map((call) => call.join(" ")).join(" ");
+    expect(warning).toContain('Warning: Could not export GPG key for secret "GPG_SIGNING_KEY"');
+    expect(warning).toContain(`Failed to export secret key ${fpr}: gpg exported no key`);
+    expect(warning).not.toContain(`Failed to export secret key ${fpr}: Failed to export`);
   });
 });
 

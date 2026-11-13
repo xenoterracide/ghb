@@ -45,7 +45,14 @@ export class CheckCommand extends Command {
     }
     const windowDays = Number.parseInt(daysOption, 10);
 
-    const keys = listKeys({ runner: this.runner });
+    let keys;
+    try {
+      keys = listKeys({ runner: this.runner });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      process.stderr.write(`Error: ${msg}\n`);
+      return 1;
+    }
     const selected = selectKey(keys, keyOption);
 
     if (selected.status === "missing") {

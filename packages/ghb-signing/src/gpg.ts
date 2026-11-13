@@ -67,20 +67,21 @@ export function listKeys(opts?: GpgOpts): PublicKey[] {
 export function exportSecretKey(fingerprint: string, opts?: GpgOpts): string {
   const runner = opts?.runner ?? defaultRunner;
   const { args, input } = loopbackArgs(opts?.passphrase);
+  let output: string;
   try {
-    const output = runner.runArgv(
+    output = runner.runArgv(
       "gpg",
       [...args, "--armor", "--export-secret-keys", fingerprint],
       runOpts(opts?.env, input),
     );
-    if (output === "") {
-      throw new Error(`Failed to export secret key ${fingerprint}: gpg exported no key`);
-    }
-    return output;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     throw new Error(`Failed to export secret key ${fingerprint}: ${msg}`, { cause: e });
   }
+  if (output === "") {
+    throw new Error(`Failed to export secret key ${fingerprint}: gpg exported no key`);
+  }
+  return output;
 }
 
 // eslint-disable-next-line @typescript-eslint/max-params

@@ -303,6 +303,7 @@ describe("SyncCommand", () => {
 
     expect(result).toBe(0);
     expect(calls.some((c) => c.cmd === "gpg" && c.input === "pass")).toBe(true);
+    expect(calls.some((c) => c.cmd === "gh" && c.args.includes("GPG_SIGNING_KEY") && c.input === armor)).toBe(true);
   });
 
   it("should skip a gpg: entry when export fails and still sync other secrets", async () => {
