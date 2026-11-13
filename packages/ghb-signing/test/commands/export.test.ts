@@ -71,6 +71,24 @@ function createSequenceRunner(responses: string[]): SequenceRunner {
   };
 }
 
+function createFailingRunner(errorMessage: string): SequenceRunner {
+  const calls: SequenceCall[] = [];
+  return {
+    calls,
+    runArgv(
+      cmd: string,
+      args: string[],
+      opts?: { cwd?: string; env?: Record<string, string>; input?: string },
+    ): string {
+      calls.push({ cmd, args, opts });
+      if (calls.length === 1) {
+        return colonKey();
+      }
+      throw new Error(errorMessage);
+    },
+  };
+}
+
 function captureStreams(): { out: string[]; err: string[] } {
   const out: string[] = [];
   const err: string[] = [];
@@ -85,6 +103,12 @@ function captureStreams(): { out: string[]; err: string[] } {
   return { out, err };
 }
 
+async function runExport(command: ExportCommand): Promise<{ exit: number; out: string; err: string }> {
+  const { out, err } = captureStreams();
+  const exit = await command.execute();
+  return { exit, out: out.join(""), err: err.join("") };
+}
+
 function makeCommand(runner: SequenceRunner): ExportCommand {
   const cmd = new ExportCommand();
   cmd.runner = runner;
@@ -92,158 +116,166 @@ function makeCommand(runner: SequenceRunner): ExportCommand {
   return cmd;
 }
 
-describe("ExportCommand unit", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
+function importArmor(armor: string): void {
+  execFileSync("gpg", ["--batch", "--pinentry-mode", "loopback", "--import"], {
+    encoding: "utf8",
+    env: process.env,
+    input: armor,
   });
+}
 
+function assertListKeysCall(call: SequenceCall): void {
+  expect(call.cmd).toBe("gpg");
+  expect(call.args).toEqual(["--list-keys", "--with-colons"]);
+}
+
+function assertExportCall(call: SequenceCall): void {
+  expect(call.cmd).toBe("gpg");
+  expect(call.args).toEqual([
+    "--batch",
+    "--pinentry-mode",
+    "loopback",
+    "--passphrase-fd",
+    "0",
+    "--armor",
+    "--export-secret-keys",
+    PRIMARY_FPR,
+  ]);
+  expect(call.opts).toEqual({ input: PASS });
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe("ExportCommand exports armored secret", () => {
   it("exports the armored secret key to stdout with a loopback passphrase", async () => {
     const runner = createSequenceRunner([colonKey(), ARMOR]);
-    const { out, err } = captureStreams();
 
-    const result = await makeCommand(runner).execute();
+    const { exit, out, err } = await runExport(makeCommand(runner));
 
-    expect(result).toBe(0);
+    expect(exit).toBe(0);
     expect(runner.calls).toHaveLength(2);
-
-    expect(runner.calls[0].cmd).toBe("gpg");
-    expect(runner.calls[0].args).toEqual(["--list-keys", "--with-colons"]);
-
-    expect(runner.calls[1].cmd).toBe("gpg");
-    expect(runner.calls[1].args).toEqual([
-      "--batch",
-      "--pinentry-mode",
-      "loopback",
-      "--passphrase-fd",
-      "0",
-      "--armor",
-      "--export-secret-keys",
-      PRIMARY_FPR,
-    ]);
-    expect(runner.calls[1].opts).toEqual({ input: PASS });
-
-    expect(out.join("")).toBe(ARMOR + "\n");
-    expect(err.join("")).toBe("");
-  });
-
-  it("errors when --key is not a full fingerprint", async () => {
-    const runner = createSequenceRunner([]);
-    const { err } = captureStreams();
-
-    const cmd = makeCommand(runner);
-    cmd.key = "8042ED9A";
-    const result = await cmd.execute();
-
-    expect(result).toBe(1);
-    expect(runner.calls).toHaveLength(0);
-    expect(err.join("")).toContain('Error: --key must be a full fingerprint; got "8042ED9A"');
-  });
-
-  it("errors when the keyring is empty", async () => {
-    const runner = createSequenceRunner([""]);
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(2);
-    expect(err.join("")).toContain("Error: no keys in the keyring");
-  });
-
-  it("errors with both fingerprints when no --key and several keys", async () => {
-    const runner = createSequenceRunner([twoKeys()]);
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(2);
-    const stderr = err.join("");
-    expect(stderr).toContain("Error: multiple keys in the keyring; pass --key with one of:");
-    expect(stderr).toContain(PRIMARY_FPR);
-    expect(stderr).toContain(OTHER_PRIMARY_FPR);
-    expect(runner.calls).toHaveLength(1);
-  });
-
-  it("errors when --key matches nothing", async () => {
-    const runner = createSequenceRunner([colonKey()]);
-    const { err } = captureStreams();
-
-    const cmd = makeCommand(runner);
-    cmd.key = OTHER_PRIMARY_FPR;
-    const result = await cmd.execute();
-
-    expect(result).toBe(2);
-    expect(err.join("")).toContain(`Error: key ${OTHER_PRIMARY_FPR} not found`);
-  });
-
-  it("errors when the export fails", async () => {
-    const runner: SequenceRunner = {
-      calls: [],
-      runArgv(cmd, args, opts) {
-        runner.calls.push({ cmd, args, opts });
-        if (runner.calls.length === 1) {
-          return colonKey();
-        }
-        throw new Error("gpg exited with code 2");
-      },
-    };
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(1);
-    expect(runner.calls).toHaveLength(2);
-    expect(err.join("")).toContain(`Error: Failed to export secret key ${PRIMARY_FPR}: gpg exited with code 2`);
-  });
-
-  it("exports a key without a signing subkey", async () => {
-    const noSigning = colonKey().replace(/:::::s:::::ed25519::/, ":::::e:::::ed25519::");
-    const runner = createSequenceRunner([noSigning, ARMOR]);
-    const { out, err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(0);
-    expect(runner.calls).toHaveLength(2);
-    expect(out.join("")).toBe(ARMOR + "\n");
-    expect(err.join("")).toBe("");
+    assertListKeysCall(runner.calls[0]);
+    assertExportCall(runner.calls[1]);
+    expect(out).toBe(ARMOR + "\n");
+    expect(err).toBe("");
   });
 });
 
+describe("ExportCommand non-signing key", () => {
+  it("exports a key without a signing subkey", async () => {
+    const noSigning = colonKey().replace(/:::::s:::::ed25519::/, ":::::e:::::ed25519::");
+    const runner = createSequenceRunner([noSigning, ARMOR]);
+
+    const { exit, out, err } = await runExport(makeCommand(runner));
+
+    expect(exit).toBe(0);
+    expect(runner.calls).toHaveLength(2);
+    expect(out).toBe(ARMOR + "\n");
+    expect(err).toBe("");
+  });
+});
+
+describe("ExportCommand key validation", () => {
+  it("errors when --key is not a full fingerprint", async () => {
+    const runner = createSequenceRunner([]);
+    const cmd = makeCommand(runner);
+    cmd.key = "8042ED9A";
+
+    const { exit, err } = await runExport(cmd);
+
+    expect(exit).toBe(1);
+    expect(runner.calls).toHaveLength(0);
+    expect(err).toContain('Error: --key must be a full fingerprint; got "8042ED9A"');
+  });
+});
+
+describe("ExportCommand empty keyring", () => {
+  it("errors when the keyring is empty", async () => {
+    const runner = createSequenceRunner([""]);
+
+    const { exit, err } = await runExport(makeCommand(runner));
+
+    expect(exit).toBe(2);
+    expect(err).toContain("Error: no keys in the keyring");
+  });
+});
+
+describe("ExportCommand ambiguous keys", () => {
+  it("errors with both fingerprints when no --key and several keys", async () => {
+    const runner = createSequenceRunner([twoKeys()]);
+
+    const { exit, err } = await runExport(makeCommand(runner));
+
+    expect(exit).toBe(2);
+    expect(err).toContain("Error: multiple keys in the keyring; pass --key with one of:");
+    expect(err).toContain(PRIMARY_FPR);
+    expect(err).toContain(OTHER_PRIMARY_FPR);
+    expect(runner.calls).toHaveLength(1);
+  });
+});
+
+describe("ExportCommand key not found", () => {
+  it("errors when --key matches nothing", async () => {
+    const runner = createSequenceRunner([colonKey()]);
+    const cmd = makeCommand(runner);
+    cmd.key = OTHER_PRIMARY_FPR;
+
+    const { exit, err } = await runExport(cmd);
+
+    expect(exit).toBe(2);
+    expect(err).toContain(`Error: key ${OTHER_PRIMARY_FPR} not found`);
+  });
+});
+
+describe("ExportCommand export failure", () => {
+  it("errors when the export fails", async () => {
+    const runner = createFailingRunner("gpg exited with code 2");
+
+    const { exit, err } = await runExport(makeCommand(runner));
+
+    expect(exit).toBe(1);
+    expect(runner.calls).toHaveLength(2);
+    expect(err).toContain(`Error: Failed to export secret key ${PRIMARY_FPR}: gpg exited with code 2`);
+  });
+});
+
+const originalEnv = process.env;
+let exportHome: string;
+
+function setupExportHome(): void {
+  exportHome = createGnupgHome();
+  process.env = { ...originalEnv, GNUPGHOME: exportHome };
+}
+
+function teardownExportHome(): void {
+  process.env = originalEnv;
+}
+
+function assertArmoredFormat(out: string): void {
+  expect(out).toContain("-----BEGIN PGP PRIVATE KEY BLOCK-----");
+  expect(out.endsWith("\n")).toBe(true);
+  expect(out.endsWith("\n\n")).toBe(false);
+}
+
 describe("ExportCommand integration", () => {
-  const originalEnv = process.env;
-  let home: string;
-
-  beforeEach(() => {
-    home = createGnupgHome();
-    process.env = { ...originalEnv, GNUPGHOME: home };
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-    vi.restoreAllMocks();
-  });
+  beforeEach(setupExportHome);
+  afterEach(teardownExportHome);
 
   it("exports a generated key and reimports it into a fresh home", async () => {
-    const generated = generateSigningKey(home, PASS);
+    const generated = generateSigningKey(exportHome, PASS);
     const command = new ExportCommand();
     command.passphrase = PASS;
-    const { out } = captureStreams();
 
-    const result = await command.execute();
+    const { exit, out } = await runExport(command);
 
-    expect(result).toBe(0);
-    const stdout = out.join("");
-    expect(stdout).toContain("-----BEGIN PGP PRIVATE KEY BLOCK-----");
-    expect(stdout.endsWith("\n")).toBe(true);
-    expect(stdout.endsWith("\n\n")).toBe(false);
+    expect(exit).toBe(0);
+    assertArmoredFormat(out);
 
     const freshHome = createGnupgHome();
     process.env = { ...originalEnv, GNUPGHOME: freshHome };
-    execFileSync("gpg", ["--batch", "--pinentry-mode", "loopback", "--import"], {
-      encoding: "utf8",
-      env: process.env,
-      input: stdout,
-    });
+    importArmor(out);
 
     const keys = listKeys();
     const primary = keys.find((key) => key.fingerprint === generated.primaryFpr);

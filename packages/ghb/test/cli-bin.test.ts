@@ -57,41 +57,56 @@ const runWithInput = (
 
 const createGnupgHome = (): string => mkdtempSync(join(tmpdir(), "ghb-signing-"));
 
-const generateSigningKey = (
-  home: string,
-  passphrase: string,
-  expiry = "1y",
-): { primaryFpr: string; subkeyFpr: string } => {
-  const uid = `Ghb Signing Test <test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.invalid>`;
-  const loopbackArgs = ["--batch", "--pinentry-mode", "loopback", "--passphrase-fd", "0"];
-  const env = { ...process.env, GNUPGHOME: home };
+function generateUid(): string {
+  return `Ghb Signing Test <test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.invalid>`;
+}
 
-  execFileSync("gpg", [...loopbackArgs, "--quick-generate-key", uid, "ed25519", "cert", expiry], {
-    encoding: "utf8",
-    env,
-    input: passphrase,
-  });
+function loopbackArgs(): string[] {
+  return ["--batch", "--pinentry-mode", "loopback", "--passphrase-fd", "0"];
+}
 
-  const [primaryKey] = parseColonKeys(execFileSync("gpg", ["--list-keys", "--with-colons"], { encoding: "utf8", env }));
-  const primaryFpr = primaryKey.fingerprint;
+interface KeyPair {
+  primaryFpr: string;
+  subkeyFpr: string;
+}
 
-  execFileSync("gpg", [...loopbackArgs, "--quick-add-key", primaryFpr, "ed25519", "sign", expiry], {
-    encoding: "utf8",
-    env,
-    input: passphrase,
-  });
+function primaryFingerprint(env: Record<string, string>): string {
+  const keys = parseColonKeys(execFileSync("gpg", ["--list-keys", "--with-colons"], { encoding: "utf8", env }));
+  return keys[0].fingerprint;
+}
 
-  const keysAfterSubkey = parseColonKeys(
-    execFileSync("gpg", ["--list-keys", "--with-colons"], { encoding: "utf8", env }),
-  );
-  const subkey = findSigningSubkey(keysAfterSubkey[0]);
+function subkeyFingerprint(env: Record<string, string>): string {
+  const keys = parseColonKeys(execFileSync("gpg", ["--list-keys", "--with-colons"], { encoding: "utf8", env }));
+  const subkey = findSigningSubkey(keys[0]);
   if (subkey === undefined) {
     throw new Error("signing subkey missing after key generation");
   }
-  const subkeyFpr = subkey.fingerprint;
+  return subkey.fingerprint;
+}
+
+function generateSigningKey(home: string, passphrase: string, expiry = "1y"): KeyPair {
+  const env = { ...process.env, GNUPGHOME: home };
+  const uid = generateUid();
+  const args = loopbackArgs();
+
+  execFileSync("gpg", [...args, "--quick-generate-key", uid, "ed25519", "cert", expiry], {
+    encoding: "utf8",
+    env,
+    input: passphrase,
+  });
+
+  const primaryFpr = primaryFingerprint(env);
+
+  execFileSync("gpg", [...args, "--quick-add-key", primaryFpr, "ed25519", "sign", expiry], {
+    encoding: "utf8",
+    env,
+    input: passphrase,
+  });
+
+  const subkeyFpr = subkeyFingerprint(env);
 
   return { primaryFpr, subkeyFpr };
-};
+}
 
 let bin = "";
 
@@ -130,16 +145,16 @@ afterAll(() => {
   rmSync(workDir, { recursive: true, force: true });
 });
 
-describe("the installed bin", () => {
+describe("the installed bin help", () => {
   it("answers help when installed from tarballs and invoked through its bin link", () => {
     const stdout = run(bin, ["--help"], workDir);
 
     expect(stdout).toContain("ghb <command>");
   });
+});
 
+describe("the installed bin pr verify", () => {
   it("binds pr verify's flags and PR selector instead of rejecting them", () => {
-    // outside a git repository the command must fail at its first git
-    // call, never at the parser
     const output = runExpectingFailure(bin, ["pr", "verify", "--interval", "5", "--timeout", "10", "585"]);
 
     expect(output).toContain("not a git repository");
@@ -147,34 +162,34 @@ describe("the installed bin", () => {
   });
 });
 
-describe("the installed bin", () => {
+describe("the installed bin secrets get", () => {
   it("binds the secrets commands' positionals instead of rejecting them", () => {
-    // an unbound positional dies as a syntax error; a bound one reaches
-    // the resolver, which fails on an unknown name without touching gh
     const output = runExpectingFailure(bin, ["secrets", "get", "NO_SUCH_SECRET"]);
 
     expect(output).toContain('Could not resolve secret "NO_SUCH_SECRET"');
     expect(output).not.toContain("Unknown Syntax Error");
   });
+});
 
+describe("the installed bin secrets sync env-file", () => {
   it("delivers --env-file to the command instead of node", () => {
-    // node recognizes --env-file after the entry script, eats it, and
-    // dies on the missing file with its own error before the command
-    // runs; the command's own error must reach the user instead
     const output = runExpectingFailure(bin, ["secrets", "sync", "--env-file", join(workDir, "no-such.env")]);
 
     expect(output).toContain("Env file not found");
-    // node's eaten-flag error shape: "<path>: not found"
     expect(output).not.toContain(".env: not found");
   });
+});
 
+describe("the installed bin signing check", () => {
   it("binds signing check's --key instead of rejecting it", () => {
     const output = runExpectingFailure(bin, ["signing", "check", "--key", "8042ED9A"]);
 
     expect(output).toContain("must be a full fingerprint");
     expect(output).not.toContain("Unknown Syntax Error");
   });
+});
 
+describe("the installed bin signing export", () => {
   it("exports the armored key from a piped passphrase", () => {
     const home = createGnupgHome();
     const PASS = "correct horse battery staple";

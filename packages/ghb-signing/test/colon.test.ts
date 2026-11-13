@@ -28,7 +28,28 @@ fpr:::::::::ABCDEF0123456789ABCDEF0123456789ABCDEF01:
 sub:u:255:22:0123456789ABCDEF:1794537431:1826073431:::::s:::::ed25519::
 fpr:::::::::0123456789ABCDEF0123456789ABCDEF01234567:`;
 
-describe("parseColonKeys", () => {
+function makeSubkey(keyId: string, fingerprint: string, capabilities: string): SubKey {
+  return {
+    keyId,
+    fingerprint,
+    capabilities,
+    createdAt: 1794537422,
+    expiresAt: 1826073422,
+  };
+}
+
+function makePublicKey(subkey: SubKey): PublicKey {
+  return {
+    keyId: "32BF5B09B5329853",
+    fingerprint: "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853",
+    capabilities: "cSC",
+    createdAt: 1794537421,
+    expiresAt: 1826073421,
+    subkeys: [subkey],
+  };
+}
+
+describe("parseColonKeys one key", () => {
   it("parses one key with its signing subkey", () => {
     expect(parseColonKeys(FIXTURE)).toEqual([
       {
@@ -49,7 +70,9 @@ describe("parseColonKeys", () => {
       },
     ]);
   });
+});
 
+describe("parseColonKeys empty expiry", () => {
   it("reads an empty expiry as never", () => {
     const keys = parseColonKeys(NO_EXPIRY);
 
@@ -57,7 +80,9 @@ describe("parseColonKeys", () => {
     expect(keys[0]?.expiresAt).toBeNull();
     expect(keys[0]?.subkeys[0]?.expiresAt).toBeNull();
   });
+});
 
+describe("parseColonKeys multiple keys", () => {
   it("keeps each key's subkeys with it", () => {
     const keys = parseColonKeys(TWO_KEYS);
 
@@ -68,7 +93,7 @@ describe("parseColonKeys", () => {
   });
 });
 
-describe("findSigningSubkey", () => {
+describe("findSigningSubkey fixture", () => {
   it("returns the signing-capable subkey of the fixture key", () => {
     const [key] = parseColonKeys(FIXTURE);
 
@@ -80,36 +105,19 @@ describe("findSigningSubkey", () => {
       expiresAt: 1826073422,
     });
   });
+});
 
+describe("findSigningSubkey missing sign", () => {
   it("returns undefined when no subkey can sign", () => {
-    const key: PublicKey = {
-      keyId: "32BF5B09B5329853",
-      fingerprint: "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853",
-      capabilities: "cSC",
-      createdAt: 1794537421,
-      expiresAt: 1826073421,
-      subkeys: [
-        {
-          keyId: "C3C46C6F2A3408CC",
-          fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
-          capabilities: "e",
-          createdAt: 1794537422,
-          expiresAt: 1826073422,
-        },
-      ],
-    };
+    const key = makePublicKey(makeSubkey("C3C46C6F2A3408CC", "C17EB30E70FBD586F5794285C3C46C6F2A3408CC", "e"));
 
     expect(findSigningSubkey(key)).toBeUndefined();
   });
+});
 
+describe("findSigningSubkey newest", () => {
   it("picks the newest signing subkey", () => {
-    const older: SubKey = {
-      keyId: "C3C46C6F2A3408CC",
-      fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
-      capabilities: "s",
-      createdAt: 1794537422,
-      expiresAt: 1826073422,
-    };
+    const older = makeSubkey("C3C46C6F2A3408CC", "C17EB30E70FBD586F5794285C3C46C6F2A3408CC", "s");
     const newer: SubKey = {
       keyId: "0123456789ABCDEF",
       fingerprint: "0123456789ABCDEF0123456789ABCDEF01234567",
@@ -117,89 +125,88 @@ describe("findSigningSubkey", () => {
       createdAt: 1794537431,
       expiresAt: 1826073431,
     };
-    const key: PublicKey = {
-      keyId: "32BF5B09B5329853",
-      fingerprint: "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853",
-      capabilities: "cSC",
-      createdAt: 1794537421,
-      expiresAt: 1826073421,
-      subkeys: [older, newer],
-    };
+    const key = makePublicKey(older);
+    key.subkeys.push(newer);
 
     expect(findSigningSubkey(key)).toBe(newer);
   });
+});
 
+describe("findSigningSubkey uppercase S", () => {
   it("matches uppercase S as sign", () => {
-    const subkey: SubKey = {
-      keyId: "C3C46C6F2A3408CC",
-      fingerprint: "C17EB30E70FBD586F5794285C3C46C6F2A3408CC",
-      capabilities: "S",
-      createdAt: 1794537422,
-      expiresAt: 1826073422,
-    };
-    const key: PublicKey = {
-      keyId: "32BF5B09B5329853",
-      fingerprint: "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853",
-      capabilities: "cSC",
-      createdAt: 1794537421,
-      expiresAt: 1826073421,
-      subkeys: [subkey],
-    };
+    const subkey = makeSubkey("C3C46C6F2A3408CC", "C17EB30E70FBD586F5794285C3C46C6F2A3408CC", "S");
+    const key = makePublicKey(subkey);
 
     expect(findSigningSubkey(key)).toBe(subkey);
   });
 });
 
-describe("isValidFingerprint", () => {
+describe("isValidFingerprint 40-hex", () => {
   it("accepts a 40-hex fingerprint", () => {
     expect(isValidFingerprint("E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853")).toBe(true);
   });
+});
 
+describe("isValidFingerprint 64-hex", () => {
   it("accepts a 64-hex fingerprint", () => {
     expect(isValidFingerprint("e2161dbffa7e2c4ed8a6dc8032bf5b09b5329853e2161dbffa7e2c4ed8a6dc80")).toBe(true);
   });
+});
 
+describe("isValidFingerprint lowercase", () => {
   it("accepts a lowercase 40-hex fingerprint", () => {
     expect(isValidFingerprint("e2161dbffa7e2c4ed8a6dc8032bf5b09b5329853")).toBe(true);
   });
+});
 
+describe("isValidFingerprint key id", () => {
   it("rejects a key id", () => {
     expect(isValidFingerprint("32BF5B09B5329853")).toBe(false);
   });
+});
 
+describe("isValidFingerprint non-hex", () => {
   it("rejects non-hex characters", () => {
     expect(isValidFingerprint("G2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853")).toBe(false);
   });
 });
 
-describe("selectKey", () => {
-  const [fixtureKey, secondKey] = parseColonKeys(TWO_KEYS);
+const [fixtureKey, secondKey] = parseColonKeys(TWO_KEYS);
 
+describe("selectKey single", () => {
   it("returns ok for a single key", () => {
     expect(selectKey([fixtureKey])).toEqual({
       status: "ok",
       key: fixtureKey,
     });
   });
+});
 
+describe("selectKey missing", () => {
   it("returns missing when there are no keys", () => {
     expect(selectKey([])).toEqual({ status: "missing" });
   });
+});
 
+describe("selectKey ambiguous", () => {
   it("returns ambiguous with both keys", () => {
     expect(selectKey([fixtureKey, secondKey])).toEqual({
       status: "ambiguous",
       keys: [fixtureKey, secondKey],
     });
   });
+});
 
+describe("selectKey case insensitive", () => {
   it("matches a fingerprint case-insensitively", () => {
     expect(selectKey([fixtureKey], "e2161dbffa7e2c4ed8a6dc8032bf5b09b5329853")).toEqual({
       status: "ok",
       key: fixtureKey,
     });
   });
+});
 
+describe("selectKey not found", () => {
   it("returns not-found when the fingerprint matches nothing", () => {
     expect(selectKey([fixtureKey], "0123456789ABCDEF0123456789ABCDEF01234567")).toEqual({ status: "not-found" });
   });

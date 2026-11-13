@@ -1,0 +1,91 @@
+// SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+import { findSigningSubkey, isValidFingerprint, selectKey } from "./colon.js";
+import { listKeys } from "./gpg.js";
+import type { CommandRunner, PublicKey, SubKey } from "./types.js";
+
+export type PrimarySelection = { status: "ok"; key: PublicKey } | { status: "fail"; exit: number };
+export type SigningSelection = { status: "ok"; key: PublicKey; subkey: SubKey } | { status: "fail"; exit: number };
+
+export function writeError(message: string): void {
+  process.stderr.write(`Error: ${message}\n`);
+}
+
+function fail(exit: number): { status: "fail"; exit: number } {
+  return { status: "fail", exit };
+}
+
+// An empty --key reads as absent, matching the empty-flag convention of
+// the secrets commands.
+function normalize(key: string | undefined): string | undefined {
+  return key === "" ? undefined : key;
+}
+
+function writeAmbiguous(keys: PublicKey[]): void {
+  writeError("multiple keys in the keyring; pass --key with one of:");
+  for (const key of keys) {
+    process.stderr.write(`${key.fingerprint}\n`);
+  }
+}
+
+function primaryFromKeys(keys: PublicKey[], key: string | undefined): PrimarySelection {
+  const selected = selectKey(keys, key);
+
+  if (selected.status === "missing") {
+    writeError("no keys in the keyring");
+    return fail(2);
+  }
+  if (selected.status === "ambiguous") {
+    writeAmbiguous(selected.keys);
+    return fail(2);
+  }
+  if (selected.status === "not-found") {
+    // selectKey answers not-found only for a fingerprint that was given
+    writeError(`key ${String(key)} not found`);
+    return fail(2);
+  }
+  return { status: "ok", key: selected.key };
+}
+
+/**
+ * Resolve the primary key a signing command operates on: validate the
+ * `--key` fingerprint, list the keyring, apply the selection rules. A
+ * `fail` result has already written its error to stderr.
+ */
+export function selectPrimary(rawKey: string | undefined, runner?: CommandRunner): PrimarySelection {
+  const key = normalize(rawKey);
+  if (key !== undefined && !isValidFingerprint(key)) {
+    writeError(`--key must be a full fingerprint; got "${key}"`);
+    return fail(1);
+  }
+
+  let keys;
+  try {
+    keys = listKeys({ runner });
+  } catch (e) {
+    writeError(e instanceof Error ? e.message : String(e));
+    return fail(1);
+  }
+  return primaryFromKeys(keys, key);
+}
+
+/**
+ * As `selectPrimary`, but also resolves the signing subkey; commands
+ * that renew or report expiry need the subkey, whose expiry is the one
+ * that gates CI signing.
+ */
+export function selectSigning(rawKey: string | undefined, runner?: CommandRunner): SigningSelection {
+  const primary = selectPrimary(rawKey, runner);
+  if (primary.status === "fail") {
+    return primary;
+  }
+
+  const subkey = findSigningSubkey(primary.key);
+  if (subkey === undefined) {
+    writeError(`key ${primary.key.fingerprint} has no signing subkey`);
+    return fail(2);
+  }
+  return { status: "ok", key: primary.key, subkey };
+}

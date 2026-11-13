@@ -4,9 +4,64 @@
 
 import { Command, Option } from "clipanion";
 
-import { findSigningSubkey, isValidFingerprint, selectKey } from "../colon.js";
-import { listKeys } from "../gpg.js";
-import type { CommandRunner } from "../types.js";
+import { writeError, selectSigning } from "../select.js";
+import type { CommandRunner, PublicKey, SubKey } from "../types.js";
+
+function formatDate(seconds: number): string {
+  return new Date(seconds * 1000).toISOString().slice(0, 10);
+}
+
+function daysUntil(expiresAt: number): number {
+  const now = Math.floor(Date.now() / 1000);
+  return Math.floor((expiresAt - now) / 86400);
+}
+
+interface ExpiryReport {
+  subkey: SubKey;
+  date: string;
+  days: number;
+  windowDays: number;
+  primaryFpr: string;
+}
+
+function reportExpired(report: ExpiryReport): number {
+  writeError(`signing subkey ${report.subkey.fingerprint} expired ${report.date} (${-report.days} days ago)`);
+  process.stderr.write(`Run: ghb signing renew --key ${report.primaryFpr}\n`);
+  return 1;
+}
+
+function reportWithinWindow(report: ExpiryReport): number {
+  writeError(
+    `signing subkey ${report.subkey.fingerprint} expires ${report.date} (${report.days} days; within ${report.windowDays} days)`,
+  );
+  process.stderr.write(`Run: ghb signing renew --key ${report.primaryFpr}\n`);
+  return 1;
+}
+
+function reportExpiry(key: PublicKey, subkey: SubKey, windowDays: number): number {
+  if (subkey.expiresAt === null) {
+    process.stdout.write(`signing subkey ${subkey.fingerprint} never expires\n`);
+    return 0;
+  }
+
+  const report: ExpiryReport = {
+    subkey,
+    date: formatDate(subkey.expiresAt),
+    days: daysUntil(subkey.expiresAt),
+    windowDays,
+    primaryFpr: key.fingerprint,
+  };
+
+  if (report.days < 0) {
+    return reportExpired(report);
+  }
+  if (report.days <= windowDays) {
+    return reportWithinWindow(report);
+  }
+
+  process.stdout.write(`signing subkey ${subkey.fingerprint} expires ${report.date} (${report.days} days)\n`);
+  return 0;
+}
 
 export class CheckCommand extends Command {
   public static paths = [["signing", "check"]];
@@ -31,79 +86,28 @@ export class CheckCommand extends Command {
     return this.check();
   }
 
+  private parseWindowDays(): number | undefined {
+    const option = typeof this.days === "string" ? this.days : "30";
+    if (!/^\d+$/.test(option)) {
+      writeError(`--days must be a number; got "${option}"`);
+      return undefined;
+    }
+    return Number.parseInt(option, 10);
+  }
+
   private check(): number {
-    const keyOption = typeof this.key === "string" ? this.key : undefined;
-    if (keyOption !== undefined && keyOption !== "" && !isValidFingerprint(keyOption)) {
-      process.stderr.write(`Error: --key must be a full fingerprint; got "${keyOption}"\n`);
-      return 1;
-    }
+    const windowDays = this.parseWindowDays();
+    if (windowDays === undefined) return 1;
 
-    const daysOption = typeof this.days === "string" ? this.days : "30";
-    if (!/^\d+$/.test(daysOption)) {
-      process.stderr.write(`Error: --days must be a number; got "${daysOption}"\n`);
-      return 1;
-    }
-    const windowDays = Number.parseInt(daysOption, 10);
+    const selection = selectSigning(this.keyOption(), this.runner);
+    if (selection.status === "fail") return selection.exit;
 
-    let keys;
-    try {
-      keys = listKeys({ runner: this.runner });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      process.stderr.write(`Error: ${msg}\n`);
-      return 1;
-    }
-    const selected = selectKey(keys, keyOption);
+    return reportExpiry(selection.key, selection.subkey, windowDays);
+  }
 
-    if (selected.status === "missing") {
-      process.stderr.write("Error: no keys in the keyring\n");
-      return 2;
-    }
-
-    if (selected.status === "ambiguous") {
-      process.stderr.write("Error: multiple keys in the keyring; pass --key with one of:\n");
-      for (const key of selected.keys) {
-        process.stderr.write(`${key.fingerprint}\n`);
-      }
-      return 2;
-    }
-
-    if (selected.status === "not-found") {
-      process.stderr.write(`Error: key ${keyOption} not found\n`);
-      return 2;
-    }
-
-    const { key } = selected;
-    const subkey = findSigningSubkey(key);
-    if (subkey === undefined) {
-      process.stderr.write(`Error: key ${key.fingerprint} has no signing subkey\n`);
-      return 2;
-    }
-
-    if (subkey.expiresAt === null) {
-      process.stdout.write(`signing subkey ${subkey.fingerprint} never expires\n`);
-      return 0;
-    }
-
-    const now = Math.floor(Date.now() / 1000);
-    const days = Math.floor((subkey.expiresAt - now) / 86400);
-    const date = new Date(subkey.expiresAt * 1000).toISOString().slice(0, 10);
-
-    if (days < 0) {
-      process.stderr.write(`Error: signing subkey ${subkey.fingerprint} expired ${date} (${-days} days ago)\n`);
-      process.stderr.write(`Run: ghb signing renew --key ${key.fingerprint}\n`);
-      return 1;
-    }
-
-    if (days <= windowDays) {
-      process.stderr.write(
-        `Error: signing subkey ${subkey.fingerprint} expires ${date} (${days} days; within ${windowDays} days)\n`,
-      );
-      process.stderr.write(`Run: ghb signing renew --key ${key.fingerprint}\n`);
-      return 1;
-    }
-
-    process.stdout.write(`signing subkey ${subkey.fingerprint} expires ${date} (${days} days)\n`);
-    return 0;
+  // Tests construct the command without clipanion's parser, so unset
+  // options hold the Option marker, not a string.
+  private keyOption(): string | undefined {
+    return typeof this.key === "string" ? this.key : undefined;
   }
 }

@@ -16,6 +16,7 @@ interface SyncOptions {
   repo?: string;
   label?: string;
   dryRun?: boolean;
+  passphrase?: string;
 }
 
 function createFakeRunner(responses: Map<string, string>): CommandRunner {
@@ -37,6 +38,10 @@ function writeEnvFile(dir: string, content: string): string {
   return envPath;
 }
 
+function gpgExportCommand(fpr: string): string {
+  return `gpg --batch --pinentry-mode loopback --passphrase-fd 0 --armor --export-secret-keys ${fpr}`;
+}
+
 async function runSync(options: SyncOptions): Promise<number> {
   const cmd = new SyncCommand();
   Object.assign(cmd, options);
@@ -56,22 +61,24 @@ afterEach(() => {
   process.env = originalEnv;
 });
 
-describe("SyncCommand", () => {
-  it("should return error when neither --secrets nor --env-file provided", async () => {
+describe("SyncCommand missing input", () => {
+  it("returns error when neither --secrets nor --env-file provided", async () => {
     const result = await runSync({ repo: "owner/target", dryRun: true });
 
     expect(result).toBe(1);
   });
+});
 
-  it("should return error when both --to and --label provided", async () => {
+describe("SyncCommand conflicting target", () => {
+  it("returns error when both --to and --label provided", async () => {
     const result = await runSync({ secrets: "API_KEY", repo: "owner/target", label: "production", dryRun: true });
 
     expect(result).toBe(1);
   });
 });
 
-describe("SyncCommand", () => {
-  it("should sync secrets from environment variables to specific repo", async () => {
+describe("SyncCommand secrets", () => {
+  it("syncs secrets from environment variables to specific repo", async () => {
     process.env.API_KEY = "test-api-key";
     process.env.SECRET = "test-secret";
     const runner = createFakeRunner(
@@ -86,8 +93,8 @@ describe("SyncCommand", () => {
   });
 });
 
-describe("SyncCommand", () => {
-  it("should sync all secrets from env file to specific repo", async () => {
+describe("SyncCommand env file", () => {
+  it("syncs all secrets from env file to specific repo", async () => {
     const envFile = writeEnvFile(tmpDir, "API_KEY=val:from-env\nSECRET=val:also-from-env\n");
     const runner = createFakeRunner(
       new Map([
@@ -101,8 +108,8 @@ describe("SyncCommand", () => {
   });
 });
 
-describe("SyncCommand", () => {
-  it("should auto-detect current repo when --to not specified", async () => {
+describe("SyncCommand repo detection", () => {
+  it("auto-detects current repo when --to not specified", async () => {
     process.env.MY_SECRET = "secret-value";
     const runner = createFakeRunner(
       new Map([
@@ -116,8 +123,8 @@ describe("SyncCommand", () => {
   });
 });
 
-describe("SyncCommand", () => {
-  it("should sync to repos with label", async () => {
+describe("SyncCommand label sync", () => {
+  it("syncs to repos with label", async () => {
     const envFile = writeEnvFile(tmpDir, "TOKEN=val:abc123\n");
     const runner = createFakeRunner(
       new Map([
@@ -136,34 +143,8 @@ describe("SyncCommand", () => {
   });
 });
 
-describe("SyncCommand", () => {
-  it("should return 0 for dry-run without making changes", async () => {
-    process.env.API_KEY = "test-key";
-    const result = await runSync({ secrets: "API_KEY", repo: "owner/target", dryRun: true });
-
-    expect(result).toBe(0);
-  });
-
-  it("should skip secrets that cannot be resolved", async () => {
-    // API_KEY is not set in the environment; only SECRET is
-    process.env.SECRET = "secret-value";
-    const runner = createFakeRunner(new Map([["gh secret set SECRET --repo owner/target", ""]]));
-    const result = await runSync({ runner, secrets: "API_KEY,SECRET", repo: "owner/target", dryRun: false });
-
-    expect(result).toBe(0);
-  });
-});
-
-describe("SyncCommand", () => {
-  it("should return error when no secrets can be resolved", async () => {
-    const result = await runSync({ secrets: "MISSING_KEY,ANOTHER_MISSING", repo: "owner/target", dryRun: false });
-
-    expect(result).toBe(1);
-  });
-});
-
-describe("SyncCommand", () => {
-  it("should return error when no target repos found", async () => {
+describe("SyncCommand empty label", () => {
+  it("returns error when no target repos found", async () => {
     process.env.API_KEY = "test-key";
     const runner = createFakeRunner(
       new Map([
@@ -177,10 +158,44 @@ describe("SyncCommand", () => {
   });
 });
 
-describe("SyncCommand", () => {
-  it("should handle setSecret errors gracefully", async () => {
+describe("SyncCommand dry run", () => {
+  it("returns 0 for dry-run without making changes", async () => {
     process.env.API_KEY = "test-key";
-    // setSecret throws because "gh secret set" is not in the map
+    const result = await runSync({ secrets: "API_KEY", repo: "owner/target", dryRun: true });
+
+    expect(result).toBe(0);
+  });
+});
+
+describe("SyncCommand skip missing", () => {
+  it("skips secrets that cannot be resolved", async () => {
+    process.env.SECRET = "secret-value";
+    const runner = createFakeRunner(new Map([["gh secret set SECRET --repo owner/target", ""]]));
+    const result = await runSync({ runner, secrets: "API_KEY,SECRET", repo: "owner/target", dryRun: false });
+
+    expect(result).toBe(0);
+  });
+});
+
+describe("SyncCommand no secrets resolved", () => {
+  it("returns error when no secrets can be resolved", async () => {
+    const result = await runSync({ secrets: "MISSING_KEY,ANOTHER_MISSING", repo: "owner/target", dryRun: false });
+
+    expect(result).toBe(1);
+  });
+});
+
+describe("SyncCommand empty secrets list", () => {
+  it("returns error when secrets list is empty after filtering", async () => {
+    const result = await runSync({ secrets: "", repo: "owner/target", dryRun: false });
+
+    expect(result).toBe(1);
+  });
+});
+
+describe("SyncCommand setSecret error", () => {
+  it("handles setSecret errors gracefully", async () => {
+    process.env.API_KEY = "test-key";
     const runner = createFakeRunner(
       new Map([["gh repo view --json nameWithOwner", '{"nameWithOwner":"current/repo"}']]),
     );
@@ -188,92 +203,88 @@ describe("SyncCommand", () => {
 
     expect(result).toBe(0);
   });
+});
 
-  it("should return error when current repo cannot be detected", async () => {
+describe("SyncCommand repo detection failure", () => {
+  it("returns error when current repo cannot be detected", async () => {
     process.env.API_KEY = "test-key";
-    // "gh repo view" throws because it is absent from the map
     const result = await runSync({ runner: createFakeRunner(new Map()), secrets: "API_KEY", dryRun: false });
 
     expect(result).toBe(1);
   });
 });
 
-describe("SyncCommand", () => {
-  it("should return error when secrets list is empty after filtering", async () => {
-    const result = await runSync({ secrets: "", repo: "owner/target", dryRun: false });
+interface RecordedCall {
+  cmd: string;
+  args: string[];
+  input?: string;
+}
 
-    expect(result).toBe(1);
-  });
+function createGpgRunner(responses: Map<string, string>, calls: RecordedCall[]): CommandRunner {
+  return {
+    runArgv: (cmd: string, args: string[], opts?: { input?: string }): string => {
+      calls.push({ cmd, args, input: opts?.input });
+      const key = `${cmd} ${args.join(" ")}`;
+      const response = responses.get(key);
+      if (response === undefined) {
+        throw new Error(`Unexpected command: ${key}`);
+      }
+      return response;
+    },
+  };
+}
 
-  it("should sync gpg: entries by exporting the secret key", async () => {
+function createFailingGpgRunner(responses: Map<string, string>, calls: RecordedCall[]): CommandRunner {
+  return {
+    runArgv: (cmd: string, args: string[], opts?: { input?: string }): string => {
+      calls.push({ cmd, args, input: opts?.input });
+      const key = `${cmd} ${args.join(" ")}`;
+      if (cmd === "gpg" && args.includes("--export-secret-keys")) {
+        throw new Error("no secret key");
+      }
+      const response = responses.get(key);
+      if (response === undefined) {
+        throw new Error(`Unexpected command: ${key}`);
+      }
+      return response;
+    },
+  };
+}
+
+describe("SyncCommand gpg export", () => {
+  it("syncs gpg: entries by exporting the secret key", async () => {
     const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
     const armor = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nabc\n-----END PGP PRIVATE KEY BLOCK-----\n";
     const envPath = join(tmpDir, "secrets.env");
     writeFileSync(envPath, `GPG_SIGNING_KEY=gpg:${fpr}\nPLAIN_SECRET=val:plain\n`, "utf8");
 
-    const gpgKey = `gpg --batch --pinentry-mode loopback --passphrase-fd 0 --armor --export-secret-keys ${fpr}`;
     const responses = new Map([
-      [gpgKey, armor],
+      [gpgExportCommand(fpr), armor],
       ["gh secret set GPG_SIGNING_KEY --repo owner/target", ""],
       ["gh secret set PLAIN_SECRET --repo owner/target", ""],
     ]);
-    const calls: { cmd: string; args: string[]; input?: string }[] = [];
-    const runner = {
-      runArgv: (cmd: string, args: string[], opts?: { input?: string }): string => {
-        calls.push({ cmd, args, input: opts?.input });
-        const key = `${cmd} ${args.join(" ")}`;
-        const response = responses.get(key);
-        if (response === undefined) {
-          throw new Error(`Unexpected command: ${key}`);
-        }
-        return response;
-      },
-    };
+    const calls: RecordedCall[] = [];
+    const runner = createGpgRunner(responses, calls);
 
-    const cmd = new SyncCommand();
-    cmd.runner = runner;
-    cmd.envFile = envPath;
-    cmd.repo = "owner/target";
-    cmd.passphrase = "pass";
-    cmd.dryRun = false;
-
-    const result = await cmd.execute();
+    const result = await runSync({ runner, envFile: envPath, repo: "owner/target", passphrase: "pass", dryRun: false });
 
     expect(result).toBe(0);
     expect(calls.some((c) => c.cmd === "gpg" && c.input === "pass")).toBe(true);
     expect(calls.some((c) => c.cmd === "gh" && c.args.includes("GPG_SIGNING_KEY") && c.input === armor)).toBe(true);
   });
+});
 
-  it("should skip a gpg: entry when export fails and still sync other secrets", async () => {
+describe("SyncCommand gpg export failure", () => {
+  it("skips a gpg: entry when export fails and still sync other secrets", async () => {
     const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
     const envPath = join(tmpDir, "secrets.env");
     writeFileSync(envPath, `GPG_SIGNING_KEY=gpg:${fpr}\nPLAIN_SECRET=val:plain\n`, "utf8");
 
     const responses = new Map([["gh secret set PLAIN_SECRET --repo owner/target", ""]]);
-    const calls: { cmd: string; args: string[]; input?: string }[] = [];
-    const runner = {
-      runArgv: (cmd: string, args: string[], opts?: { input?: string }): string => {
-        calls.push({ cmd, args, input: opts?.input });
-        const key = `${cmd} ${args.join(" ")}`;
-        if (cmd === "gpg" && args.includes("--export-secret-keys")) {
-          throw new Error("no secret key");
-        }
-        const response = responses.get(key);
-        if (response === undefined) {
-          throw new Error(`Unexpected command: ${key}`);
-        }
-        return response;
-      },
-    };
+    const calls: RecordedCall[] = [];
+    const runner = createFailingGpgRunner(responses, calls);
 
-    const cmd = new SyncCommand();
-    cmd.runner = runner;
-    cmd.envFile = envPath;
-    cmd.repo = "owner/target";
-    cmd.passphrase = "pass";
-    cmd.dryRun = false;
-
-    const result = await cmd.execute();
+    const result = await runSync({ runner, envFile: envPath, repo: "owner/target", passphrase: "pass", dryRun: false });
 
     expect(result).toBe(0);
     expect(calls.some((c) => c.cmd === "gpg")).toBe(true);

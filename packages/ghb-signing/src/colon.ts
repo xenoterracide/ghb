@@ -27,50 +27,70 @@ function parseKeyRecord(fields: readonly string[]): Omit<SubKey, "fingerprint"> 
   };
 }
 
+interface ParseState {
+  keys: PublicKey[];
+  key: PublicKey | undefined;
+  subkey: SubKey | undefined;
+}
+
+function startKey(state: ParseState, fields: readonly string[]): void {
+  state.key = {
+    ...parseKeyRecord(fields),
+    fingerprint: "",
+    subkeys: [],
+  };
+  state.keys.push(state.key);
+  state.subkey = undefined;
+}
+
+function addSubkey(state: ParseState, fields: readonly string[]): void {
+  if (state.key === undefined) return;
+  state.subkey = { ...parseKeyRecord(fields), fingerprint: "" };
+  state.key.subkeys.push(state.subkey);
+}
+
+function attachFingerprint(state: ParseState, fingerprint: string): void {
+  if (state.subkey !== undefined) {
+    state.subkey.fingerprint = fingerprint;
+  } else if (state.key !== undefined) {
+    state.key.fingerprint = fingerprint;
+  }
+}
+
+function applyRecord(state: ParseState, fields: string[]): void {
+  switch (fields[0]) {
+    case "pub": {
+      startKey(state, fields);
+      break;
+    }
+    case "sub": {
+      addSubkey(state, fields);
+      break;
+    }
+    case "fpr": {
+      attachFingerprint(state, fields[FINGERPRINT] ?? "");
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 /**
  * Parse `gpg --list-keys --with-colons` output into public keys with
  * their subkeys. Every record type other than `pub`, `sub`, and `fpr`
  * (for example `tru` and `uid`) is skipped.
  */
 export function parseColonKeys(colonOutput: string): PublicKey[] {
-  const keys: PublicKey[] = [];
-  let key: PublicKey | undefined;
-  let subkey: SubKey | undefined;
+  const state: ParseState = { keys: [], key: undefined, subkey: undefined };
 
   for (const line of colonOutput.split("\n")) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-
-    const fields = trimmed.split(":");
-    switch (fields[0]) {
-      case "pub": {
-        key = {
-          ...parseKeyRecord(fields),
-          fingerprint: "",
-          subkeys: [],
-        };
-        keys.push(key);
-        subkey = undefined;
-        break;
-      }
-      case "sub": {
-        if (!key) break;
-        subkey = { ...parseKeyRecord(fields), fingerprint: "" };
-        key.subkeys.push(subkey);
-        break;
-      }
-      case "fpr": {
-        const fingerprint = fields[FINGERPRINT] ?? "";
-        if (subkey) subkey.fingerprint = fingerprint;
-        else if (key) key.fingerprint = fingerprint;
-        break;
-      }
-      default:
-        break;
-    }
+    applyRecord(state, trimmed.split(":"));
   }
 
-  return keys;
+  return state.keys;
 }
 
 /**

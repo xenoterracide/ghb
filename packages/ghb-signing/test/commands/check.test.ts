@@ -13,6 +13,10 @@ const SUBKEY_FPR = "C17EB30E70FBD586F5794285C3C46C6F2A3408CC";
 const OTHER_PRIMARY_FPR = "ABCDEF0123456789ABCDEF0123456789ABCDEF01";
 const OTHER_SUBKEY_FPR = "0123456789ABCDEF0123456789ABCDEF01234567";
 
+interface FakeRunner extends CommandRunner {
+  called: boolean;
+}
+
 function colon(subExpiresAt: number | null, subCapabilities = "s"): string {
   const expiryField = subExpiresAt === null ? "" : String(subExpiresAt);
   return `tru::1:1794537422:1826073421:3:1:5
@@ -38,10 +42,6 @@ sub:u:255:22:0123456789ABCDEF:1794537431:1826073431:::::s:::::ed25519::
 fpr:::::::::${OTHER_SUBKEY_FPR}:`;
 }
 
-interface FakeRunner extends CommandRunner {
-  called: boolean;
-}
-
 function createFakeRunner(output: string): FakeRunner {
   let called = false;
   return {
@@ -52,6 +52,22 @@ function createFakeRunner(output: string): FakeRunner {
       called = true;
       if (cmd === "gpg" && args.join(" ") === "--list-keys --with-colons") {
         return output;
+      }
+      throw new Error(`Unexpected command: ${cmd} ${args.join(" ")}`);
+    },
+  };
+}
+
+function createThrowingRunner(errorMessage: string): FakeRunner {
+  let called = false;
+  return {
+    get called(): boolean {
+      return called;
+    },
+    runArgv(cmd: string, args: string[]): string {
+      called = true;
+      if (cmd === "gpg" && args.join(" ") === "--list-keys --with-colons") {
+        throw new Error(errorMessage);
       }
       throw new Error(`Unexpected command: ${cmd} ${args.join(" ")}`);
     },
@@ -72,6 +88,12 @@ function captureStreams(): { out: string[]; err: string[] } {
   return { out, err };
 }
 
+async function runCheck(command: CheckCommand): Promise<{ exit: number; out: string; err: string }> {
+  const { out, err } = captureStreams();
+  const exit = await command.execute();
+  return { exit, out: out.join(""), err: err.join("") };
+}
+
 function makeCommand(runner: FakeRunner): CheckCommand {
   const cmd = new CheckCommand();
   cmd.runner = runner;
@@ -82,205 +104,174 @@ function nowSeconds(): number {
   return Math.floor(Date.now() / 1000);
 }
 
-describe("CheckCommand unit", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
+describe("CheckCommand healthy key", () => {
   it("reports healthy when expiry is beyond the window", async () => {
-    const now = nowSeconds();
-    const runner = createFakeRunner(colon(now + 365 * 86400));
-    const { out } = captureStreams();
+    const { exit, out } = await runCheck(makeCommand(createFakeRunner(colon(nowSeconds() + 365 * 86400))));
 
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(0);
-    expect(out.join("")).toMatch(/signing subkey \w{40} expires \d{4}-\d{2}-\d{2} \(\d+ days\)/);
-  });
-
-  it("reports within window at the inclusive boundary", async () => {
-    const now = nowSeconds();
-    const runner = createFakeRunner(colon(now + 30 * 86400 + 3600));
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(1);
-    const stderr = err.join("");
-    expect(stderr).toContain("within 30 days");
-    expect(stderr).toContain(`Run: ghb signing renew --key ${PRIMARY_FPR}`);
-  });
-
-  it("reports healthy just above the window", async () => {
-    const now = nowSeconds();
-    const runner = createFakeRunner(colon(now + 31 * 86400 + 3600));
-    const { out } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(0);
-    expect(out.join("")).toMatch(/signing subkey \w{40} expires \d{4}-\d{2}-\d{2} \(\d+ days\)/);
-  });
-
-  it("reports expired when expiry is in the past", async () => {
-    const now = nowSeconds();
-    const runner = createFakeRunner(colon(now - 5 * 86400 + 3600));
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(1);
-    const stderr = err.join("");
-    expect(stderr).toContain("expired");
-    expect(stderr).toMatch(/\d+ days ago/);
-    expect(stderr).toContain(`Run: ghb signing renew --key ${PRIMARY_FPR}`);
-  });
-
-  it("reports never expires when the subkey has no expiry", async () => {
-    const runner = createFakeRunner(colon(null));
-    const { out } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(0);
-    expect(out.join("")).toContain("never expires");
-  });
-
-  it("errors when the key has no signing subkey", async () => {
-    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400, "e"));
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(2);
-    expect(err.join("")).toContain(`Error: key ${PRIMARY_FPR} has no signing subkey`);
-  });
-
-  it("errors when --key is not a full fingerprint", async () => {
-    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
-    const { err } = captureStreams();
-
-    const cmd = makeCommand(runner);
-    cmd.key = "8042ED9A";
-    const result = await cmd.execute();
-
-    expect(result).toBe(1);
-    expect(runner.called).toBe(false);
-    expect(err.join("")).toContain('Error: --key must be a full fingerprint; got "8042ED9A"');
-  });
-
-  it("errors when --key matches nothing", async () => {
-    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
-    const { err } = captureStreams();
-
-    const cmd = makeCommand(runner);
-    cmd.key = OTHER_PRIMARY_FPR;
-    const result = await cmd.execute();
-
-    expect(result).toBe(2);
-    expect(err.join("")).toContain(`Error: key ${OTHER_PRIMARY_FPR} not found`);
-  });
-
-  it("errors with both fingerprints when no --key and several keys", async () => {
-    const now = nowSeconds();
-    const runner = createFakeRunner(twoKeys(now + 365 * 86400));
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(2);
-    const stderr = err.join("");
-    expect(stderr).toContain("Error: multiple keys in the keyring; pass --key with one of:");
-    expect(stderr).toContain(PRIMARY_FPR);
-    expect(stderr).toContain(OTHER_PRIMARY_FPR);
-  });
-
-  it("errors when --days is not a number", async () => {
-    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
-    const { err } = captureStreams();
-
-    const cmd = makeCommand(runner);
-    cmd.days = "abc";
-    const result = await cmd.execute();
-
-    expect(result).toBe(1);
-    expect(runner.called).toBe(false);
-    expect(err.join("")).toContain('Error: --days must be a number; got "abc"');
-  });
-
-  it("errors when the keyring is empty", async () => {
-    const runner = createFakeRunner("");
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(2);
-    expect(err.join("")).toContain("Error: no keys in the keyring");
-  });
-
-  it("errors when listKeys fails", async () => {
-    function createThrowingRunner(errorMessage: string): FakeRunner {
-      let called = false;
-      return {
-        get called(): boolean {
-          return called;
-        },
-        runArgv(cmd: string, args: string[]): string {
-          called = true;
-          if (cmd === "gpg" && args.join(" ") === "--list-keys --with-colons") {
-            throw new Error(errorMessage);
-          }
-          throw new Error(`Unexpected command: ${cmd} ${args.join(" ")}`);
-        },
-      };
-    }
-
-    const runner = createThrowingRunner("gpg is not installed");
-    const { err } = captureStreams();
-
-    const result = await makeCommand(runner).execute();
-
-    expect(result).toBe(1);
-    const stderr = err.join("");
-    expect(stderr).toContain("Error: Failed to list keys: gpg is not installed");
-    expect(stderr).not.toContain("Internal Error");
+    expect(exit).toBe(0);
+    expect(out).toMatch(/signing subkey \w{40} expires \d{4}-\d{2}-\d{2} \(\d+ days\)/);
   });
 });
 
-describe("CheckCommand integration", () => {
-  const PASS = "correct horse battery staple";
-  const originalEnv = process.env;
-  let home: string;
+describe("CheckCommand window boundary", () => {
+  it("reports within window at the inclusive boundary", async () => {
+    const { exit, err } = await runCheck(makeCommand(createFakeRunner(colon(nowSeconds() + 30 * 86400 + 3600))));
 
-  beforeEach(() => {
-    home = createGnupgHome();
-    process.env = { ...originalEnv, GNUPGHOME: home };
+    expect(exit).toBe(1);
+    expect(err).toContain("within 30 days");
+    expect(err).toContain(`Run: ghb signing renew --key ${PRIMARY_FPR}`);
   });
+});
 
-  afterEach(() => {
-    process.env = originalEnv;
-    vi.restoreAllMocks();
+describe("CheckCommand just above window", () => {
+  it("reports healthy just above the window", async () => {
+    const { exit, out } = await runCheck(makeCommand(createFakeRunner(colon(nowSeconds() + 31 * 86400 + 3600))));
+
+    expect(exit).toBe(0);
+    expect(out).toMatch(/signing subkey \w{40} expires \d{4}-\d{2}-\d{2} \(\d+ days\)/);
   });
+});
+
+describe("CheckCommand expired", () => {
+  it("reports expired when expiry is in the past", async () => {
+    const { exit, err } = await runCheck(makeCommand(createFakeRunner(colon(nowSeconds() - 5 * 86400 + 3600))));
+
+    expect(exit).toBe(1);
+    expect(err).toContain("expired");
+    expect(err).toMatch(/\d+ days ago/);
+    expect(err).toContain(`Run: ghb signing renew --key ${PRIMARY_FPR}`);
+  });
+});
+
+describe("CheckCommand never expires", () => {
+  it("reports never expires when the subkey has no expiry", async () => {
+    const { exit, out } = await runCheck(makeCommand(createFakeRunner(colon(null))));
+
+    expect(exit).toBe(0);
+    expect(out).toContain("never expires");
+  });
+});
+
+describe("CheckCommand missing signing subkey", () => {
+  it("errors when the key has no signing subkey", async () => {
+    const { exit, err } = await runCheck(makeCommand(createFakeRunner(colon(nowSeconds() + 365 * 86400, "e"))));
+
+    expect(exit).toBe(2);
+    expect(err).toContain(`Error: key ${PRIMARY_FPR} has no signing subkey`);
+  });
+});
+
+describe("CheckCommand key validation", () => {
+  it("errors when --key is not a full fingerprint", async () => {
+    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
+    const cmd = makeCommand(runner);
+    cmd.key = "8042ED9A";
+
+    const { exit, err } = await runCheck(cmd);
+
+    expect(exit).toBe(1);
+    expect(runner.called).toBe(false);
+    expect(err).toContain('Error: --key must be a full fingerprint; got "8042ED9A"');
+  });
+});
+
+describe("CheckCommand ambiguous keys", () => {
+  it("errors with both fingerprints when no --key and several keys", async () => {
+    const { exit, err } = await runCheck(makeCommand(createFakeRunner(twoKeys(nowSeconds() + 365 * 86400))));
+
+    expect(exit).toBe(2);
+    expect(err).toContain("Error: multiple keys in the keyring; pass --key with one of:");
+    expect(err).toContain(PRIMARY_FPR);
+    expect(err).toContain(OTHER_PRIMARY_FPR);
+  });
+});
+
+describe("CheckCommand days validation", () => {
+  it("errors when --days is not a number", async () => {
+    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
+    const cmd = makeCommand(runner);
+    cmd.days = "abc";
+
+    const { exit, err } = await runCheck(cmd);
+
+    expect(exit).toBe(1);
+    expect(runner.called).toBe(false);
+    expect(err).toContain('Error: --days must be a number; got "abc"');
+  });
+});
+
+describe("CheckCommand empty keyring", () => {
+  it("errors when the keyring is empty", async () => {
+    const { exit, err } = await runCheck(makeCommand(createFakeRunner("")));
+
+    expect(exit).toBe(2);
+    expect(err).toContain("Error: no keys in the keyring");
+  });
+});
+
+describe("CheckCommand key not found", () => {
+  it("errors when --key matches nothing", async () => {
+    const runner = createFakeRunner(colon(nowSeconds() + 365 * 86400));
+    const cmd = makeCommand(runner);
+    cmd.key = OTHER_PRIMARY_FPR;
+
+    const { exit, err } = await runCheck(cmd);
+
+    expect(exit).toBe(2);
+    expect(err).toContain(`Error: key ${OTHER_PRIMARY_FPR} not found`);
+  });
+});
+
+describe("CheckCommand listKeys failure", () => {
+  it("errors when listKeys fails", async () => {
+    const { exit, err } = await runCheck(makeCommand(createThrowingRunner("gpg is not installed")));
+
+    expect(exit).toBe(1);
+    expect(err).toContain("Error: Failed to list keys: gpg is not installed");
+    expect(err).not.toContain("Internal Error");
+  });
+});
+
+const PASS = "correct horse battery staple";
+const originalEnv = process.env;
+let integrationHome: string;
+
+function setupIntegrationHome(): void {
+  integrationHome = createGnupgHome();
+  process.env = { ...originalEnv, GNUPGHOME: integrationHome };
+}
+
+function teardownIntegrationHome(): void {
+  process.env = originalEnv;
+}
+
+describe("CheckCommand integration healthy", () => {
+  beforeEach(setupIntegrationHome);
+  afterEach(teardownIntegrationHome);
 
   it("reports a freshly generated 1y key as healthy", async () => {
-    generateSigningKey(home, PASS, "1y");
-    const { out } = captureStreams();
+    generateSigningKey(integrationHome, PASS, "1y");
+    const { exit, out } = await runCheck(new CheckCommand());
 
-    const result = await new CheckCommand().execute();
-
-    expect(result).toBe(0);
-    expect(out.join("")).toMatch(/signing subkey \w{40} expires \d{4}-\d{2}-\d{2} \(\d+ days\)/);
+    expect(exit).toBe(0);
+    expect(out).toMatch(/signing subkey \w{40} expires \d{4}-\d{2}-\d{2} \(\d+ days\)/);
   });
+});
+
+describe("CheckCommand integration window", () => {
+  beforeEach(setupIntegrationHome);
+  afterEach(teardownIntegrationHome);
 
   it("reports a 1d key as inside the window", async () => {
-    const { primaryFpr } = generateSigningKey(home, PASS, "1d");
-    const { err } = captureStreams();
+    const { primaryFpr } = generateSigningKey(integrationHome, PASS, "1d");
+    const { exit, err } = await runCheck(new CheckCommand());
 
-    const result = await new CheckCommand().execute();
-
-    expect(result).toBe(1);
-    const stderr = err.join("");
-    expect(stderr).toContain("within 30 days");
-    expect(stderr).toContain(`Run: ghb signing renew --key ${primaryFpr}`);
+    expect(exit).toBe(1);
+    expect(err).toContain("within 30 days");
+    expect(err).toContain(`Run: ghb signing renew --key ${primaryFpr}`);
   });
 });

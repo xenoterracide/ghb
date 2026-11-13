@@ -4,14 +4,38 @@
 
 import { Command, Option } from "clipanion";
 
-import { findSigningSubkey, isValidFingerprint, selectKey } from "../colon.js";
+import { findSigningSubkey, selectKey } from "../colon.js";
 import { listKeys, setExpiry } from "../gpg.js";
 import { readPassphrase } from "../passphrase.js";
-import type { CommandRunner } from "../types.js";
+import { writeError, selectSigning } from "../select.js";
+import type { CommandRunner, PublicKey, SubKey } from "../types.js";
 
 function formatDate(seconds: number | null): string {
   if (seconds === null) return "never";
   return new Date(seconds * 1000).toISOString().slice(0, 10);
+}
+
+function writeRenewal(before: KeyPair, after: KeyPair): void {
+  process.stdout.write(
+    `primary ${before.key.fingerprint} expires ${formatDate(after.key.expiresAt)} (was ${formatDate(before.key.expiresAt)})\n`,
+  );
+  process.stdout.write(
+    `signing subkey ${before.subkey.fingerprint} expires ${formatDate(after.subkey.expiresAt)} (was ${formatDate(before.subkey.expiresAt)})\n`,
+  );
+  process.stdout.write(
+    "Next: ghb secrets sync --env-file <env-file> --repo <owner/repo>  # push the renewed key to CI\n",
+  );
+  process.stdout.write("Next: back up the key to Bitwarden\n");
+}
+
+interface KeyPair {
+  key: PublicKey;
+  subkey: SubKey;
+}
+
+interface Renewal {
+  duration: string;
+  passphrase: string | undefined;
 }
 
 export class RenewCommand extends Command {
@@ -38,90 +62,59 @@ export class RenewCommand extends Command {
     return this.renew();
   }
 
-  private async renew(): Promise<number> {
-    const keyOption = typeof this.key === "string" ? this.key : undefined;
-    if (keyOption !== undefined && keyOption !== "" && !isValidFingerprint(keyOption)) {
-      process.stderr.write(`Error: --key must be a full fingerprint; got "${keyOption}"\n`);
-      return 1;
+  private parseDuration(): string | undefined {
+    const option = typeof this.duration === "string" ? this.duration : "1y";
+    if (!/^\d+[dwmy]$/.test(option) || Number.parseInt(option, 10) === 0) {
+      writeError(`--duration must be <n>d, <n>w, <n>m, or <n>y; got "${option}"`);
+      return undefined;
     }
+    return option;
+  }
 
-    const durationOption = typeof this.duration === "string" ? this.duration : "1y";
-    if (!/^\d+[dwmy]$/.test(durationOption) || Number.parseInt(durationOption, 10) === 0) {
-      process.stderr.write(`Error: --duration must be <n>d, <n>w, <n>m, or <n>y; got "${durationOption}"\n`);
-      return 1;
-    }
-
-    let keys;
+  private extend(key: PublicKey, subkey: SubKey, renewal: Renewal): number {
+    const opts = { runner: this.runner, passphrase: renewal.passphrase };
     try {
-      keys = listKeys({ runner: this.runner });
+      setExpiry(key.fingerprint, renewal.duration, undefined, opts);
+      setExpiry(key.fingerprint, renewal.duration, subkey.fingerprint, opts);
+      const afterKeys = listKeys(opts);
+      return this.reportRenewed(key, subkey, afterKeys);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      process.stderr.write(`Error: ${msg}\n`);
+      writeError(e instanceof Error ? e.message : String(e));
       return 1;
     }
+  }
 
-    const selected = selectKey(keys, keyOption);
-
-    if (selected.status === "missing") {
-      process.stderr.write("Error: no keys in the keyring\n");
-      return 2;
-    }
-
-    if (selected.status === "ambiguous") {
-      process.stderr.write("Error: multiple keys in the keyring; pass --key with one of:\n");
-      for (const key of selected.keys) {
-        process.stderr.write(`${key.fingerprint}\n`);
-      }
-      return 2;
-    }
-
-    if (selected.status === "not-found") {
-      process.stderr.write(`Error: key ${keyOption} not found\n`);
-      return 2;
-    }
-
-    const { key } = selected;
-    const subkey = findSigningSubkey(key);
-    if (subkey === undefined) {
-      process.stderr.write(`Error: key ${key.fingerprint} has no signing subkey\n`);
-      return 2;
-    }
-
-    const passphrase = this.passphrase ?? (await readPassphrase(process.stdin));
-
-    let afterKeys;
-    try {
-      setExpiry(key.fingerprint, durationOption, undefined, { runner: this.runner, passphrase });
-      setExpiry(key.fingerprint, durationOption, subkey.fingerprint, { runner: this.runner, passphrase });
-      afterKeys = listKeys({ runner: this.runner });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      process.stderr.write(`Error: ${msg}\n`);
-      return 1;
-    }
-
+  private reportRenewed(key: PublicKey, subkey: SubKey, afterKeys: PublicKey[]): number {
     const afterSelected = selectKey(afterKeys, key.fingerprint);
     if (afterSelected.status !== "ok") {
-      process.stderr.write(`Error: key ${key.fingerprint} disappeared after renew\n`);
+      writeError(`key ${key.fingerprint} disappeared after renew`);
       return 1;
     }
 
     const afterSubkey = findSigningSubkey(afterSelected.key);
     if (afterSubkey === undefined) {
-      process.stderr.write(`Error: key ${key.fingerprint} has no signing subkey after renew\n`);
+      writeError(`key ${key.fingerprint} has no signing subkey after renew`);
       return 1;
     }
 
-    process.stdout.write(
-      `primary ${key.fingerprint} expires ${formatDate(afterSelected.key.expiresAt)} (was ${formatDate(key.expiresAt)})\n`,
-    );
-    process.stdout.write(
-      `signing subkey ${subkey.fingerprint} expires ${formatDate(afterSubkey.expiresAt)} (was ${formatDate(subkey.expiresAt)})\n`,
-    );
-    process.stdout.write(
-      "Next: ghb secrets sync --env-file <env-file> --repo <owner/repo>  # push the renewed key to CI\n",
-    );
-    process.stdout.write("Next: back up the key to Bitwarden\n");
+    writeRenewal({ key, subkey }, { key: afterSelected.key, subkey: afterSubkey });
     return 0;
+  }
+
+  private async renew(): Promise<number> {
+    const duration = this.parseDuration();
+    if (duration === undefined) return 1;
+
+    const selection = selectSigning(this.keyOption(), this.runner);
+    if (selection.status === "fail") return selection.exit;
+
+    const passphrase = this.passphrase ?? (await readPassphrase(process.stdin));
+    return this.extend(selection.key, selection.subkey, { duration, passphrase });
+  }
+
+  // Tests construct the command without clipanion's parser, so unset
+  // options hold the Option marker, not a string.
+  private keyOption(): string | undefined {
+    return typeof this.key === "string" ? this.key : undefined;
   }
 }

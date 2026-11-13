@@ -33,6 +33,27 @@ async function runGet(name: string, envFile?: string): Promise<{ exit: number; o
   return { exit, out: out.join(""), err: err.join("") };
 }
 
+interface RunnerResult {
+  calls: { cmd: string; args: string[] }[];
+  runner: { runArgv: (cmd: string, args: string[]) => string };
+}
+
+function makeGpgRunner(armor: string): RunnerResult {
+  const calls: { cmd: string; args: string[] }[] = [];
+  return {
+    calls,
+    runner: {
+      runArgv: (cmd: string, args: string[]): string => {
+        calls.push({ cmd, args });
+        if (cmd === "gpg" && args.includes("--export-secret-keys")) {
+          return armor;
+        }
+        throw new Error(`Unexpected command: ${cmd} ${args.join(" ")}`);
+      },
+    },
+  };
+}
+
 let tmpDir = "";
 
 beforeEach(() => {
@@ -44,7 +65,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("GetCommand", () => {
+describe("GetCommand value from env file", () => {
   it("resolves a value from an env file", async () => {
     const envPath = join(tmpDir, ".env");
     writeFileSync(envPath, "API_KEY=val:from-file\n", "utf8");
@@ -54,7 +75,9 @@ describe("GetCommand", () => {
     expect(exit).toBe(0);
     expect(out).toBe("from-file");
   });
+});
 
+describe("GetCommand missing value", () => {
   it("fails when no value can be resolved", async () => {
     const { exit, err } = await runGet("DEFINITELY_MISSING_KEY");
 
@@ -63,7 +86,7 @@ describe("GetCommand", () => {
   });
 });
 
-describe("GetCommand", () => {
+describe("GetCommand environment fallback", () => {
   it("falls back to the environment without an env file", async () => {
     process.env.GET_TEST_KEY = "from-env";
     try {
@@ -75,7 +98,9 @@ describe("GetCommand", () => {
       delete process.env.GET_TEST_KEY;
     }
   });
+});
 
+describe("GetCommand env file missing name", () => {
   it("fails when the env file has no entry for the name", async () => {
     const envPath = join(tmpDir, ".env");
     writeFileSync(envPath, "OTHER=val:x\n", "utf8");
@@ -87,7 +112,7 @@ describe("GetCommand", () => {
   });
 });
 
-describe("GetCommand", () => {
+describe("GetCommand empty env-file", () => {
   it("treats an empty --env-file as unset", async () => {
     process.env.GET_EMPTY_FILE_KEY = "from-env";
     try {
@@ -99,29 +124,29 @@ describe("GetCommand", () => {
       delete process.env.GET_EMPTY_FILE_KEY;
     }
   });
+});
 
+describe("GetCommand gpg:", () => {
   it("resolves a gpg: entry by exporting the secret key", async () => {
     const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
     const armor = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nabc\n-----END PGP PRIVATE KEY BLOCK-----\n";
     const envPath = join(tmpDir, ".env");
     writeFileSync(envPath, `GPG_SIGNING_KEY=gpg:${fpr}\n`, "utf8");
     const { out } = captureStreams();
+    const { calls, runner } = makeGpgRunner(armor);
 
     const command = new GetCommand();
     command.name = "GPG_SIGNING_KEY";
     command.envFile = envPath;
     command.passphrase = "pass";
-    command.runner = {
-      runArgv: (cmd: string, args: string[]): string => {
-        if (cmd === "gpg" && args.includes("--export-secret-keys")) {
-          return armor;
-        }
-        throw new Error(`Unexpected command: ${cmd} ${args.join(" ")}`);
-      },
-    };
+    command.runner = runner;
     const exit = await command.execute();
 
     expect(exit).toBe(0);
     expect(out.join("")).toBe(armor);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].cmd).toBe("gpg");
+    expect(calls[0].args).toContain("--export-secret-keys");
+    expect(calls[0].args).toContain(fpr);
   });
 });

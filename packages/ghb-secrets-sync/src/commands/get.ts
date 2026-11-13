@@ -31,22 +31,25 @@ export class GetCommand extends Command {
     return await this.get();
   }
 
-  private async get(): Promise<number> {
+  private async resolveFromEnvFile(envFilePath: string): Promise<string | undefined> {
+    const entries = parseEnvFile(envFilePath);
+    const entry = entries[this.name] as EnvEntry | undefined;
+    const needsPassphrase = entry?.type === "gpg";
+    const passphrase = this.passphrase ?? (needsPassphrase ? await readPassphrase(process.stdin) : undefined);
+    return resolveSecretValue(this.name, entries, undefined, { runner: this.runner, passphrase });
+  }
+
+  private async resolveValue(): Promise<string | undefined> {
     const envFilePath = this.envFile;
-    const hasEnvFile = typeof envFilePath === "string" && envFilePath !== "";
-
-    let value: string | undefined;
-
-    if (hasEnvFile) {
-      const envFileEntries = parseEnvFile(envFilePath);
-      const entry = envFileEntries[this.name] as EnvEntry | undefined;
-      const needsPassphrase = entry?.type === "gpg";
-      const passphrase = this.passphrase ?? (needsPassphrase ? await readPassphrase(process.stdin) : undefined);
-      value = resolveSecretValue(this.name, envFileEntries, undefined, { runner: this.runner, passphrase });
-    } else {
+    if (typeof envFilePath !== "string" || envFilePath === "") {
       // Fall back to environment variable
-      value = process.env[this.name];
+      return process.env[this.name];
     }
+    return this.resolveFromEnvFile(envFilePath);
+  }
+
+  private async get(): Promise<number> {
+    const value = await this.resolveValue();
 
     if (value === undefined) {
       process.stderr.write(`Error: Could not resolve secret "${this.name}"\n`);

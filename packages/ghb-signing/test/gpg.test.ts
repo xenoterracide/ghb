@@ -59,7 +59,63 @@ function signingSubkey(key: PublicKey): SubKey {
   return subkey;
 }
 
-describe("gpg unit", () => {
+function importKey(home: string, armored: string): void {
+  execFileSync("gpg", ["--batch", "--pinentry-mode", "loopback", "--import"], {
+    encoding: "utf8",
+    env: { ...process.env, GNUPGHOME: home },
+    input: armored,
+  });
+}
+
+function writeBlob(home: string): string {
+  const blob = join(home, "blob.txt");
+  writeFileSync(blob, "hello world");
+  return blob;
+}
+
+interface SignBlobOptions {
+  home: string;
+  primaryFpr: string;
+  passphrase: string;
+  blob: string;
+}
+
+function signBlob(opts: SignBlobOptions): string {
+  const sig = join(opts.home, "blob.txt.sig");
+  execFileSync(
+    "gpg",
+    [
+      "--batch",
+      "--pinentry-mode",
+      "loopback",
+      "--passphrase-fd",
+      "0",
+      "--detach-sign",
+      "-u",
+      opts.primaryFpr,
+      "--output",
+      sig,
+      opts.blob,
+    ],
+    {
+      encoding: "utf8",
+      env: { ...process.env, GNUPGHOME: opts.home },
+      input: opts.passphrase,
+    },
+  );
+  return sig;
+}
+
+function assertValidSignature(home: string, blob: string, sig: string): void {
+  const verifyResult = spawnSync("gpg", ["--verify", sig, blob], {
+    encoding: "utf8",
+    env: { ...process.env, GNUPGHOME: home },
+  });
+  expect(verifyResult.status).toBe(0);
+  expect(verifyResult.stderr).toContain("Good signature");
+}
+
+describe("gpg unit export with passphrase", () => {
   it("exports with a passphrase using loopback argv and fd0 input", () => {
     const runner = createFakeRunner(["-----BEGIN PGP PRIVATE KEY BLOCK-----"]);
     exportSecretKey(PRIMARY_FPR, { runner, passphrase: "secret" });
@@ -79,7 +135,9 @@ describe("gpg unit", () => {
       opts: { input: "secret" },
     });
   });
+});
 
+describe("gpg unit export without passphrase", () => {
   it("exports without a passphrase and omits loopback flags", () => {
     const runner = createFakeRunner(["-----BEGIN PGP PRIVATE KEY BLOCK-----"]);
     exportSecretKey(PRIMARY_FPR, { runner });
@@ -90,14 +148,18 @@ describe("gpg unit", () => {
       opts: undefined,
     });
   });
+});
 
+describe("gpg unit empty armor", () => {
   it("throws when the runner returns empty armor", () => {
     const runner = createFakeRunner([""]);
     expect(() => exportSecretKey(PRIMARY_FPR, { runner })).toThrow(
       "Failed to export secret key E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853: gpg exported no key",
     );
   });
+});
 
+describe("gpg unit setExpiry primary", () => {
   it("setExpiry moves the primary only", () => {
     const runner = createFakeRunner([""]);
     setExpiry(PRIMARY_FPR, "2y", undefined, { runner, passphrase: "secret" });
@@ -112,7 +174,9 @@ describe("gpg unit", () => {
       "2y",
     ]);
   });
+});
 
+describe("gpg unit setExpiry subkey", () => {
   it("setExpiry appends subkey fingerprint", () => {
     const runner = createFakeRunner([""]);
     setExpiry(PRIMARY_FPR, "2y", SUBKEY_FPR, { runner, passphrase: "secret" });
@@ -128,7 +192,9 @@ describe("gpg unit", () => {
       SUBKEY_FPR,
     ]);
   });
+});
 
+describe("gpg unit listKeys", () => {
   it("listKeys parses the fake runner output", () => {
     const runner = createFakeRunner([FIXTURE]);
     const keys = listKeys({ runner });
@@ -143,96 +209,80 @@ describe("gpg unit", () => {
   });
 });
 
-describe("gpg integration", () => {
-  const PASS = "correct horse battery staple";
-  let home: string;
+const INTEGRATION_PASS = "correct horse battery staple";
+let gpgHome: string;
 
-  beforeEach(() => {
-    home = createGnupgHome();
-  });
+function setupGpgHome(): void {
+  gpgHome = createGnupgHome();
+}
 
-  afterEach(() => {
-    rmSync(home, { recursive: true, force: true });
-  });
+function teardownGpgHome(): void {
+  rmSync(gpgHome, { recursive: true, force: true });
+}
+
+describe("gpg integration list", () => {
+  beforeEach(setupGpgHome);
+  afterEach(teardownGpgHome);
 
   it("lists the generated key and its signing subkey", () => {
-    const { primaryFpr, subkeyFpr } = generateSigningKey(home, PASS);
-    const keys = listKeys({ env: { GNUPGHOME: home } });
+    const { primaryFpr, subkeyFpr } = generateSigningKey(gpgHome, INTEGRATION_PASS);
+    const keys = listKeys({ env: { GNUPGHOME: gpgHome } });
     expect(firstKey(keys).fingerprint).toBe(primaryFpr);
     expect(signingSubkey(firstKey(keys)).fingerprint).toBe(subkeyFpr);
   });
+});
+
+describe("gpg integration export and sign", () => {
+  beforeEach(setupGpgHome);
+  afterEach(teardownGpgHome);
 
   it("exports an armored key that still signs after import", () => {
-    const { primaryFpr } = generateSigningKey(home, PASS);
-    const armored = exportSecretKey(primaryFpr, { env: { GNUPGHOME: home }, passphrase: PASS });
+    const { primaryFpr } = generateSigningKey(gpgHome, INTEGRATION_PASS);
+    const armored = exportSecretKey(primaryFpr, { env: { GNUPGHOME: gpgHome }, passphrase: INTEGRATION_PASS });
     expect(armored).toContain("BEGIN PGP PRIVATE KEY BLOCK");
 
     const home2 = createGnupgHome();
     try {
-      execFileSync("gpg", ["--batch", "--pinentry-mode", "loopback", "--import"], {
-        encoding: "utf8",
-        env: { ...process.env, GNUPGHOME: home2 },
-        input: armored,
-      });
-
-      const blob = join(home2, "blob.txt");
-      const sig = join(home2, "blob.txt.sig");
-      writeFileSync(blob, "hello world");
-
-      execFileSync(
-        "gpg",
-        [
-          "--batch",
-          "--pinentry-mode",
-          "loopback",
-          "--passphrase-fd",
-          "0",
-          "--detach-sign",
-          "-u",
-          primaryFpr,
-          "--output",
-          sig,
-          blob,
-        ],
-        {
-          encoding: "utf8",
-          env: { ...process.env, GNUPGHOME: home2 },
-          input: PASS,
-        },
-      );
-
-      const verifyResult = spawnSync("gpg", ["--verify", sig, blob], {
-        encoding: "utf8",
-        env: { ...process.env, GNUPGHOME: home2 },
-      });
-      expect(verifyResult.status).toBe(0);
-      expect(verifyResult.stderr).toContain("Good signature");
+      importKey(home2, armored);
+      const blob = writeBlob(home2);
+      const sig = signBlob({ home: home2, primaryFpr, passphrase: INTEGRATION_PASS, blob });
+      assertValidSignature(home2, blob, sig);
     } finally {
       rmSync(home2, { recursive: true, force: true });
     }
   });
+});
+
+describe("gpg integration setExpiry", () => {
+  beforeEach(setupGpgHome);
+  afterEach(teardownGpgHome);
 
   it("setExpiry moves the primary only, then the subkey", () => {
-    const { primaryFpr, subkeyFpr } = generateSigningKey(home, PASS, "5y");
-    const env = { GNUPGHOME: home };
+    const { primaryFpr, subkeyFpr } = generateSigningKey(gpgHome, INTEGRATION_PASS, "5y");
+    const env = { GNUPGHOME: gpgHome };
 
     const initialKeys = listKeys({ env });
     const initialPrimaryExpires = firstKey(initialKeys).expiresAt;
     const initialSubkeyExpires = signingSubkey(firstKey(initialKeys)).expiresAt;
 
-    setExpiry(primaryFpr, "2y", undefined, { env, passphrase: PASS });
+    setExpiry(primaryFpr, "2y", undefined, { env, passphrase: INTEGRATION_PASS });
     let keys = listKeys({ env });
     expect(firstKey(keys).expiresAt).not.toBe(initialPrimaryExpires);
     expect(signingSubkey(firstKey(keys)).expiresAt).toBe(initialSubkeyExpires);
 
-    setExpiry(primaryFpr, "2y", subkeyFpr, { env, passphrase: PASS });
+    setExpiry(primaryFpr, "2y", subkeyFpr, { env, passphrase: INTEGRATION_PASS });
     keys = listKeys({ env });
     expect(signingSubkey(firstKey(keys)).expiresAt).not.toBe(initialSubkeyExpires);
   });
+});
+
+describe("gpg integration wrong passphrase", () => {
+  beforeEach(setupGpgHome);
+  afterEach(teardownGpgHome);
 
   it("a wrong passphrase throws", () => {
-    const { primaryFpr } = generateSigningKey(home, PASS);
-    expect(() => exportSecretKey(primaryFpr, { env: { GNUPGHOME: home }, passphrase: "wrong" })).toThrow(
+    const { primaryFpr } = generateSigningKey(gpgHome, INTEGRATION_PASS);
+    expect(() => exportSecretKey(primaryFpr, { env: { GNUPGHOME: gpgHome }, passphrase: "wrong" })).toThrow(
       "Failed to export secret key",
     );
   });
