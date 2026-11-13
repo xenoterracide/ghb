@@ -7,6 +7,7 @@
 import { Cli } from "clipanion";
 
 import { CheckCommand } from "./commands/check.js";
+import { ExportCommand } from "./commands/export.js";
 import { RenewCommand } from "./commands/renew.js";
 
 const cli = new Cli({
@@ -15,6 +16,7 @@ const cli = new Cli({
 });
 
 cli.register(CheckCommand);
+cli.register(ExportCommand);
 cli.register(RenewCommand);
 
 void cli
