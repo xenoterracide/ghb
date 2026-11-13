@@ -16,6 +16,8 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 **Spec:** `docs/superpowers/specs/2026-11-11-pr-verify-queued-checks.md`
 
+**Status:** implemented — every task complete (2026-11-11).
+
 ## Global Constraints
 
 - Conventional commits per `git-conventional-commits.yaml`; allowed types include `feat`, `fix`, `test`, `docs`, `refactor`.
@@ -74,7 +76,7 @@ export function bucketOf(context: RollupContext): Bucket;
 export function summarize(rollup: RollupContext[] | null | undefined): Check[];
 ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `bucketOf`, exact cases from gh's table (spec §Design):
 
@@ -165,21 +167,21 @@ it("clears a failed group whose re-run passed", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-pr`
 Expected: the new cases fail — `bucketOf`/`summarize` are not exported.
 
-- [ ] **Step 3: Implement the mapping in `pr-verify.ts`**
+- [x] **Step 3: Implement the mapping in `pr-verify.ts`**
 
 Port gh's logic verbatim: `state = context.state || (context.status === "COMPLETED" ? context.conclusion : context.status)`, then the switch table from the spec. Delete nothing else in this task; the existing `Check` interface (`name`, `bucket: string`) is replaced by the exported one above.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-pr`
 Expected: all pass, including the untouched `PrVerifyCommand` suite.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-pr/src/commands/pr-verify.ts packages/ghb-pr/test/commands/pr-verify.test.ts
@@ -203,7 +205,7 @@ completed verdict, otherwise the latest startedAt decides" \
 - Consumes: Task 1's `summarize`, `Check`; the existing `Runner`, `PrView` (gains `statusCheckRollup?: RollupContext[] | null | undefined`).
 - Produces: the shipped command behavior; no new exports.
 
-- [ ] **Step 1: Rewrite the fixtures and the failing tests**
+- [x] **Step 1: Rewrite the fixtures and the failing tests**
 
 Fixture shapes — a view is now built with a rollup, favoring a small builder in the test file:
 
@@ -258,12 +260,12 @@ it("fails fast when the runner errors on the view", async () => {
 
 Timeout-line format, pinned: started names first, then `; queued: <names>` when any pending check never started; when none started, omit the empty first segment — `pending after 0m: queued: build`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-pr`
 Expected: the new scenarios fail — `execute` still calls `gh pr checks`, the grace and queued marking do not exist.
 
-- [ ] **Step 3: Rewire `execute` to the single-read loop**
+- [x] **Step 3: Rewire `execute` to the single-read loop**
 
 `readView` gains `statusCheckRollup` in the `--json` field list and the `PrView` field. Delete `readChecks` and the `Check` import of its JSON shape. The loop becomes:
 
@@ -273,12 +275,12 @@ Expected: the new scenarios fail — `execute` still calls `gh pr checks`, the g
 - Final gate: fresh view non-CLEAN with pending or empty rollup polls; fresh non-CLEAN with terminal checks fails; fresh CLEAN passes through the currency re-check.
 - Deadline check before every sleep, as now; `pending after Xm` prints started names, then `; queued: <names>` per the pinned format.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-pr`
 Expected: all pass.
 
-- [ ] **Step 5: Typecheck, READMEs, and the full gate**
+- [x] **Step 5: Typecheck, READMEs, and the full gate**
 
 Typecheck: `pnpm --filter @xenoterracide/ghb-pr typecheck`.
 
@@ -297,7 +299,7 @@ the seconds after a push before check runs exist.
 
 Then: `pnpm check` — prettier, eslint, typecheck, tests all green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/ghb-pr/src/commands/pr-verify.ts packages/ghb-pr/test/commands/pr-verify.test.ts README.md packages/ghb-pr/README.md
