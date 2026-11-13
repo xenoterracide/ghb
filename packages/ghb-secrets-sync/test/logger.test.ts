@@ -8,12 +8,12 @@ import { logger, setLogLevel } from "../src/logger.js";
 // eslint-disable-next-line no-control-regex -- stripping the ANSI codes is the point
 const stripAnsi = (text: string): string => text.replace(/\x1b\[[0-9;]*m/g, "");
 
-describe("logger", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-    setLogLevel("info");
-  });
+afterEach(() => {
+  vi.restoreAllMocks();
+  setLogLevel("info");
+});
 
+describe("logger", () => {
   it("prints info with, without, and with empty fields", () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
 
@@ -27,7 +27,9 @@ describe("logger", () => {
     expect(printed).toContain("INFO: empty fields");
     expect(printed).not.toContain("empty fields (");
   });
+});
 
+describe("logger", () => {
   it("prints debug only at debug level", () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
 

@@ -45,10 +45,7 @@ export default defineConfig([
       "@typescript-eslint/init-declarations": "error",
       "prefer-destructuring": "off",
       "@typescript-eslint/prefer-destructuring": "error",
-<<<<<<< before updating
-
-=======
-      "complexity": ["error", 10],
+      complexity: ["error", 10],
       "max-classes-per-file": "error",
       "max-depth": ["error", 3],
       "max-lines": "error",
@@ -56,7 +53,6 @@ export default defineConfig([
       "max-statements": ["error", 20, { ignoreTopLevelFunctions: false }],
       "sonarjs/cognitive-complexity": "error",
       "sonarjs/expression-complexity": ["error", { max: 3 }],
->>>>>>> after updating
       "@typescript-eslint/consistent-type-exports": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/explicit-member-accessibility": "error",
