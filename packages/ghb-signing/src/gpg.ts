@@ -68,7 +68,15 @@ export function exportSecretKey(fingerprint: string, opts?: GpgOpts): string {
   const runner = opts?.runner ?? defaultRunner;
   const { args, input } = loopbackArgs(opts?.passphrase);
   try {
-    return runner.runArgv("gpg", [...args, "--armor", "--export-secret-keys", fingerprint], runOpts(opts?.env, input));
+    const output = runner.runArgv(
+      "gpg",
+      [...args, "--armor", "--export-secret-keys", fingerprint],
+      runOpts(opts?.env, input),
+    );
+    if (output === "") {
+      throw new Error(`Failed to export secret key ${fingerprint}: gpg exported no key`);
+    }
+    return output;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     throw new Error(`Failed to export secret key ${fingerprint}: ${msg}`, { cause: e });

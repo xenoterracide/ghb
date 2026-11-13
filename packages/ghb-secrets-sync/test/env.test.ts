@@ -311,6 +311,26 @@ describe("resolveSecretValue", () => {
       'Warning: Could not export GPG key for secret "GPG_SIGNING_KEY"',
     );
   });
+
+  it("should warn and return undefined when gpg exports empty armor", () => {
+    const fpr = "E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853";
+    const runner = {
+      runArgv: (): string => {
+        return "";
+      },
+    };
+    const envFileEntries = {
+      GPG_SIGNING_KEY: { type: "gpg" as const, value: fpr },
+    };
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const result = resolveSecretValue("GPG_SIGNING_KEY", envFileEntries, undefined, { runner });
+
+    expect(result).toBeUndefined();
+    expect(warn.mock.calls.map((call) => call.join(" ")).join(" ")).toContain(
+      'Warning: Could not export GPG key for secret "GPG_SIGNING_KEY"',
+    );
+  });
 });
 
 describe("env edge cases", () => {

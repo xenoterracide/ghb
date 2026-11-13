@@ -91,6 +91,13 @@ describe("gpg unit", () => {
     });
   });
 
+  it("throws when the runner returns empty armor", () => {
+    const runner = createFakeRunner([""]);
+    expect(() => exportSecretKey(PRIMARY_FPR, { runner })).toThrow(
+      "Failed to export secret key E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853: gpg exported no key",
+    );
+  });
+
   it("setExpiry moves the primary only", () => {
     const runner = createFakeRunner([""]);
     setExpiry(PRIMARY_FPR, "2y", undefined, { runner, passphrase: "secret" });
