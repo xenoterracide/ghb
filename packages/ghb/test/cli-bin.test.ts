@@ -95,33 +95,42 @@ const generateSigningKey = (
 
 let bin = "";
 
+// pack applies publishConfig (main -> dist) and rewrites workspace:^,
+// so only the packed form can run under plain node; prepack builds
+function packPackages(): void {
+  for (const pkg of ["ghb", "ghb-pr", "ghb-secrets-sync", "ghb-signing"]) {
+    run("pnpm", ["pack", "--pack-destination", packsDir], join(repoRoot, "packages", pkg));
+  }
+}
+
+function packedTarballs(): string[] {
+  return run("ls", [packsDir], workDir)
+    .split("\n")
+    .filter((line) => line.endsWith(".tgz"))
+    .map((name) => join(packsDir, name));
+}
+
+function installTarballs(tarballs: string[]): void {
+  // one prefix, never three globals: npm -g installs each tarball as
+  // its own root and nests a clipanion copy per package; option specs
+  // carry a module-scoped symbol, so the parser only saw specs from
+  // its own copy and every flag and positional of a subpackage's
+  // commands died as a syntax error. One root hoists one clipanion
+  // every package shares
+  run("npm", ["install", "--prefix", installDir, ...tarballs], workDir);
+}
+
+beforeAll(() => {
+  packPackages();
+  installTarballs(packedTarballs());
+  bin = join(installDir, "node_modules", ".bin", "ghb");
+}, 60000);
+
+afterAll(() => {
+  rmSync(workDir, { recursive: true, force: true });
+});
+
 describe("the installed bin", () => {
-  beforeAll(() => {
-    // pack applies publishConfig (main -> dist) and rewrites workspace:^,
-    // so only the packed form can run under plain node; prepack builds
-    for (const pkg of ["ghb", "ghb-pr", "ghb-secrets-sync", "ghb-signing"]) {
-      run("pnpm", ["pack", "--pack-destination", packsDir], join(repoRoot, "packages", pkg));
-    }
-
-    const tarballs = run("ls", [packsDir], workDir)
-      .split("\n")
-      .filter((line) => line.endsWith(".tgz"))
-      .map((name) => join(packsDir, name));
-
-    // one prefix, never three globals: npm -g installs each tarball as
-    // its own root and nests a clipanion copy per package; option specs
-    // carry a module-scoped symbol, so the parser only saw specs from
-    // its own copy and every flag and positional of a subpackage's
-    // commands died as a syntax error. One root hoists one clipanion
-    // every package shares
-    run("npm", ["install", "--prefix", installDir, ...tarballs], workDir);
-    bin = join(installDir, "node_modules", ".bin", "ghb");
-  }, 60000);
-
-  afterAll(() => {
-    rmSync(workDir, { recursive: true, force: true });
-  });
-
   it("answers help when installed from tarballs and invoked through its bin link", () => {
     const stdout = run(bin, ["--help"], workDir);
 
@@ -136,7 +145,9 @@ describe("the installed bin", () => {
     expect(output).toContain("not a git repository");
     expect(output).not.toContain("Unknown Syntax Error");
   });
+});
 
+describe("the installed bin", () => {
   it("binds the secrets commands' positionals instead of rejecting them", () => {
     // an unbound positional dies as a syntax error; a bound one reaches
     // the resolver, which fails on an unknown name without touching gh

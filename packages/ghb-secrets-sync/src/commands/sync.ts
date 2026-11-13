@@ -8,7 +8,36 @@ import { logger, setLogLevel } from "../logger.js";
 import { parseEnvFile, resolveSecretValue } from "../env.js";
 import { setSecret, getCurrentRepo, findReposByLabel } from "../github.js";
 import { UserError } from "../errors.js";
-import type { CommandRunner } from "../types.js";
+import type { CommandRunner, EnvEntry } from "../types.js";
+
+function hasValue(value: string | undefined): value is string {
+  return typeof value === "string" && value !== "";
+}
+
+function splitList(value: string): string[] {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+function nonEmptyNames(names: string[]): string[] | undefined {
+  if (names.length > 0) {
+    return names;
+  }
+  logger.error("Error: No secrets specified");
+  return undefined;
+}
+
+async function readReply(): Promise<string> {
+  const reply = await new Promise<string>((resolve) => {
+    process.stdin.once("data", (data): void => {
+      resolve(data.toString().trim().toLowerCase());
+    });
+  });
+  process.stdin.pause();
+  return reply;
+}
 
 export class SyncCommand extends Command {
   public static paths = [["secrets", "sync"]];
@@ -65,89 +94,114 @@ export class SyncCommand extends Command {
   }
 
   private async doExecute(): Promise<number> {
-    // Must provide either --secrets or --env-file
-    const hasSecrets = typeof this.secrets === "string" && this.secrets !== "";
-    const envFilePath = this.envFile;
-    const hasEnvFile = typeof envFilePath === "string" && envFilePath !== "";
+    const hasEnvFile = hasValue(this.envFile);
+    const hasSecrets = hasValue(this.secrets);
+    this.configureLogging(hasSecrets, hasEnvFile, this.envFile);
+    if (!this.optionsValid(hasSecrets, hasEnvFile)) return 1;
 
+    const entries = this.parseEntries();
+    const names = this.resolveSecretNames(hasSecrets, entries);
+    const targets = names === undefined ? undefined : this.resolveTargetRepos();
+    if (names === undefined || targets === undefined) return 1;
+
+    return this.syncAll(targets, names, entries);
+  }
+
+  private parseEntries(): Record<string, EnvEntry> | undefined {
+    if (!hasValue(this.envFile)) return undefined;
+    const entries = parseEnvFile(this.envFile);
     if (this.verbose) {
-      setLogLevel("debug");
-      logger.debug({ hasSecrets, hasEnvFile, envFilePath }, "Parsing options");
+      logger.debug({ keys: Object.keys(entries) }, "Parsed env file");
     }
+    return entries;
+  }
 
+  private async syncAll(
+    targetRepos: string[],
+    names: string[],
+    entries: Record<string, EnvEntry> | undefined,
+  ): Promise<number> {
+    const secretsToSync = await this.collectSecretValues(names, entries);
+    if (secretsToSync.length === 0) return this.reportUnresolvedSecrets();
+
+    this.printPlan(targetRepos, secretsToSync);
+    if (this.dryRun) return this.dryRunResult();
+    if (process.stdin.isTTY && !(await this.confirm())) return 0;
+
+    this.syncSecrets(targetRepos, secretsToSync);
+    return 0;
+  }
+
+  private configureLogging(hasSecrets: boolean, hasEnvFile: boolean, envFilePath: string | undefined): void {
+    if (!this.verbose) return;
+    setLogLevel("debug");
+    logger.debug({ hasSecrets, hasEnvFile, envFilePath }, "Parsing options");
+  }
+
+  private optionsValid(hasSecrets: boolean, hasEnvFile: boolean): boolean {
+    // Must provide either --secrets or --env-file
     if (!hasSecrets && !hasEnvFile) {
       logger.error("Error: Must provide either --secrets or --env-file");
-      return 1;
+      return false;
     }
-
     // Cannot use both --repo and --label
-    if (typeof this.repo === "string" && this.repo !== "" && typeof this.label === "string" && this.label !== "") {
+    if (hasValue(this.repo) && hasValue(this.label)) {
       logger.error("Error: Cannot use both --repo and --label");
-      return 1;
+      return false;
     }
+    return true;
+  }
 
-    // Parse env file if provided
-    const envFileEntries = hasEnvFile ? parseEnvFile(envFilePath) : undefined;
-
-    if (this.verbose && envFileEntries) {
-      logger.debug({ keys: Object.keys(envFileEntries) }, "Parsed env file");
-    }
-
-    // Determine secret names to sync
-    let secretNames: string[];
+  private resolveSecretNames(hasSecrets: boolean, entries: Record<string, EnvEntry> | undefined): string[] | undefined {
     if (hasSecrets) {
-      secretNames = (this.secrets ?? "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-    } else if (envFileEntries !== undefined) {
+      return nonEmptyNames(splitList(this.secrets ?? ""));
+    }
+    if (entries !== undefined) {
       // Sync all secrets from env file
-      secretNames = Object.keys(envFileEntries);
-    } else {
-      logger.error("Error: No secrets to sync");
-      return 1;
+      return nonEmptyNames(Object.keys(entries));
     }
+    logger.error("Error: No secrets to sync");
+    return undefined;
+  }
 
-    if (secretNames.length === 0) {
-      logger.error("Error: No secrets specified");
-      return 1;
-    }
+  private resolveTargetRepos(): string[] | undefined {
+    const targetRepos = hasValue(this.repo) ? splitList(this.repo) : this.reposByLabel();
+    if (targetRepos === undefined) return undefined;
+    if (targetRepos.length > 0) return targetRepos;
+    logger.error("Error: No target repos found");
+    return undefined;
+  }
 
-    // Determine target repos
-    let targetRepos: string[];
-    if (typeof this.repo === "string" && this.repo !== "") {
-      targetRepos = this.repo
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-    } else if (typeof this.label === "string" && this.label !== "") {
+  private reposByLabel(): string[] | undefined {
+    if (hasValue(this.label)) {
       // Find repos by label
-      const owner = typeof this.owner === "string" && this.owner !== "" ? this.owner : undefined;
-      targetRepos = findReposByLabel(this.label, owner, this.runner);
-    } else {
-      // Default to current repo
-      try {
-        targetRepos = [getCurrentRepo(this.runner)];
-      } catch (e) {
-        logger.error(`Error: ${e instanceof Error ? e.message : String(e)}`);
-        return 1;
-      }
+      return findReposByLabel(this.label, hasValue(this.owner) ? this.owner : undefined, this.runner);
     }
-
-    if (targetRepos.length === 0) {
-      logger.error("Error: No target repos found");
-      return 1;
+    // Default to current repo
+    try {
+      return [getCurrentRepo(this.runner)];
+    } catch (e) {
+      logger.error(`Error: ${e instanceof Error ? e.message : String(e)}`);
+      return undefined;
     }
+  }
 
-    // Resolve all secret values
+  private needsPassphrase(entries: Record<string, EnvEntry> | undefined): boolean {
+    return entries !== undefined && Object.values(entries).some((entry) => entry.type === "gpg");
+  }
+
+  private async collectSecretValues(
+    secretNames: string[],
+    entries: Record<string, EnvEntry> | undefined,
+  ): Promise<{ name: string; value: string }[]> {
+    const passphrase =
+      this.passphrase ?? (this.needsPassphrase(entries) ? await readPassphrase(process.stdin) : undefined);
+    const opts = { runner: this.runner, passphrase };
+
     const secretsToSync: { name: string; value: string }[] = [];
-    const needsPassphrase =
-      envFileEntries !== undefined && Object.values(envFileEntries).some((entry) => entry.type === "gpg");
-    const passphrase = this.passphrase ?? (needsPassphrase ? await readPassphrase(process.stdin) : undefined);
-
     for (const name of secretNames) {
       logger.debug({ name }, "Resolving secret");
-      const value = resolveSecretValue(name, envFileEntries, undefined, { runner: this.runner, passphrase });
+      const value = resolveSecretValue(name, entries, undefined, opts);
       if (value === undefined) {
         logger.warn(`Warning: Could not resolve value for secret "${name}", skipping`);
         continue;
@@ -156,51 +210,53 @@ export class SyncCommand extends Command {
       secretsToSync.push({ name, value });
     }
 
-    if (secretsToSync.length === 0) {
-      logger.error("Error: Could not resolve values for any secrets.");
-      logger.error("Secrets must be provided via environment variables or --env-file.");
-      return 1;
-    }
+    return secretsToSync;
+  }
 
-    // Use console for interactive output to avoid async log ordering issues
+  private reportUnresolvedSecrets(): number {
+    logger.error("Error: Could not resolve values for any secrets.");
+    logger.error("Secrets must be provided via environment variables or --env-file.");
+    return 1;
+  }
+
+  // Use console for interactive output to avoid async log ordering issues
+  private printPlan(targetRepos: string[], secretsToSync: { name: string }[]): void {
     console.log(`Will sync ${secretsToSync.length} secret(s) to ${targetRepos.length} repo(s):`);
     console.log(`  Repos: ${targetRepos.join(", ")}`);
     console.log(`  Secrets: ${secretsToSync.map((s) => s.name).join(", ")}`);
+  }
 
-    if (this.dryRun) {
-      console.log("[Dry Run] No changes made");
-      return 0;
+  private dryRunResult(): number {
+    console.log("[Dry Run] No changes made");
+    return 0;
+  }
+
+  private async confirm(): Promise<boolean> {
+    process.stdout.write("\nProceed? [Y/n] ");
+    const reply = await readReply();
+    if (reply === "n" || reply === "no") {
+      console.log("Cancelled");
+      return false;
     }
+    return true;
+  }
 
-    // Confirm if interactive
-    if (process.stdin.isTTY) {
-      process.stdout.write("\nProceed? [Y/n] ");
-      const reply = await new Promise<string>((res) => {
-        process.stdin.once("data", (data): void => {
-          res(data.toString().trim().toLowerCase());
-        });
-      });
-      process.stdin.pause();
-      if (reply === "n" || reply === "no") {
-        console.log("Cancelled");
-        return 0;
-      }
-    }
-
-    // Sync to each target repo
+  private syncSecrets(targetRepos: string[], secretsToSync: { name: string; value: string }[]): void {
     for (const repo of targetRepos) {
       console.log(`\nSyncing to ${repo}...`);
       for (const { name, value } of secretsToSync) {
-        try {
-          setSecret({ repo, name, value, runner: this.runner });
-          console.log(`  ✓ ${name}`);
-        } catch (e) {
-          console.error(`  ✗ ${name}: ${e instanceof Error ? e.message : String(e)}`);
-        }
+        this.syncSecret(repo, name, value);
       }
     }
-
     console.log("\nSync complete!");
-    return 0;
+  }
+
+  private syncSecret(repo: string, name: string, value: string): void {
+    try {
+      setSecret({ repo, name, value, runner: this.runner });
+      console.log(`  ✓ ${name}`);
+    } catch (e) {
+      console.error(`  ✗ ${name}: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 }
