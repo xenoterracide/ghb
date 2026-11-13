@@ -7,3 +7,10 @@ export type { CommandRunner, KeySelection, PublicKey, SubKey } from "./types.js"
 
 // Gpg colon format parsing
 export { findSigningSubkey, isValidFingerprint, parseColonKeys, selectKey } from "./colon.js";
+
+// Gpg operations
+export type { GpgOpts } from "./gpg.js";
+export { exportSecretKey, listKeys, setExpiry } from "./gpg.js";
+
+// Stdin passphrase reading
+export { readAll, readPassphrase } from "./passphrase.js";
