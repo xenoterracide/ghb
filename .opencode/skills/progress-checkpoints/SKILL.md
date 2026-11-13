@@ -39,13 +39,22 @@ Do not use for quick, single-step edits that finish in one commit.
    config migrated, feature green — commit and push to the current branch.
    Verify the push succeeded before starting the next milestone.
 2. Keep checkpoints frequent enough that a kill loses at most one milestone.
-3. When resuming after an interruption, fetch the branch and move the local
-   checkout to it: `git fetch origin --prune`, push any commits the remote
-   lacks, then `git reset --hard origin/<branch>`. If the remote and the
-   local checkout diverged, never force-push: rebase the local commits onto
-   the fetched branch, then push. A fetch alone leaves the working tree at
-   the pre-checkpoint commit. Treat the remote branch, not the local
-   checkout, as authoritative.
+3. When resuming after an interruption, move the local checkout to the
+   fetched checkpoint. Treat the remote branch, not the local checkout, as
+   authoritative:
+   1. `git fetch origin --prune`.
+   2. Push any commits the remote lacks. Verify the push exits 0.
+   3. A failed push means a diverged branch, or an auth or network fault.
+      Fix the fault, or rebase the local commits onto the fetched branch
+      when it diverged, then push again. Never force-push. An unpushed
+      commit must never reach the reset.
+   4. Only after the verified push, run
+      `git reset --hard origin/<branch>`. The reset after a failed push
+      destroys the local-only commits — the checkpoint work this skill
+      exists to keep.
+
+   A fetch alone leaves the working tree at the pre-checkpoint commit.
+
 4. Stage only the milestone's changes in the checkpoint commit; leave the tree
    otherwise clean.
 
