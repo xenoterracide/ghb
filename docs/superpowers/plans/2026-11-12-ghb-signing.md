@@ -16,6 +16,8 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 **Spec:** `docs/superpowers/specs/2026-11-12-ghb-signing-design.md`
 
+**Status:** implemented — every task complete (2026-11-12).
+
 ## Global Constraints
 
 - Conventional commits per `git-conventional-commits.yaml`; allowed types include `feat`, `fix`, `test`, `docs`, `refactor`.
@@ -90,11 +92,11 @@ export function selectKey(keys: PublicKey[], fingerprint?: string): KeySelection
 
 `types.ts` carries the package's own `CommandRunner`, identical in shape to `ghb-secrets-sync`'s (the two are structurally compatible, no shared import).
 
-- [ ] **Step 1: Scaffold the package**
+- [x] **Step 1: Scaffold the package**
 
 `package.json` mirrors `packages/ghb-secrets-sync/package.json`: name `@xenoterracide/ghb-signing`, version `0.1.0`, license `GPL-3.0-or-later`, `main: src/index.ts`, the same `publishConfig`, `files`, clipanion dependency, devDependencies, engines, repository `directory`, and scripts — minus the `secrets-sync` script (Task 3 adds `signing`). Root `vitest.config.ts` gains the project `{ name: "ghb-signing", root: "./packages/ghb-signing", include: ["test/**/*.test.ts"] }`. Then `pnpm install --reporter=silent`.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Real `gpg --list-keys --with-colons` output, captured from gpg 2.4.9 (an ed25519 `cert` primary plus an ed25519 `sign` subkey). Use it verbatim as the fixture:
 
@@ -138,21 +140,21 @@ it("parses one key with its signing subkey", () => {
 - `isValidFingerprint`: the 40-hex fixture fingerprint is `true`, a 64-hex string is `true`, both lowercase; `32BF5B09B5329853` (key id) is `false`; non-hex characters are `false`.
 - `selectKey`: `selectKey(keys)` with one key → `ok`; no keys → `missing`; two keys → `ambiguous` carrying both; `selectKey(keys, fixtureFpr.toLowerCase())` → `ok`; `selectKey(keys, <40-hex that matches nothing>)` → `not-found`.
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-signing`
 Expected: FAIL — `src/colon.ts` does not exist.
 
-- [ ] **Step 4: Implement `colon.ts` and `types.ts`**
+- [x] **Step 4: Implement `colon.ts` and `types.ts`**
 
 Split on `:`; read fields by index: `[4]` key id, `[5]` creation, `[6]` expiry (`""` → `null`), `[11]` capabilities; the `fpr` record's `[9]` is the fingerprint of the `pub`/`sub` record it follows. Skip every other record type (`tru`, `uid`, …). `findSigningSubkey` matches `s` case-insensitively in capabilities and, among matches, returns the greatest `createdAt`. `selectKey` matches fingerprints case-insensitively.
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-signing`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/ghb-signing vitest.config.ts
@@ -210,7 +212,7 @@ Argv, pinned (cmd is always `"gpg"`):
 
 `readPassphrase`: a TTY stream resolves `undefined`; anything else resolves everything the stream yields, trailing newline kept — gpg strips it. An empty pipe resolves `""` and gpg fails loudly (`No passphrase given`, exit 2).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `test/gnupg.ts`: `createGnupgHome` makes a temp dir under `tmpdir()`; `generateSigningKey` runs the two proven commands with the passphrase piped (`--quick-generate-key '<uid>' ed25519 cert <expiry>`, then `--quick-add-key <fpr> ed25519 sign <expiry>` with unique uids) and returns both fingerprints read from `fpr` records.
 
@@ -253,21 +255,21 @@ it("lists the generated key and its signing subkey", () => {
 - `setExpiry moves the primary only, then the subkey`: `setExpiry(primaryFpr, "2y", undefined, …)`, assert via `listKeys` the primary moved and the subkey did not; then `setExpiry(primaryFpr, "2y", subkeyFpr, …)` and assert the subkey moved.
 - `a wrong passphrase throws`: `exportSecretKey(primaryFpr, { …, passphrase: "wrong" })` throws, message contains `Failed to export secret key`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-signing`
 Expected: FAIL — `src/gpg.ts`, `src/passphrase.ts` do not exist.
 
-- [ ] **Step 3: Implement `gpg.ts` and `passphrase.ts`**
+- [x] **Step 3: Implement `gpg.ts` and `passphrase.ts`**
 
 `gpg.ts` owns a module-level default runner mirroring `github.ts`'s `createDefaultCommandRunner` (same `execFileSync` options: encoding, cwd, env merge, input, trimmed return). `readAll` concatenates the stream's chunks until end; declare both helpers `async` (`@typescript-eslint/promise-function-async` requires it). Export everything from `src/index.ts`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-signing && pnpm --filter @xenoterracide/ghb-signing typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-signing
@@ -312,7 +314,7 @@ Behavior, pinned:
 
 `days = Math.floor((expiresAt - Math.floor(Date.now() / 1000)) / 86400)`; `<date>` is UTC `new Date(sec * 1000).toISOString().slice(0, 10)`. The window check is inclusive. `check` never takes a passphrase and never modifies anything.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Fixture strings built at runtime — a helper in the test file:
 
@@ -335,21 +337,21 @@ emits the Task 1 fixture shape with the computed expiry (`null` writes the blank
 
 Integration (real gpg; save, set, and restore `process.env.GNUPGHOME` as `sync.test.ts` restores `process.env`): a generated 1y key → exit 0; a generated 1d key → exit 1 with `within 30 days`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-signing`
 Expected: FAIL — `commands/check.ts` does not exist.
 
-- [ ] **Step 3: Implement `check.ts` and `cli.ts`**
+- [x] **Step 3: Implement `check.ts` and `cli.ts`**
 
 Follow the table. `console`/`process.stdout.write` per `get.ts`'s split: values to stdout, errors to stderr.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-signing && pnpm --filter @xenoterracide/ghb-signing typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-signing
@@ -391,25 +393,25 @@ Next: back up the key to Bitwarden
 
 - A gpg failure mid-renew: stderr `Error: <message>`, exit 1.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 A sequence fake runner (queue of responses, records every call). Happy path: responses `[colonBefore, "", "", colonAfter]` where the after-fixture's expiries are the before's plus the duration; assert exit 0; call 1 argv is `--quick-set-expire <primaryFpr> 1y` with the loopback prefix and `input` = passphrase; call 2 appends the subkey fingerprint; call 3 is the second list; stdout contains `expires <after-date> (was <before-date>)` for both lines and both `Next:` lines. Error cases per the behavior list, each asserting the runner saw no calls when validation fails. Integration: generate 1y, `command.passphrase = PASS`, renew `--duration 2y`, then `listKeys` shows both expiries ≈ 2 years out.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-signing`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement `renew.ts`**
+- [x] **Step 3: Implement `renew.ts`**
 
 As pinned. Print the before/after from the two listings — never assume the set-expire worked.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-signing && pnpm --filter @xenoterracide/ghb-signing typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-signing
@@ -435,25 +437,25 @@ git commit -m "feat: add ghb signing renew" \
 
 Behavior: select the primary key (same messages and exits), passphrase as in `renew`, then `exportSecretKey(primaryFpr, { runner, passphrase })`; write the armor to stdout plus a trailing newline and nothing else — the output is pipe-clean. A gpg failure: stderr `Error: <message>`, exit 1. `printf '%s' "$PASS" | ghb signing export > key.asc` is the intended use; the command never writes a file itself.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Fake runner: returns `-----BEGIN PGP PRIVATE KEY BLOCK-----\n…armor…` for the export argv. Cases: piped export (argv with loopback prefix, `input` = passphrase, exit 0, stdout is exactly armor + `\n`); short `--key` → exit 1, runner never called; ambiguous keys → exit 2; runner throws → exit 1, stderr has `Error:`. Integration: generate a key, export with the passphrase, import into a fresh home, `listKeys` shows it.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-signing`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement `export.ts`**
+- [x] **Step 3: Implement `export.ts`**
 
 As pinned.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-signing && pnpm --filter @xenoterracide/ghb-signing typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-signing
@@ -500,7 +502,7 @@ export function resolveSecretValue(
 - `resolveSecretValue` case `gpg`: `exportSecretKey(entry.value, { runner: opts?.runner, passphrase: opts?.passphrase })`; on throw, `logger.warn` — `` `Warning: Could not export GPG key for secret "${name}": ${msg}` `` — and return `undefined`, the same skip semantics as a missing env var or file.
 - `sync.ts` and `get.ts`: `public passphrase?: string`; before resolving, `needsPassphrase` is any entry with `type === "gpg"`; `const passphrase = this.passphrase ?? (needsPassphrase ? await readPassphrase(process.stdin) : undefined)`; every `resolveSecretValue` call passes `{ runner: this.runner, passphrase }`. `GetCommand`'s sync `get()` becomes async.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `env.test.ts`: `GPG_SIGNING_KEY=gpg:E2161DBFFA7E2C4ED8A6DC8032BF5B09B5329853` parses to `{ type: "gpg", value: … }`; `gpg:8042ED9A` throws `must be a full fingerprint`; the unknown-protocol message contains `gpg:`. `resolveSecretValue` with a recording fake runner: returns the runner's armor, argv is the piped export shape, `input` is `opts.passphrase`; when the runner throws, `console.warn` is spied (as the existing permissive-permissions test does) and the result is `undefined`.
 
@@ -508,21 +510,21 @@ export function resolveSecretValue(
 
 `get.test.ts`: `gpg:` entry + fake runner + `cmd.passphrase` → exit 0, stdout is the armor.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-secrets-sync`
 Expected: the new cases fail; existing cases still pass.
 
-- [ ] **Step 3: Implement the resolver and wiring**
+- [x] **Step 3: Implement the resolver and wiring**
 
 As pinned. `env.ts` imports from `@xenoterracide/ghb-signing`; the two packages' `CommandRunner` interfaces are structurally identical, so `opts.runner` passes straight through.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-secrets-sync && pnpm --filter @xenoterracide/ghb-secrets-sync typecheck`
 Expected: PASS, including every pre-existing case.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-secrets-sync pnpm-lock.yaml
@@ -547,7 +549,7 @@ git commit -m "feat: resolve gpg: entries from the keyring at sync time" \
 - Consumes: `CheckCommand`, `RenewCommand`, `ExportCommand` from `@xenoterracide/ghb-signing`.
 - Produces: the shipped `ghb signing …` surface.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `cli.test.ts`: registered paths gain `ghb signing check`, `ghb signing renew`, `ghb signing export`; the count assertion becomes 8; the no-args help output contains all three. `cli-bin.test.ts`: the pack list gains `"ghb-signing"`; new cases:
 
@@ -568,21 +570,21 @@ it("exports the armored key from a piped passphrase", () => {
 
 `runWithInput` is a local helper: `execFileSync` with `input` and `env` — the file's existing `run` does not pass them.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb`
 Expected: the new cases fail — the commands are not registered.
 
-- [ ] **Step 3: Wire the aggregator**
+- [x] **Step 3: Wire the aggregator**
 
 `cli.ts`: import and register the three commands after the secrets commands. Root `package.json` gains the `signing` script.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb && pnpm --filter @xenoterracide/ghb typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb package.json pnpm-lock.yaml
@@ -600,16 +602,16 @@ passphrase reaches export through the real binary" \
 - Modify: `README.md`, `AGENTS.md`, `CONTRIBUTING.md`
 - Modify: `docs/superpowers/specs/2026-11-12-ghb-signing-design.md` (status `proposed` → `implemented`)
 
-- [ ] **Step 1: Write the docs**
+- [x] **Step 1: Write the docs**
 
 `packages/ghb-signing/README.md`: the three commands with usage, exit codes, the stdin passphrase contract (`printf '%s' "$PASS" | ghb signing export > key.asc`), the `--key` full-fingerprint rule, `GNUPGHOME` respect, one line placing `ghb signing check` first in a release workflow, and one line scoping the key to the publishing repo — no topic fan-out. Root `README.md`: the usage block gains the three commands in the existing comment style, the secrets examples gain a `gpg:<fpr>` line and a note that `val:`/`file:` are deprecated for secret values, and the package README list gains `ghb-signing`. `AGENTS.md` and `CONTRIBUTING.md`: add the package to their lists with one line each.
 
-- [ ] **Step 2: Run the full gate**
+- [x] **Step 2: Run the full gate**
 
 Run: `pnpm check`
 Expected: prettier, eslint, typecheck, and the whole suite with coverage all green.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add README.md AGENTS.md CONTRIBUTING.md docs/superpowers packages/ghb-signing/README.md

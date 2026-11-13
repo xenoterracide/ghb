@@ -59,6 +59,8 @@ checkout.
 - **Conventional commits.** See
   [`git-conventional-commits.yaml`](./git-conventional-commits.yaml).
 - **Squash merge.** Do not force push.
+- **Plan tracking.** Tick a plan's checkboxes as its tasks complete; the
+  committed plan is the completion record.
 - **SPDX headers on every file.** `lint-staged` adds them. CI checks
   compliance. Do not remove them.
 - **Shell safety.** Use `execFileSync` with argv arrays, not shell strings.
