@@ -14,6 +14,8 @@ GitHub Bridge: a TypeScript CLI devtools monorepo.
   current and prove it is mergeable and green.
 - **`@xenoterracide/ghb-secrets-sync`** — GitHub repository secret sync from
   environment variables or local env files.
+- **`@xenoterracide/ghb-signing`** — `signing check`, `renew`, and `export`:
+  OpenPGP signing key lifecycle for CI publishing.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the repository layout, setup, and
 contributor workflow.

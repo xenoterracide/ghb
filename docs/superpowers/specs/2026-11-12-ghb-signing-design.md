@@ -7,7 +7,7 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 # ghb signing: key lifecycle and secret resolution
 
 Date: 2026-11-12
-Status: proposed
+Status: implemented
 
 ## Intent
 
