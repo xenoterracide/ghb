@@ -25,6 +25,12 @@ const passingCycle = ["", view({ rollup: twoChecksRollup }), "0\t1", "", view({ 
 
 const forwardedCycle = ["", view({ rollup: passingRollup }), "0\t1", "", view({ rollup: passingRollup }), "0\t1"];
 
+const omitField = (field: string): string => {
+  const parsed = JSON.parse(view({ rollup: passingRollup })) as Record<string, unknown>;
+  const kept = Object.fromEntries(Object.entries(parsed).filter(([key]) => key !== field));
+  return JSON.stringify(kept);
+};
+
 describe("PrVerifyCommand", () => {
   it("prints pass when open, current, mergeable, and every check passes", async () => {
     const { exit, logs, errors, calls } = await runVerify(passingCycle);
@@ -112,6 +118,19 @@ describe("PrVerifyCommand", () => {
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("behind base by 3 commits");
     expect(calls).toContain("git rev-list --left-right --count origin/develop...abc123");
+  });
+});
+
+describe("PrVerifyCommand", () => {
+  it.each([
+    ["headRefOid", "PR head SHA missing from gh pr view"],
+    ["baseRefName", "base branch missing from gh pr view"],
+  ])("fails cleanly when gh omits %s", async (field, message) => {
+    const { exit, errors, calls } = await runVerify(["", omitField(field)]);
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain(message);
+    expect(calls.some((call) => call.startsWith("git rev-list"))).toBe(false);
   });
 });
 

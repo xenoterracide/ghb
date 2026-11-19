@@ -185,6 +185,12 @@ export function readView(run: Runner, forward: string[]): PrView | undefined {
 }
 
 export function baseCurrency(run: Runner, view: PrView): string[] {
+  if (!view.baseRefName) {
+    return ["base branch missing from gh pr view"];
+  }
+  if (!view.headRefOid) {
+    return ["PR head SHA missing from gh pr view"];
+  }
   const [baseLeft = "0"] = run("git", [
     "rev-list",
     "--left-right",

@@ -253,16 +253,17 @@ git commit -m "docs(pr): describe verify as a remote PR check"
 - Consumes: all prior tasks.
 - Produces: no new interface.
 
-- [ ] **Step 1: Run the full check**
+- [x] **Step 1: Run the full check**
 
 Run: `pnpm check`
 Expected: PASS. CI owns full-repo lint and tests; this is the one command a failure names for a targeted fix.
+Ruled out by repository AGENTS.md; CI via `ghb pr verify` supplied the evidence.
 
-- [ ] **Step 2: Review the branch diff**
+- [x] **Step 2: Review the branch diff**
 
 Run: `git diff develop...HEAD`
 Expected: only the files named in Tasks 1-4 plus the two committed planning documents.
 
-- [ ] **Step 3: Open the PR**
+- [x] **Step 3: Open the PR**
 
 Create a draft PR with the commit bodies as its title and description, then run `ghb pr verify` from this branch.
