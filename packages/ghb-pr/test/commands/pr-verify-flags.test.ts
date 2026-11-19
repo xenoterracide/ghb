@@ -33,20 +33,19 @@ class ProbeVerify extends PrVerifyCommand {
 
 async function runCli(args: string[]): Promise<CliResult> {
   const chunks: string[] = [];
+  vi.spyOn(process.stdout, "write").mockImplementation((chunk: string | Uint8Array): boolean => {
+    chunks.push(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
+    return true;
+  });
   const cli = new Cli({ binaryName: "ghb" });
   cli.register(ProbeVerify);
-  const stdout = {
-    write: (chunk: string | Uint8Array): boolean => {
-      chunks.push(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
-      return true;
-    },
-  } as NodeJS.WriteStream;
-  const exit = await cli.run(args, { ...Cli.defaultContext, stdout, colorDepth: 0 });
+  const exit = await cli.run(args, { ...Cli.defaultContext, stdout: process.stdout, colorDepth: 0 });
   return { exit, stdout: chunks.join("") };
 }
 
 afterEach(() => {
   ProbeVerify.bound = undefined;
+  vi.restoreAllMocks();
 });
 
 describe("PrVerifyCommand", () => {
