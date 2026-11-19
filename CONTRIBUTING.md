@@ -21,7 +21,6 @@ monorepo managed with pnpm workspaces.
 
 ## Setup
 
-<<<<<<< before updating
 1. Ensure `asdf` and `direnv` are installed and allowed.
 2. Run `npm run contribute` — it installs tools, syncs Node and Python
    dependencies, and points `core.hooksPath` at `.config/git/hooks`.
@@ -65,11 +64,16 @@ pnpm check
 pnpm test              # tests with coverage across the workspace
 pnpm build             # build every package topologically
 pnpm typecheck         # root project, then every package
-pnpm lint              # eslint + prettier + reuse
+pnpm lint              # eslint + prettier + shellcheck + reuse
 pnpm lint:eslint
 pnpm lint:prettier
+pnpm lint:shellcheck
 pnpm lint:reuse
 ```
+
+`pnpm check` runs the CI set. `git push` runs `pnpm lint` first (pre-push
+hook). `git push --no-verify` bypasses it. The first commit's pre-commit
+hook stamps headers and seeds `LICENSES`.
 
 ## Updating from the Template
 
@@ -77,17 +81,8 @@ This repository is managed with
 [copier](https://copier.readthedocs.io); [`.copier-answers.yml`](./.copier-answers.yml)
 holds the answers. Refresh from
 [xenoterracide/base-template](https://github.com/xenoterracide/base-template):
-=======
-`pnpm check` runs the CI set; on TypeScript it skips reuse, which the
-license CI job runs. `git push` runs `pnpm lint` first (pre-push hook),
-reuse included; `git push --no-verify` bypasses it. The first commit's
-pre-commit hook stamps headers and seeds `LICENSES`; reuse checks fail
-before it runs.
 
-## Updating from the template
->>>>>>> after updating
-
-    uv run --group dev copier update --trust
+    uvx copier update --trust
 
 Conflicts appear as `.rej` files or inline markers; resolve and commit.
 Renovate opens an update PR on each template release and automerges clean
