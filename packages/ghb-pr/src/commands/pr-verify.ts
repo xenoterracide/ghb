@@ -71,7 +71,7 @@ export class PrVerifyCommand extends Command {
   public static paths = [["pr", "verify"]];
 
   public static usage = Command.Usage({
-    description: "Verify the current PR is current, mergeable, and green",
+    description: "Verify a PR is current, mergeable, and green",
   });
 
   public interval = Option.String("--interval", "10", {
@@ -111,7 +111,7 @@ export class PrVerifyCommand extends Command {
     return await this.poll(polling, view);
   }
 
-  // currency and PR state are local facts; fail fast
+  // currency and PR state come from GitHub; fail fast
   private failFast(run: Runner, view: PrView): number | undefined {
     const failures = currencyFailures(run, view);
     if (view.state !== "OPEN") {

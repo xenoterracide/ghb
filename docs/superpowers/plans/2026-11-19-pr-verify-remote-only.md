@@ -208,7 +208,7 @@ git commit -m "test(pr): drop local head currency from verify scripts"
 - Consumes: nothing new.
 - Produces: no new interface.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `packages/ghb-pr/test/commands/pr-verify-flags.test.ts`:
 
@@ -221,23 +221,23 @@ it("describes verify as checking a PR, not the current checkout", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `pnpm vitest run packages/ghb-pr/test/commands/pr-verify-flags.test.ts`
 Expected: FAIL; help still says "Verify the current PR is current, mergeable, and green".
 
-- [ ] **Step 3: Update the copy**
+- [x] **Step 3: Update the copy**
 
 In `packages/ghb-pr/src/commands/pr-verify.ts`, set the command description to `Verify a PR is current, mergeable, and green`.
 
 In `packages/ghb-pr/README.md`, change the verify usage comment to say it verifies the PR on GitHub and does not depend on the checked-out branch.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm vitest run packages/ghb-pr/test/commands/pr-verify-flags.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-pr/src/commands/pr-verify.ts packages/ghb-pr/README.md packages/ghb-pr/test/commands/pr-verify-flags.test.ts

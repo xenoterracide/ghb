@@ -18,7 +18,8 @@ prove it is mergeable and green.
 # or when tracked files or colliding untracked files would be lost
 ghb pr sync
 
-# Verify the current PR is current, mergeable, and every check passes
+# Verify the PR on GitHub: current, mergeable, and every check passes
+# Does not depend on the checked-out branch
 # Prints pass, or one line per failed dimension
 # Exits 0 on pass, 1 on failure, 2 when checks stay pending past the timeout
 ghb pr verify [--interval SECONDS] [--timeout SECONDS] [PR NUMBER | URL | BRANCH]

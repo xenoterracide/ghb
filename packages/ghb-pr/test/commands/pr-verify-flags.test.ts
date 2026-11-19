@@ -66,4 +66,11 @@ describe("PrVerifyCommand", () => {
     expect(stdout).toContain("pr verify");
     expect(stdout).toContain("[<number> | <url> | <branch>]");
   });
+
+  it("describes verify as checking a PR, not the current checkout", async () => {
+    const { exit, stdout } = await runCli(["pr", "verify", "--help"]);
+
+    expect(exit).toBe(0);
+    expect(stdout).toContain("Verify a PR is current, mergeable, and green");
+  });
 });
