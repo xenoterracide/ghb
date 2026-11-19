@@ -179,7 +179,7 @@ export function captureConsole(): CapturedConsole {
 export interface VerifyOptions {
   interval?: string;
   timeout?: string;
-  forward?: string[];
+  pr?: string;
 }
 
 export interface VerifyResult extends CapturedConsole {
