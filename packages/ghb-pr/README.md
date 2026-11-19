@@ -19,7 +19,9 @@ prove it is mergeable and green.
 ghb pr sync
 
 # Verify the PR on GitHub: current, mergeable, and every check passes
-# Does not depend on the checked-out branch
+# Without a selector, gh finds the PR for the current branch
+# With a selector, verification does not use the checked-out branch
+# Verification uses the PR head SHA from GitHub
 # Prints pass, or one line per failed dimension
 # Exits 0 on pass, 1 on failure, 2 when checks stay pending past the timeout
 ghb pr verify [--interval SECONDS] [--timeout SECONDS] [PR NUMBER | URL | BRANCH]

@@ -37,8 +37,9 @@ retains a checkout dependency.
 - Add `headRefOid` to `PrView` and to the `gh pr view --json` field list.
 - `baseCurrency` compares `origin/<baseRefName>...<headRefOid>`.
 - Delete `headCurrency`; `currencyFailures` returns only `baseCurrency`.
-- Update the command description and the package README to say verify reads
-  the PR on GitHub and does not depend on the working tree.
+- Update the command description and the package README to say verification
+  reads the selected PR from GitHub and does not use local `HEAD`.
+- Keep gh's normal PR selection. No selector resolves the current branch's PR.
 - Keep exit codes 0, 1, 2, quiet success, loud failure, structured reads,
   and the existing poll and grace behavior.
 

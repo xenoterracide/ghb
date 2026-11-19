@@ -32,7 +32,10 @@ ghb --help
 # Exits 1 when local and remote diverged, or on a merge conflict
 ghb pr sync
 
-# Verify the current PR is current, mergeable, and every check passes
+# Verify a PR is current, mergeable, and every check passes
+# Defaults to the current branch's PR
+# Accepts a PR number, URL, or branch
+# Verification uses the PR head SHA from GitHub
 # Prints pass, or one line per failed dimension
 # Exits 0 on pass, 1 on failure, 2 when checks stay pending past the timeout
 # Waits out queued and not-yet-created checks before passing
