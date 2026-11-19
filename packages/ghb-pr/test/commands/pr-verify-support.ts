@@ -126,6 +126,7 @@ export interface ViewSpec {
   state?: string;
   mergeable?: string;
   mergeStateStatus?: string;
+  headRefOid?: string;
   rollup?: RollupContext[];
 }
 
@@ -136,6 +137,7 @@ export const view = (spec: ViewSpec = {}): string =>
     mergeStateStatus: spec.mergeStateStatus ?? "CLEAN",
     baseRefName: "develop",
     headRefName: "topic",
+    headRefOid: spec.headRefOid ?? "abc123",
     statusCheckRollup: spec.rollup ?? emptyRollup,
   });
 

@@ -50,10 +50,16 @@ describe("PrVerifyCommand", () => {
     expect(exit).toBe(0);
     expect(logs).toEqual(["pass"]);
     expect(errors).toEqual([]);
-    expect(calls).toContain(
-      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup",
-    );
     expect(calls.some((call) => call.startsWith("gh pr checks"))).toBe(false);
+  });
+
+  it("requests the PR head SHA from gh", async () => {
+    const { exit, calls } = await runVerify(passingCycle);
+
+    expect(exit).toBe(0);
+    expect(calls).toContain(
+      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,headRefOid,statusCheckRollup",
+    );
   });
 
   it("fails behind base without polling checks", async () => {
@@ -121,7 +127,7 @@ describe("PrVerifyCommand", () => {
     const { exit, calls } = await runVerify(forwardedCycle, { pr: "585" });
 
     const forwardedCall =
-      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup 585";
+      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,headRefOid,statusCheckRollup 585";
     expect(exit).toBe(0);
     expect(calls.filter((call) => call === forwardedCall)).toHaveLength(2);
   });

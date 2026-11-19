@@ -28,6 +28,7 @@ export interface PrView {
   mergeStateStatus: string;
   baseRefName: string;
   headRefName: string;
+  headRefOid: string;
   statusCheckRollup?: RollupContext[] | null | undefined;
 }
 
@@ -174,7 +175,7 @@ export function readView(run: Runner, forward: string[]): PrView | undefined {
         "pr",
         "view",
         "--json",
-        "state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup",
+        "state,mergeable,mergeStateStatus,baseRefName,headRefName,headRefOid,statusCheckRollup",
         ...forward,
       ]),
     ) as PrView;

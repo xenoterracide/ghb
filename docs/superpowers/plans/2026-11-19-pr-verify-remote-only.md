@@ -53,7 +53,7 @@ Input classes the spec implies but no current test exercises; each is pinned to 
   - `PrView.headRefOid: string`
   - `view({ headRefOid?: string })` in the test helper, defaulting to `"abc123"`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `packages/ghb-pr/test/commands/pr-verify.test.ts`:
 
@@ -68,12 +68,12 @@ it("requests the PR head SHA from gh", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `pnpm vitest run packages/ghb-pr/test/commands/pr-verify.test.ts`
 Expected: FAIL on the `toContain` assertion; the call lacks `headRefOid`.
 
-- [ ] **Step 3: Implement the view field**
+- [x] **Step 3: Implement the view field**
 
 In `packages/ghb-pr/src/pr-gates.ts`:
 
@@ -85,12 +85,12 @@ In `packages/ghb-pr/test/commands/pr-verify-support.ts`:
 - Add `headRefOid?: string` to `ViewSpec`.
 - Emit `headRefOid: spec.headRefOid ?? "abc123"` from `view()`.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm vitest run packages/ghb-pr/test/commands/pr-verify.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-pr/src/pr-gates.ts packages/ghb-pr/test/commands/pr-verify-support.ts packages/ghb-pr/test/commands/pr-verify.test.ts
