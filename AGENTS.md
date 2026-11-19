@@ -8,7 +8,6 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 GitHub Bridge: a TypeScript CLI devtools monorepo.
 
-<<<<<<< before updating
 - **`@xenoterracide/ghb`** — aggregated `ghb` CLI. Composes subcommands from
   the other packages.
 - **`@xenoterracide/ghb-pr`** — `pr sync` and `pr verify`: keep a PR branch
@@ -25,21 +24,13 @@ contributor workflow.
 
 - `npm run contribute` — bootstrap tooling (run once after clone); heals the
   toolchain through `.config/git/hooks/heal.sh`
-- `pnpm check` — prettier, eslint, typecheck, and tests
-- `pnpm lint` — eslint, prettier, and reuse
+- `pnpm check` — lint, typecheck, and tests
+- `pnpm lint` — eslint, prettier, shellcheck, and reuse
 - `pnpm lint:eslint` — ESLint check
+- `pnpm lint:reuse` — REUSE check alone
 - `pnpm build` — build every package topologically
+- `pnpm typecheck` — root project, then every package
 - `pnpm test` — vitest with coverage across the workspace
-=======
-- `npm run contribute` — bootstrap tooling (run once after clone)
-- `pnpm lint` — the pre-push set: prettier, shellcheck, reuse, plus
-  eslint (TypeScript) or checkstyle + spotbugs via Maven (java)
-- `pnpm check` — lint (minus reuse), typecheck, and tests
-- `pnpm lint:reuse` — REUSE check alone; the first commit's pre-commit
-  hook seeds `LICENSES`
-- `pnpm typecheck` — TypeScript type check
-- `pnpm test` — vitest with coverage
->>>>>>> after updating
 
 ## Source of Truth
 
@@ -60,8 +51,8 @@ and rules drift; these do not.
 | Template and answers                            | [xenoterracide/base-template](https://github.com/xenoterracide/base-template), [`.copier-answers.yml`](./.copier-answers.yml)  |
 | Renovate configuration                          | [`.github/renovate.json5`](./.github/renovate.json5)                                                                           |
 
-Template updates land with `uv run --group dev copier update --trust`; conflicts
-appear as `.rej` files. Hooks heal the toolchain: `.envrc`, `contribute`, and
+Template updates land with `uvx copier update --trust`; conflicts appear as
+`.rej` files or inline markers. Hooks heal the toolchain: `.envrc`, `contribute`, and
 the post hooks call `.config/git/hooks/heal.sh`. A failed heal never breaks a
 checkout.
 
