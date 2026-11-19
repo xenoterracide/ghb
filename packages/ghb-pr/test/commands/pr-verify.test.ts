@@ -7,6 +7,7 @@ import { PrVerifyCommand } from "../../src/commands/pr-verify.js";
 import { execRunner } from "../../src/exec.js";
 import {
   captureConsole,
+  divergentLocalRunner,
   failingRollup,
   passingRollup,
   realGreenRunner,
@@ -21,27 +22,15 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const passingCycle = [
-  "",
-  view({ rollup: twoChecksRollup }),
-  "0\t1",
-  "0\t0",
-  "",
-  view({ rollup: twoChecksRollup }),
-  "0\t1",
-  "0\t0",
-];
+const passingCycle = ["", view({ rollup: twoChecksRollup }), "0\t1", "", view({ rollup: twoChecksRollup }), "0\t1"];
 
-const forwardedCycle = [
-  "",
-  view({ rollup: passingRollup }),
-  "0\t1",
-  "0\t0",
-  "",
-  view({ rollup: passingRollup }),
-  "0\t1",
-  "0\t0",
-];
+const forwardedCycle = ["", view({ rollup: passingRollup }), "0\t1", "", view({ rollup: passingRollup }), "0\t1"];
+
+const omitField = (field: string): string => {
+  const parsed = JSON.parse(view({ rollup: passingRollup })) as Record<string, unknown>;
+  const kept = Object.fromEntries(Object.entries(parsed).filter(([key]) => key !== field));
+  return JSON.stringify(kept);
+};
 
 describe("PrVerifyCommand", () => {
   it("prints pass when open, current, mergeable, and every check passes", async () => {
@@ -50,14 +39,22 @@ describe("PrVerifyCommand", () => {
     expect(exit).toBe(0);
     expect(logs).toEqual(["pass"]);
     expect(errors).toEqual([]);
-    expect(calls).toContain(
-      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup",
-    );
     expect(calls.some((call) => call.startsWith("gh pr checks"))).toBe(false);
+  });
+});
+
+describe("PrVerifyCommand", () => {
+  it("requests the PR head SHA from gh", async () => {
+    const { exit, calls } = await runVerify(passingCycle);
+
+    expect(exit).toBe(0);
+    expect(calls).toContain(
+      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,headRefOid,statusCheckRollup",
+    );
   });
 
   it("fails behind base without polling checks", async () => {
-    const { exit, errors, calls } = await runVerify(["", view({ rollup: passingRollup }), "3\t0", "0\t0"]);
+    const { exit, errors, calls } = await runVerify(["", view({ rollup: passingRollup }), "3\t0"]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("behind base by 3 commits");
@@ -67,7 +64,7 @@ describe("PrVerifyCommand", () => {
 
 describe("PrVerifyCommand", () => {
   it("fails on mergeStateStatus without polling", async () => {
-    const { exit, errors, calls } = await runVerify(["", view({ mergeStateStatus: "DIRTY" }), "0\t1", "0\t0"]);
+    const { exit, errors, calls } = await runVerify(["", view({ mergeStateStatus: "DIRTY" }), "0\t1"]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("mergeStateStatus: DIRTY");
@@ -75,7 +72,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails on a fail bucket despite gh exiting 0", async () => {
-    const { exit, errors } = await runVerify(["", view({ rollup: failingRollup }), "0\t1", "0\t0"]);
+    const { exit, errors } = await runVerify(["", view({ rollup: failingRollup }), "0\t1"]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("fail: build");
@@ -85,34 +82,83 @@ describe("PrVerifyCommand", () => {
 describe("PrVerifyCommand", () => {
   it("fails fast on a gh error that is not a runless head", async () => {
     const { exit } = await runVerify(
-      ["", view({ rollup: passingRollup }), "0\t1", "0\t0", "", new Error("gh: Not logged in")],
+      ["", view({ rollup: passingRollup }), "0\t1", "", new Error("gh: Not logged in")],
       { interval: "0", timeout: "0" },
     );
 
     expect(exit).toBe(1);
   });
+});
 
-  it("fails when local is ahead of the remote head", async () => {
-    const { exit, errors } = await runVerify(["", view({ rollup: passingRollup }), "0\t1", "1\t0"]);
+describe("PrVerifyCommand", () => {
+  it("compares the base with the PR head SHA, not HEAD", async () => {
+    const { exit, errors, calls } = await runVerify([
+      "",
+      view({ rollup: passingRollup, headRefOid: "abc123" }),
+      "0\t1",
+      "",
+      view({ rollup: passingRollup, headRefOid: "abc123" }),
+      "0\t1",
+    ]);
 
-    expect(exit).toBe(1);
-    expect(errors.join("\n")).toContain("ahead of origin/topic by 1 commits");
+    expect(exit).toBe(0);
+    expect(errors).toEqual([]);
+    expect(calls).toContain("git rev-list --left-right --count origin/develop...abc123");
+    expect(calls.some((call) => call.includes("HEAD"))).toBe(false);
   });
 });
 
 describe("PrVerifyCommand", () => {
-  it("fails when local is behind the remote head", async () => {
-    const { exit, errors } = await runVerify(["", view({ rollup: passingRollup }), "0\t1", "0\t2"]);
+  it("passes when the local branch is ahead and behind its remote", async () => {
+    const { run } = divergentLocalRunner();
+    const { logs, errors } = captureConsole();
+    const command = new PrVerifyCommand();
+    command.runner = run;
 
-    expect(exit).toBe(1);
-    expect(errors.join("\n")).toContain("behind origin/topic by 2 commits");
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
+    expect(errors).toEqual([]);
   });
+});
 
-  it("fails when local has diverged from the remote head", async () => {
-    const { exit, errors } = await runVerify(["", view({ rollup: passingRollup }), "0\t1", "1\t2"]);
+describe("PrVerifyCommand", () => {
+  it("lets gh select the PR when no selector is given", async () => {
+    const { exit, calls } = await runVerify(passingCycle);
+
+    const viewCall =
+      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,headRefOid,statusCheckRollup";
+    const viewCalls = calls.filter((call) => call.startsWith("gh pr view"));
+    expect(exit).toBe(0);
+    expect(viewCalls).toEqual([viewCall, viewCall]);
+  });
+});
+
+describe("PrVerifyCommand", () => {
+  it("fails behind base using the PR head SHA", async () => {
+    const { exit, errors, calls } = await runVerify([
+      "",
+      view({ rollup: passingRollup, headRefOid: "abc123" }),
+      "3\t0",
+    ]);
 
     expect(exit).toBe(1);
-    expect(errors.join("\n")).toContain("diverged from origin/topic");
+    expect(errors.join("\n")).toContain("behind base by 3 commits");
+    expect(calls).toContain("git rev-list --left-right --count origin/develop...abc123");
+  });
+});
+
+describe("PrVerifyCommand", () => {
+  it.each([
+    ["headRefOid", "PR head SHA missing from gh pr view"],
+    ["baseRefName", "base branch missing from gh pr view"],
+  ])("fails cleanly when gh omits %s", async (field, message) => {
+    const { exit, errors, calls } = await runVerify(["", omitField(field)]);
+
+    expect(exit).toBe(1);
+    expect(errors.join("\n")).toContain(message);
+    expect(calls.some((call) => call.startsWith("git rev-list"))).toBe(false);
   });
 });
 
@@ -121,7 +167,7 @@ describe("PrVerifyCommand", () => {
     const { exit, calls } = await runVerify(forwardedCycle, { pr: "585" });
 
     const forwardedCall =
-      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup 585";
+      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,headRefOid,statusCheckRollup 585";
     expect(exit).toBe(0);
     expect(calls.filter((call) => call === forwardedCall)).toHaveLength(2);
   });

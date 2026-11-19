@@ -25,19 +25,16 @@ const blockedThenGreen = [
   "",
   view({ mergeStateStatus: "BLOCKED", rollup: runningRollup }),
   "0\t1",
-  "0\t0",
   view({ rollup: passingRollup }),
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
 ];
 
 const blockedAfterChecks = [
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
   "",
   view({ mergeStateStatus: "BLOCKED", rollup: passingRollup }),
 ];
@@ -46,9 +43,8 @@ const currencyRecheck = [
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
   "",
-  view({ rollup: passingRollup }),
+  view({ rollup: passingRollup, headRefOid: "def456" }),
   "1\t0",
 ];
 
@@ -56,74 +52,65 @@ const runlessCycle = [
   "",
   view({ rollup: emptyRollup }),
   "0\t1",
-  "0\t0",
   view({ rollup: emptyRollup }),
   view({ rollup: emptyRollup }),
   "",
   view({ rollup: emptyRollup }),
   "0\t1",
-  "0\t0",
 ];
 
 const queuedCheck = [
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
   "",
   view({ mergeStateStatus: "BLOCKED", rollup: queuedRollup }),
   view({ rollup: passingRollup }),
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
 ];
 
 const unknownSettles = [
   "",
   view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN" }),
   "0\t1",
-  "0\t0",
   view({ rollup: passingRollup }),
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
 ];
 
-const timeoutRunning = ["", view({ rollup: runningRollup }), "0\t1", "0\t0", view({ rollup: runningRollup })];
-const timeoutQueued = ["", view({ rollup: queuedRollup }), "0\t1", "0\t0", view({ rollup: queuedRollup })];
-const timeoutMixed = ["", view({ rollup: mixedRollup }), "0\t1", "0\t0", view({ rollup: mixedRollup })];
-const closedDuring = ["", view({ rollup: passingRollup }), "0\t1", "0\t0", "", view({ state: "CLOSED" })];
+const timeoutRunning = ["", view({ rollup: runningRollup }), "0\t1", view({ rollup: runningRollup })];
+const timeoutQueued = ["", view({ rollup: queuedRollup }), "0\t1", view({ rollup: queuedRollup })];
+const timeoutMixed = ["", view({ rollup: mixedRollup }), "0\t1", view({ rollup: mixedRollup })];
+const closedDuring = ["", view({ rollup: passingRollup }), "0\t1", "", view({ state: "CLOSED" })];
 
 const finalUnknown = [
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
   "",
   view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN" }),
   view({ rollup: passingRollup }),
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
 ];
 
-const finalGateError = ["", view({ rollup: passingRollup }), "0\t1", "0\t0", "", new Error("gh died")];
+const finalGateError = ["", view({ rollup: passingRollup }), "0\t1", "", new Error("gh died")];
 
 const conflicting = [
   "",
   view({ rollup: passingRollup }),
   "0\t1",
-  "0\t0",
   "",
   view({ mergeable: "CONFLICTING", rollup: passingRollup }),
 ];
 
-const blockedRunless = ["", view({ mergeStateStatus: "BLOCKED", rollup: emptyRollup }), "0\t1", "0\t0"];
+const blockedRunless = ["", view({ mergeStateStatus: "BLOCKED", rollup: emptyRollup }), "0\t1"];
 
-const unknownBlocked = ["", view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN" }), "0\t1", "0\t0"];
+const unknownBlocked = ["", view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN" }), "0\t1"];
 
 describe("PrVerifyCommand", () => {
   it("pends through pending checks while the view reports BLOCKED", async () => {
@@ -143,10 +130,11 @@ describe("PrVerifyCommand", () => {
 
 describe("PrVerifyCommand", () => {
   it("re-checks currency before passing", async () => {
-    const { exit, errors } = await runVerify(currencyRecheck, polling);
+    const { exit, errors, calls } = await runVerify(currencyRecheck, polling);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("behind base by 1 commits");
+    expect(calls).toContain("git rev-list --left-right --count origin/develop...def456");
   });
 
   it("passes a runless head when the view is CLEAN", async () => {

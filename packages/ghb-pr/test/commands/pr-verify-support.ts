@@ -126,6 +126,7 @@ export interface ViewSpec {
   state?: string;
   mergeable?: string;
   mergeStateStatus?: string;
+  headRefOid?: string;
   rollup?: RollupContext[];
 }
 
@@ -136,6 +137,7 @@ export const view = (spec: ViewSpec = {}): string =>
     mergeStateStatus: spec.mergeStateStatus ?? "CLEAN",
     baseRefName: "develop",
     headRefName: "topic",
+    headRefOid: spec.headRefOid ?? "abc123",
     statusCheckRollup: spec.rollup ?? emptyRollup,
   });
 
@@ -158,6 +160,21 @@ export function fakeRunner(script: (string | Error)[]): FakeRunResult {
   };
   return { run, calls };
 }
+
+export const divergentLocalRunner = (): FakeRunResult => {
+  const calls: string[] = [];
+  const run: Runner = (cmd, args) => {
+    calls.push(`${cmd} ${args.join(" ")}`);
+    if (cmd === "gh") {
+      return view({ rollup: passingRollup });
+    }
+    if (args[0] === "rev-list") {
+      return args.some((arg) => arg.includes("HEAD")) ? "1\t2" : "0\t1";
+    }
+    return "";
+  };
+  return { run, calls };
+};
 
 export interface CapturedConsole {
   logs: string[];
@@ -202,7 +219,7 @@ export const realGreenRunner = (cmd: "git" | "gh", args: string[]): string => {
     return view({ rollup: passingRollup });
   }
   if (args[0] === "rev-list") {
-    return args.includes("origin/develop...HEAD") ? "0\t1" : "0\t0";
+    return args.some((arg) => arg.startsWith("origin/develop...")) ? "0\t1" : "0\t0";
   }
   return "";
 };

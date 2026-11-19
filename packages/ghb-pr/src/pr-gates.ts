@@ -28,6 +28,7 @@ export interface PrView {
   mergeStateStatus: string;
   baseRefName: string;
   headRefName: string;
+  headRefOid: string;
   statusCheckRollup?: RollupContext[] | null | undefined;
 }
 
@@ -174,7 +175,7 @@ export function readView(run: Runner, forward: string[]): PrView | undefined {
         "pr",
         "view",
         "--json",
-        "state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup",
+        "state,mergeable,mergeStateStatus,baseRefName,headRefName,headRefOid,statusCheckRollup",
         ...forward,
       ]),
     ) as PrView;
@@ -184,11 +185,17 @@ export function readView(run: Runner, forward: string[]): PrView | undefined {
 }
 
 export function baseCurrency(run: Runner, view: PrView): string[] {
+  if (!view.baseRefName) {
+    return ["base branch missing from gh pr view"];
+  }
+  if (!view.headRefOid) {
+    return ["PR head SHA missing from gh pr view"];
+  }
   const [baseLeft = "0"] = run("git", [
     "rev-list",
     "--left-right",
     "--count",
-    `origin/${view.baseRefName}...HEAD`,
+    `origin/${view.baseRefName}...${view.headRefOid}`,
   ]).split("\t");
   if (Number(baseLeft) > 0) {
     return [`behind base by ${baseLeft} commits`];
@@ -196,27 +203,6 @@ export function baseCurrency(run: Runner, view: PrView): string[] {
   return [];
 }
 
-export function headCurrency(run: Runner, view: PrView): string[] {
-  const [ahead = 0, behind = 0] = run("git", [
-    "rev-list",
-    "--left-right",
-    "--count",
-    `HEAD...origin/${view.headRefName}`,
-  ])
-    .split("\t")
-    .map(Number);
-  if (ahead > 0 && behind > 0) {
-    return [`diverged from origin/${view.headRefName}`];
-  }
-  if (ahead > 0) {
-    return [`ahead of origin/${view.headRefName} by ${ahead} commits`];
-  }
-  if (behind > 0) {
-    return [`behind origin/${view.headRefName} by ${behind} commits`];
-  }
-  return [];
-}
-
 export function currencyFailures(run: Runner, view: PrView): string[] {
-  return [...baseCurrency(run, view), ...headCurrency(run, view)];
+  return baseCurrency(run, view);
 }
