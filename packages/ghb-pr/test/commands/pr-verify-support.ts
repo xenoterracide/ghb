@@ -161,6 +161,21 @@ export function fakeRunner(script: (string | Error)[]): FakeRunResult {
   return { run, calls };
 }
 
+export const divergentLocalRunner = (): FakeRunResult => {
+  const calls: string[] = [];
+  const run: Runner = (cmd, args) => {
+    calls.push(`${cmd} ${args.join(" ")}`);
+    if (cmd === "gh") {
+      return view({ rollup: passingRollup });
+    }
+    if (args[0] === "rev-list") {
+      return args.some((arg) => arg.includes("HEAD")) ? "1\t2" : "0\t1";
+    }
+    return "";
+  };
+  return { run, calls };
+};
+
 export interface CapturedConsole {
   logs: string[];
   errors: string[];

@@ -7,6 +7,7 @@ import { PrVerifyCommand } from "../../src/commands/pr-verify.js";
 import { execRunner } from "../../src/exec.js";
 import {
   captureConsole,
+  divergentLocalRunner,
   failingRollup,
   passingRollup,
   realGreenRunner,
@@ -104,6 +105,33 @@ describe("PrVerifyCommand", () => {
     expect(errors).toEqual([]);
     expect(calls).toContain("git rev-list --left-right --count origin/develop...abc123");
     expect(calls.some((call) => call.includes("HEAD"))).toBe(false);
+  });
+});
+
+describe("PrVerifyCommand", () => {
+  it("passes when the local branch is ahead and behind its remote", async () => {
+    const { run } = divergentLocalRunner();
+    const { logs, errors } = captureConsole();
+    const command = new PrVerifyCommand();
+    command.runner = run;
+
+    const exit = await command.execute();
+
+    expect(exit).toBe(0);
+    expect(logs).toEqual(["pass"]);
+    expect(errors).toEqual([]);
+  });
+});
+
+describe("PrVerifyCommand", () => {
+  it("lets gh select the PR when no selector is given", async () => {
+    const { exit, calls } = await runVerify(passingCycle);
+
+    const viewCall =
+      "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,headRefOid,statusCheckRollup";
+    const viewCalls = calls.filter((call) => call.startsWith("gh pr view"));
+    expect(exit).toBe(0);
+    expect(viewCalls).toEqual([viewCall, viewCall]);
   });
 });
 
