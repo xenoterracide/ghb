@@ -64,6 +64,6 @@ describe("PrVerifyCommand", () => {
 
     expect(exit).toBe(0);
     expect(stdout).toContain("pr verify");
-    expect(stdout).toContain("[<number>]");
+    expect(stdout).toContain("[<number> | <url> | <branch>]");
   });
 });

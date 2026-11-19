@@ -85,9 +85,9 @@ export class PrVerifyCommand extends Command {
   // Optional runner for testing - uses the real runner if not set
   public runner?: Runner;
 
-  // a PR number, URL, or branch forwards to gh; `name` gives the help
-  // output gh's `[<number>]` label, which the property name cannot
-  public pr = Option.String({ required: false, name: "<number>" });
+  // a PR number, URL, or branch forwards to gh; `name` writes gh's
+  // usage label, which the property name cannot
+  public pr = Option.String({ required: false, name: "<number> | <url> | <branch>" });
 
   public async execute(): Promise<number> {
     const run = this.runner ?? execRunner;
