@@ -11,7 +11,7 @@ vi.mock("../../src/exec.js", () => ({ execRunner: vi.fn() }));
 interface Bound {
   interval: string;
   timeout: string;
-  forward: string[];
+  pr: string | undefined;
 }
 
 interface CliResult {
@@ -24,7 +24,7 @@ class ProbeVerify extends PrVerifyCommand {
   public static bound: Bound | undefined;
 
   public async execute(): Promise<number> {
-    ProbeVerify.bound = { interval: this.interval, timeout: this.timeout, forward: this.forward };
+    ProbeVerify.bound = { interval: this.interval, timeout: this.timeout, pr: this.pr };
     // clipanion requires a Promise even from a synchronous probe
     await Promise.resolve();
     return 0;
@@ -41,7 +41,7 @@ async function runCli(args: string[]): Promise<CliResult> {
       return true;
     },
   } as NodeJS.WriteStream;
-  const exit = await cli.run(args, { ...Cli.defaultContext, stdout });
+  const exit = await cli.run(args, { ...Cli.defaultContext, stdout, colorDepth: 0 });
   return { exit, stdout: chunks.join("") };
 }
 
@@ -56,7 +56,7 @@ describe("PrVerifyCommand", () => {
     expect(exit).toBe(0);
     expect(ProbeVerify.bound?.interval).toBe("5");
     expect(ProbeVerify.bound?.timeout).toBe("120");
-    expect(ProbeVerify.bound?.forward).toEqual(["585"]);
+    expect(ProbeVerify.bound?.pr).toBe("585");
   });
 
   it("shows help instead of forwarding --help to gh", async () => {
@@ -64,5 +64,6 @@ describe("PrVerifyCommand", () => {
 
     expect(exit).toBe(0);
     expect(stdout).toContain("pr verify");
+    expect(stdout).toContain("[<number> | <url> | <branch>]");
   });
 });

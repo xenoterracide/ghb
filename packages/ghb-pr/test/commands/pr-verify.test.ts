@@ -118,7 +118,7 @@ describe("PrVerifyCommand", () => {
 
 describe("PrVerifyCommand", () => {
   it("forwards the PR selector to gh pr view", async () => {
-    const { exit, calls } = await runVerify(forwardedCycle, { forward: ["585"] });
+    const { exit, calls } = await runVerify(forwardedCycle, { pr: "585" });
 
     const forwardedCall =
       "gh pr view --json state,mergeable,mergeStateStatus,baseRefName,headRefName,statusCheckRollup 585";

@@ -85,10 +85,9 @@ export class PrVerifyCommand extends Command {
   // Optional runner for testing - uses the real runner if not set
   public runner?: Runner;
 
-  // remaining args (a PR number, URL, or branch) forward to gh; must be
-  // declared last. Option.Proxy is unusable here: it routes every token,
-  // including the named flags above, into the proxy before they can bind.
-  public forward = Option.Rest();
+  // a PR number, URL, or branch forwards to gh; `name` writes gh's
+  // usage label, which the property name cannot
+  public pr = Option.String({ required: false, name: "<number> | <url> | <branch>" });
 
   public async execute(): Promise<number> {
     const run = this.runner ?? execRunner;
@@ -273,9 +272,9 @@ export class PrVerifyCommand extends Command {
     }
   }
 
-  // before clipanion parses, an option property holds the option spec, not a value
+  // a positional Option.String holds its spec until clipanion binds it
   private forwarded(): string[] {
-    return Array.isArray(this.forward) ? this.forward : [];
+    return typeof this.pr === "string" ? [this.pr] : [];
   }
 
   private toSeconds(value: string, fallback: number): number {
