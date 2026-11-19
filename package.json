@@ -24,20 +24,35 @@
     "vitest": "^5.0.0"
   },
   "scripts": {
+<<<<<<< before updating
     "build": "pnpm -r run build",
     "check": "pnpm lint:prettier && pnpm lint:eslint && pnpm typecheck && pnpm test",
+=======
+    "check": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:shellcheck && pnpm typecheck && pnpm test",
+>>>>>>> after updating
     "contribute": "sh .config/git/hooks/heal.sh",
     "ghb": "pnpm --filter @xenoterracide/ghb run ghb",
     "lint:prettier": "prettier --ignore-unknown --cache --check '**'",
+<<<<<<< before updating
     "lint:reuse": "pnpm reuse download --all && pnpm reuse lint",
     "lint:eslint": "eslint .",
     "lint": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:reuse",
+=======
+    "lint:reuse": "pnpm reuse lint",
+    "lint:shellcheck": "git ls-files -z -- '*.sh' '.envrc' ':(glob)**/git/hooks/*' | xargs -0 shellcheck",
+>>>>>>> after updating
     "precontribute": "npm run setup:corepack",
     "reuse": "uv run --frozen --group dev reuse",
     "secrets": "pnpm --filter @xenoterracide/ghb run ghb secrets",
     "signing": "pnpm --filter @xenoterracide/ghb run ghb signing",
     "setup:corepack": "npm install --global corepack && mkdir -p ~/.local/bin && corepack enable --install-directory ~/.local/bin",
+<<<<<<< before updating
     "typecheck": "tsc --noEmit -p tsconfig.eslint.json && pnpm -r run typecheck",
+=======
+    "lint:eslint": "eslint .",
+    "lint": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:shellcheck && pnpm lint:reuse",
+    "typecheck": "tsc --noEmit -p tsconfig.eslint.json",
+>>>>>>> after updating
     "test": "vitest run --coverage"
   }
 }

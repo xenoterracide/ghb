@@ -20,3 +20,4 @@ coverage/
 
 # TypeScript
 dist/
+.eslintcache

@@ -21,6 +21,7 @@ monorepo managed with pnpm workspaces.
 
 ## Setup
 
+<<<<<<< before updating
 1. Ensure `asdf` and `direnv` are installed and allowed.
 2. Run `npm run contribute` — it installs tools, syncs Node and Python
    dependencies, and points `core.hooksPath` at `.config/git/hooks`.
@@ -76,6 +77,15 @@ This repository is managed with
 [copier](https://copier.readthedocs.io); [`.copier-answers.yml`](./.copier-answers.yml)
 holds the answers. Refresh from
 [xenoterracide/base-template](https://github.com/xenoterracide/base-template):
+=======
+`pnpm check` runs the CI set; on TypeScript it skips reuse, which the
+license CI job runs. `git push` runs `pnpm lint` first (pre-push hook),
+reuse included; `git push --no-verify` bypasses it. The first commit's
+pre-commit hook stamps headers and seeds `LICENSES`; reuse checks fail
+before it runs.
+
+## Updating from the template
+>>>>>>> after updating
 
     uv run --group dev copier update --trust
 
