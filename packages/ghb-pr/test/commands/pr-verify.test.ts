@@ -34,7 +34,9 @@ describe("PrVerifyCommand", () => {
     expect(errors).toEqual([]);
     expect(calls.some((call) => call.startsWith("gh pr checks"))).toBe(false);
   });
+});
 
+describe("PrVerifyCommand", () => {
   it("requests the PR head SHA from gh", async () => {
     const { exit, calls } = await runVerify(passingCycle);
 
@@ -79,7 +81,9 @@ describe("PrVerifyCommand", () => {
 
     expect(exit).toBe(1);
   });
+});
 
+describe("PrVerifyCommand", () => {
   it("compares the base with the PR head SHA, not HEAD", async () => {
     const { exit, errors, calls } = await runVerify([
       "",
@@ -95,7 +99,9 @@ describe("PrVerifyCommand", () => {
     expect(calls).toContain("git rev-list --left-right --count origin/develop...abc123");
     expect(calls.some((call) => call.includes("HEAD"))).toBe(false);
   });
+});
 
+describe("PrVerifyCommand", () => {
   it("fails behind base using the PR head SHA", async () => {
     const { exit, errors, calls } = await runVerify([
       "",
