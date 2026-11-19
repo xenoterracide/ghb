@@ -175,7 +175,7 @@ git commit -m "fix(pr): verify currency against the PR head"
 - Consumes: `currencyFailures` from Task 2, which now performs one `rev-list` read per currency check.
 - Produces: no new interface.
 
-- [ ] **Step 1: Remove the stale head-currency script values**
+- [x] **Step 1: Remove the stale head-currency script values**
 
 In the three test files, delete the second `rev-list` result from each currency pair. Every pair has the form `"0\t1", "0\t0",`; keep `"0\t1",`. In `currencyRecheck`, delete the `"0\t0"` immediately after its first `"0\t1"`, and keep `"1\t0"` as the fresh base result.
 
@@ -183,12 +183,12 @@ In `packages/ghb-pr/test/commands/pr-verify-poll.test.ts`, change the second `vi
 
 In `packages/ghb-pr/test/commands/pr-verify-support.ts`, change `realGreenRunner` so its `rev-list` branch returns `"0\t1"` when any argument starts with `origin/develop...`, and `"0\t0"` otherwise. The old check for `origin/develop...HEAD` no longer matches.
 
-- [ ] **Step 2: Run the package tests and typecheck**
+- [x] **Step 2: Run the package tests and typecheck**
 
 Run: `pnpm --filter @xenoterracide/ghb-pr test`
 Expected: PASS. Any script drift shows as a wrong return value from `fakeRunner`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/ghb-pr/test/commands/pr-verify.test.ts packages/ghb-pr/test/commands/pr-verify-poll.test.ts packages/ghb-pr/test/commands/pr-verify-poll-grace.test.ts packages/ghb-pr/test/commands/pr-verify-support.ts

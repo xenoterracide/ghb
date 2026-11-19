@@ -25,20 +25,17 @@ const graceCycle = [
   "",
   view({ rollup: emptyRollup }),
   "0\t1",
-  "0\t0",
   view({ rollup: emptyRollup }),
   view({ rollup: emptyRollup }),
   "",
   view({ rollup: emptyRollup }),
   "0\t1",
-  "0\t0",
 ];
 
 const resetGrace = [
   "",
   view({ rollup: emptyRollup }),
   "0\t1",
-  "0\t0",
   view({ rollup: emptyRollup }),
   view({ mergeStateStatus: "BLOCKED", rollup: queuedRollup }),
   view({ rollup: emptyRollup }),
@@ -47,26 +44,22 @@ const resetGrace = [
   "",
   view({ rollup: emptyRollup }),
   "0\t1",
-  "0\t0",
 ];
 
 const requeuedThenPass = [
   "",
   view({ mergeStateStatus: "BLOCKED", rollup: requeuedRollup }),
   "0\t1",
-  "0\t0",
   view({ rollup: rerunRollup }),
   "",
   view({ rollup: rerunRollup }),
   "0\t1",
-  "0\t0",
 ];
 
 const closedOnPoll = [
   "",
   view({ mergeStateStatus: "BLOCKED", rollup: runningRollup }),
   "0\t1",
-  "0\t0",
   view({ state: "CLOSED" }),
 ];
 
@@ -77,7 +70,6 @@ const unknownBreaksGrace = [
   "",
   view({ rollup: emptyRollup }),
   "0\t1",
-  "0\t0",
   view({ rollup: emptyRollup }),
   view({ mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN", rollup: emptyRollup }),
   view({ rollup: emptyRollup }),
@@ -86,7 +78,6 @@ const unknownBreaksGrace = [
   "",
   view({ rollup: emptyRollup }),
   "0\t1",
-  "0\t0",
 ];
 
 describe("PrVerifyCommand", () => {

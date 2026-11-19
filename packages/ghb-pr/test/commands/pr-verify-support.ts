@@ -204,7 +204,7 @@ export const realGreenRunner = (cmd: "git" | "gh", args: string[]): string => {
     return view({ rollup: passingRollup });
   }
   if (args[0] === "rev-list") {
-    return args.includes("origin/develop...HEAD") ? "0\t1" : "0\t0";
+    return args.some((arg) => arg.startsWith("origin/develop...")) ? "0\t1" : "0\t0";
   }
   return "";
 };
