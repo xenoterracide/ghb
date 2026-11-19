@@ -2,19 +2,22 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { Writable } from "node:stream";
+import { describe, expect, it } from "vitest";
 import { Cli } from "clipanion";
 import { createCli } from "../src/cli.js";
 
 async function runCapturing(cli: Cli, args: string[]): Promise<{ exit: number; output: string }> {
   const chunks: string[] = [];
-  vi.spyOn(process.stdout, "write").mockImplementation((chunk: string | Uint8Array): boolean => {
-    chunks.push(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
-    return true;
+  const stdout = new Writable({
+    write(chunk: string | Uint8Array, _encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
+      chunks.push(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
+      callback();
+    },
   });
   const context = {
     ...Cli.defaultContext,
-    stdout: process.stdout,
+    stdout,
     stderr: process.stderr,
     stdin: process.stdin,
   };
@@ -22,10 +25,6 @@ async function runCapturing(cli: Cli, args: string[]): Promise<{ exit: number; o
   const exit = await cli.run(args, context);
   return { exit, output: chunks.join("") };
 }
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
 
 describe("ghb CLI", () => {
   it("should register all expected commands", () => {

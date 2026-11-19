@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import { Writable } from "node:stream";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Cli } from "clipanion";
 import { PrVerifyCommand } from "../../src/commands/pr-verify.js";
@@ -33,19 +34,20 @@ class ProbeVerify extends PrVerifyCommand {
 
 async function runCli(args: string[]): Promise<CliResult> {
   const chunks: string[] = [];
-  vi.spyOn(process.stdout, "write").mockImplementation((chunk: string | Uint8Array): boolean => {
-    chunks.push(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
-    return true;
+  const stdout = new Writable({
+    write(chunk: string | Uint8Array, _encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
+      chunks.push(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
+      callback();
+    },
   });
   const cli = new Cli({ binaryName: "ghb" });
   cli.register(ProbeVerify);
-  const exit = await cli.run(args, { ...Cli.defaultContext, stdout: process.stdout, colorDepth: 0 });
+  const exit = await cli.run(args, { ...Cli.defaultContext, stdout, colorDepth: 0 });
   return { exit, stdout: chunks.join("") };
 }
 
 afterEach(() => {
   ProbeVerify.bound = undefined;
-  vi.restoreAllMocks();
 });
 
 describe("PrVerifyCommand", () => {
