@@ -21,27 +21,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const passingCycle = [
-  "",
-  view({ rollup: twoChecksRollup }),
-  "0\t1",
-  "0\t0",
-  "",
-  view({ rollup: twoChecksRollup }),
-  "0\t1",
-  "0\t0",
-];
+const passingCycle = ["", view({ rollup: twoChecksRollup }), "0\t1", "", view({ rollup: twoChecksRollup }), "0\t1"];
 
-const forwardedCycle = [
-  "",
-  view({ rollup: passingRollup }),
-  "0\t1",
-  "0\t0",
-  "",
-  view({ rollup: passingRollup }),
-  "0\t1",
-  "0\t0",
-];
+const forwardedCycle = ["", view({ rollup: passingRollup }), "0\t1", "", view({ rollup: passingRollup }), "0\t1"];
 
 describe("PrVerifyCommand", () => {
   it("prints pass when open, current, mergeable, and every check passes", async () => {
@@ -63,7 +45,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails behind base without polling checks", async () => {
-    const { exit, errors, calls } = await runVerify(["", view({ rollup: passingRollup }), "3\t0", "0\t0"]);
+    const { exit, errors, calls } = await runVerify(["", view({ rollup: passingRollup }), "3\t0"]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("behind base by 3 commits");
@@ -73,7 +55,7 @@ describe("PrVerifyCommand", () => {
 
 describe("PrVerifyCommand", () => {
   it("fails on mergeStateStatus without polling", async () => {
-    const { exit, errors, calls } = await runVerify(["", view({ mergeStateStatus: "DIRTY" }), "0\t1", "0\t0"]);
+    const { exit, errors, calls } = await runVerify(["", view({ mergeStateStatus: "DIRTY" }), "0\t1"]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("mergeStateStatus: DIRTY");
@@ -81,7 +63,7 @@ describe("PrVerifyCommand", () => {
   });
 
   it("fails on a fail bucket despite gh exiting 0", async () => {
-    const { exit, errors } = await runVerify(["", view({ rollup: failingRollup }), "0\t1", "0\t0"]);
+    const { exit, errors } = await runVerify(["", view({ rollup: failingRollup }), "0\t1"]);
 
     expect(exit).toBe(1);
     expect(errors.join("\n")).toContain("fail: build");
@@ -91,34 +73,39 @@ describe("PrVerifyCommand", () => {
 describe("PrVerifyCommand", () => {
   it("fails fast on a gh error that is not a runless head", async () => {
     const { exit } = await runVerify(
-      ["", view({ rollup: passingRollup }), "0\t1", "0\t0", "", new Error("gh: Not logged in")],
+      ["", view({ rollup: passingRollup }), "0\t1", "", new Error("gh: Not logged in")],
       { interval: "0", timeout: "0" },
     );
 
     expect(exit).toBe(1);
   });
 
-  it("fails when local is ahead of the remote head", async () => {
-    const { exit, errors } = await runVerify(["", view({ rollup: passingRollup }), "0\t1", "1\t0"]);
+  it("compares the base with the PR head SHA, not HEAD", async () => {
+    const { exit, errors, calls } = await runVerify([
+      "",
+      view({ rollup: passingRollup, headRefOid: "abc123" }),
+      "0\t1",
+      "",
+      view({ rollup: passingRollup, headRefOid: "abc123" }),
+      "0\t1",
+    ]);
 
-    expect(exit).toBe(1);
-    expect(errors.join("\n")).toContain("ahead of origin/topic by 1 commits");
+    expect(exit).toBe(0);
+    expect(errors).toEqual([]);
+    expect(calls).toContain("git rev-list --left-right --count origin/develop...abc123");
+    expect(calls.some((call) => call.includes("HEAD"))).toBe(false);
   });
-});
 
-describe("PrVerifyCommand", () => {
-  it("fails when local is behind the remote head", async () => {
-    const { exit, errors } = await runVerify(["", view({ rollup: passingRollup }), "0\t1", "0\t2"]);
-
-    expect(exit).toBe(1);
-    expect(errors.join("\n")).toContain("behind origin/topic by 2 commits");
-  });
-
-  it("fails when local has diverged from the remote head", async () => {
-    const { exit, errors } = await runVerify(["", view({ rollup: passingRollup }), "0\t1", "1\t2"]);
+  it("fails behind base using the PR head SHA", async () => {
+    const { exit, errors, calls } = await runVerify([
+      "",
+      view({ rollup: passingRollup, headRefOid: "abc123" }),
+      "3\t0",
+    ]);
 
     expect(exit).toBe(1);
-    expect(errors.join("\n")).toContain("diverged from origin/topic");
+    expect(errors.join("\n")).toContain("behind base by 3 commits");
+    expect(calls).toContain("git rev-list --left-right --count origin/develop...abc123");
   });
 });
 

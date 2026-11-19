@@ -109,7 +109,7 @@ git commit -m "feat(pr): read the PR head SHA during verify"
 - Consumes: `PrView.headRefOid: string` from Task 1.
 - Produces: `currencyFailures(run: Runner, view: PrView): string[]`, returning only base failures.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace the three local-head tests in `packages/ghb-pr/test/commands/pr-verify.test.ts` (currently "fails when local is ahead of the remote head", "fails when local is behind the remote head", "fails when local has diverged from the remote head") with:
 
@@ -134,12 +134,12 @@ it("fails behind base using the PR head SHA", async () => {
 
 Update the existing "fails behind base without polling checks" script to `["", view({ rollup: passingRollup }), "3\t0"]`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm vitest run packages/ghb-pr/test/commands/pr-verify.test.ts`
 Expected: FAIL. The command still makes a second `rev-list` call against `HEAD`.
 
-- [ ] **Step 3: Implement the remote-only gate**
+- [x] **Step 3: Implement the remote-only gate**
 
 In `packages/ghb-pr/src/pr-gates.ts`:
 
@@ -149,12 +149,12 @@ In `packages/ghb-pr/src/pr-gates.ts`:
 
 Do not change the failure message `behind base by N commits`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm vitest run packages/ghb-pr/test/commands/pr-verify.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ghb-pr/src/pr-gates.ts packages/ghb-pr/test/commands/pr-verify.test.ts
