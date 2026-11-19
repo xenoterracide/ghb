@@ -64,11 +64,16 @@ pnpm check
 pnpm test              # tests with coverage across the workspace
 pnpm build             # build every package topologically
 pnpm typecheck         # root project, then every package
-pnpm lint              # eslint + prettier + reuse
+pnpm lint              # eslint + prettier + shellcheck + reuse
 pnpm lint:eslint
 pnpm lint:prettier
+pnpm lint:shellcheck
 pnpm lint:reuse
 ```
+
+`pnpm check` runs the CI set. `git push` runs `pnpm lint` first (pre-push
+hook). `git push --no-verify` bypasses it. The first commit's pre-commit
+hook stamps headers and seeds `LICENSES`.
 
 ## Updating from the Template
 
@@ -77,7 +82,7 @@ This repository is managed with
 holds the answers. Refresh from
 [xenoterracide/base-template](https://github.com/xenoterracide/base-template):
 
-    uv run --group dev copier update --trust
+    uvx copier update --trust
 
 Conflicts appear as `.rej` files or inline markers; resolve and commit.
 Renovate opens an update PR on each template release and automerges clean

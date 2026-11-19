@@ -5,7 +5,10 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["config:recommended"],
-  dependencyDashboard: true,
+  // no explicit dependencyDashboard: the object form halts hosted apps
+  // older than 44.235.4 (#329), the boolean form fails --strict on
+  // 44.235.4+, and config:recommended has enabled the dashboard since
+  // Renovate 26 — absence is the only form valid across the skew
   lockFileMaintenance: {
     enabled: true,
     automerge: true,
