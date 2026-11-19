@@ -23,10 +23,10 @@ except the PR worktree, which costs tool calls and output tokens.
 
 ## Decision
 
-Make verify always remote-only. Read `headRefOid` from `gh pr view` and use
-it as the subject of the base-freshness gate. Remove the local ahead, behind,
-and diverged gates. Verify then means: the PR is open, current with its base,
-mergeable, and every check passes.
+Make the currency gate remote-only. Read `headRefOid` from `gh pr view` and
+use it as the subject of the base-freshness gate. Remove the local ahead,
+behind, and diverged gates. Verify then means: the PR is open, current with
+its base, mergeable, and every check passes.
 
 Chosen over a selector-only remote mode, which would give the same command
 two meanings, and over keeping local checks when the branch matches, which
