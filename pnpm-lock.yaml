@@ -215,8 +215,8 @@ importers:
         specifier: ^2.7.5
         version: 2.12.0(prettier@3.10.1)
       prettier-plugin-properties:
-        specifier: ^0.3.0
-        version: 0.3.1(prettier@3.10.1)
+        specifier: ^0.4.0
+        version: 0.4.0(prettier@3.10.1)
       prettier-plugin-toml:
         specifier: ^4.0.0
         version: 4.1.0(prettier@3.10.1)
@@ -1630,8 +1630,8 @@ packages:
     peerDependencies:
       prettier: ^3.0.0
 
-  prettier-plugin-properties@0.3.1:
-    resolution: {integrity: sha512-TE85dg+1ED7Dnz8lJqrlT9qXh7EKftrvmZgXwRC6jYT0/Ru2MlGkmvLDRUwoAGNaDCn8ijNjw0T33q6nVXgQ4Q==}
+  prettier-plugin-properties@0.4.0:
+    resolution: {integrity: sha512-pI4DydM8X+SXmssaLxvHh1rRWJuLkodS2eAyUTIZpWijVIqSnNYQGkrJXBErEGaJVoR0tQgNiEwjON9FlSW9SQ==}
     peerDependencies:
       prettier: '>= 2.3.0'
 
@@ -3242,7 +3242,7 @@ snapshots:
       prettier: 3.10.1
       web-tree-sitter: 0.27.2
 
-  prettier-plugin-properties@0.3.1(prettier@3.10.1):
+  prettier-plugin-properties@0.4.0(prettier@3.10.1):
     dependencies:
       dot-properties: 1.1.2
       prettier: 3.10.1
