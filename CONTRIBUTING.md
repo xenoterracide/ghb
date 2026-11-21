@@ -28,7 +28,11 @@ monorepo managed with pnpm workspaces.
 `contribute` and the post-checkout/post-merge hooks all call
 `.config/git/hooks/heal.sh`; a failed heal never breaks a checkout.
 
+<<<<<<< before updating
 ## Local Build
+=======
+    uvx copier update --trust
+>>>>>>> after updating
 
 The registry install (`npm install -g @xenoterracide/ghb`) works only
 after the first publish. Until then — and whenever you want to run your
