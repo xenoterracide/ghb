@@ -38,15 +38,7 @@
     "secrets": "pnpm --filter @xenoterracide/ghb run ghb secrets",
     "signing": "pnpm --filter @xenoterracide/ghb run ghb signing",
     "setup:corepack": "npm install --global corepack && mkdir -p ~/.local/bin && corepack enable --install-directory ~/.local/bin",
-<<<<<<< before updating
     "typecheck": "tsc --noEmit -p tsconfig.eslint.json && pnpm -r run typecheck",
     "test": "vitest run --coverage"
-=======
-    "lint:eslint": "eslint .",
-    "lint": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:shellcheck && pnpm lint:reuse",
-    "typecheck": "tsc --noEmit -p tsconfig.eslint.json",
-    "test": "vitest run --coverage",
-    "verify": "pnpm -r build && pnpm check"
->>>>>>> after updating
   }
 }
