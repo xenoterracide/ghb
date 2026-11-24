@@ -11,6 +11,7 @@ monorepo managed with pnpm workspaces.
 
 ## Repository Overview
 
+<<<<<<< before updating
 - **`packages/ghb/`** — the `ghb` CLI aggregator.
 - **`packages/ghb-pr/`** — `pr sync` and `pr verify`.
 - **`packages/ghb-secrets-sync/`** — GitHub secrets sync utilities.
@@ -24,10 +25,27 @@ monorepo managed with pnpm workspaces.
 1. Ensure `asdf` and `direnv` are installed and allowed.
 2. Run `npm run contribute` — it installs tools, syncs Node and Python
    dependencies, and points `core.hooksPath` at `.config/git/hooks`.
+=======
+`npm run contribute` installs tools and dependencies. It heals the toolchain
+through `.config/git/hooks/heal.sh`. Node 25+ drops corepack, so bootstrap
+starts from npm. With direnv, run `direnv allow` to load the environment.
+
+## Verify
+
+    pnpm verify
+
+`pnpm verify` runs the checks and tests. Java runs Maven verify. TypeScript
+builds before checking. Config runs the checks.
+
+`git push` runs `pnpm lint` first (pre-push hook), reuse included;
+`git push --no-verify` bypasses it. The first commit's pre-commit hook stamps
+headers and seeds `LICENSES`; reuse checks fail before it runs.
+>>>>>>> after updating
 
 `contribute` and the post-checkout/post-merge hooks all call
 `.config/git/hooks/heal.sh`; a failed heal never breaks a checkout.
 
+<<<<<<< before updating
 ## Local Build
 
 The registry install (`npm install -g @xenoterracide/ghb`) works only
@@ -36,6 +54,14 @@ own changes — install the packed tarballs into one prefix. The unpacked
 workspace cannot run under plain node: workspace dependencies resolve
 `main` to TypeScript source, the tsx dev contract. Packing swaps `main`
 to `dist` and rewrites `workspace:^` to real versions:
+=======
+    uvx copier update --trust
+
+Renovate opens an update PR whenever
+[base-template](https://github.com/xenoterracide/base-template) tags a release.
+Merge it like any other dependency update. Conflicts appear as `.rej` files;
+resolve and commit.
+>>>>>>> after updating
 
 ```bash
 pnpm -r pack --pack-destination /tmp/packs
@@ -43,6 +69,7 @@ npm install --prefix ~/.local/lib/ghb /tmp/packs/*.tgz
 ln -sf ~/.local/lib/ghb/node_modules/.bin/ghb ~/.local/bin/ghb
 ```
 
+<<<<<<< before updating
 Never `npm install -g` the separate tarballs: `-g` installs each tarball
 as its own root, nesting one clipanion copy per package, and clipanion's
 option specs carry a module-scoped symbol — the parser only sees specs
@@ -103,3 +130,7 @@ updates.
 
 By contributing, you agree to license your work under the project's
 [CC-BY-NC-SA-4.0](LICENSES/CC-BY-NC-SA-4.0.txt) license.
+=======
+Most renders carry no SPDX headers. `reuse annotate`, run at the first
+commit, stamps each file's license.
+>>>>>>> after updating

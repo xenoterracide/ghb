@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright © 2026 Caleb Cushing
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/xenoterracide/agent-skills/develop/schemas/project.schema.json
+repo: ghb
+
+tracker:
+  kind: jira
+  skill: jira-workflow
+  site: xenoterracide.atlassian.net
+  project: XTC
+  board: 3
+  work_types: [Epic, Feature, Task, Bug, Subtask]
+  labels:
+    project_prefix: "project:"
+  statuses:
+    captured: Added to backlog
+    refining: Open
+    ready: To Do
+    building: In Progress
+    reviewing: In Review
+    done: Done
+    dropped: Canceled
+  transitions:
+    captured_to_refining: 9
+    captured_to_ready: 11
+    captured_to_captured: 8
+    captured_to_dropped: 2
+    refining_to_ready: 11
+    refining_to_captured: 8
+    refining_to_dropped: 2
+    ready_to_building: 21
+    ready_to_captured: 8
+    ready_to_dropped: 2
+    building_to_reviewing: 31
+    building_to_ready: 11
+    building_to_dropped: 2
+    reviewing_to_done: 41
+    reviewing_to_building: 21
+    reviewing_to_dropped: 2
+    done_to_refining: 9
+    dropped_to_captured: 8

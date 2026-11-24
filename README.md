@@ -6,6 +6,7 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 # ghb
 
+<<<<<<< before updating
 GitHub Bridge — TypeScript CLI devtools and utilities for GitHub workflow automation.
 
 ## Installation
@@ -79,3 +80,30 @@ See the package READMEs for more detail:
 ## License
 
 [CC-BY-NC-SA-4.0](LICENSES/CC-BY-NC-SA-4.0.txt)
+=======
+ghb is a TypeScript project.
+
+## Use
+
+Import the package, then call its exported API.
+
+## Install
+
+Install the package:
+
+```sh
+pnpm add @xenoterracide/ghb
+```
+
+## Development
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — human contributor guide
+- [AGENTS.md](AGENTS.md) — guide for AI agents
+
+## License
+
+Project code: [GPL-3.0-or-later](https://www.gnu.org/licenses/gpl-3.0.txt).
+Documentation: [CC-BY-NC-SA-4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+Copyright © 2015-2026 Caleb Cushing. Full texts live in [LICENSES](LICENSES).
+Each file carries its own SPDX header. A file may use a different license.
+>>>>>>> after updating
