@@ -5,6 +5,7 @@
 # AI
 *.txt
 !requirements.txt
+docs/superpowers/plans/
 
 # env
 .env*
