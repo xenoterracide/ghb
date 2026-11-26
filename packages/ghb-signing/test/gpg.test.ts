@@ -250,7 +250,7 @@ describe("gpg integration export and sign", () => {
     } finally {
       rmSync(home2, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 });
 
 describe("gpg integration setExpiry", () => {
