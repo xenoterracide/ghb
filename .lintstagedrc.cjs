@@ -57,7 +57,7 @@ module.exports = {
   ]),
   // yml is different from yaml extension as the only known yaml required file is for git-conventional-commits, but yml
   // contains files like GitHub workflows which can have significant logic
-  "*.{js,cjs,yml}": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
+  "*.{js,cjs,mjs,yml}": run([`${reuse} ${copyright} ${symbol} ${licenseScripts}`, prettier]),
   // reuse 6.3.0 does not recognise .cts, so annotate --fallback-dot-license
   // would write a sidecar the inline header already covers; prettier only
   "*.cts": run(prettier),
