@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 # Managed by copier; do not edit. `uvx copier update --trust` refreshes.
-_commit: v26.11.19
+_commit: v26.11.20
 _src_path: https://github.com/xenoterracide/base-template
 docs_license: CC-BY-NC-SA-4.0
 first_package: ghb
